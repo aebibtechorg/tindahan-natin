@@ -11,6 +11,7 @@ abstract class Shelf with _$Shelf {
     required String storeId,
     @Default(0.0) double x,
     @Default(0.0) double y,
+    @Default(0.0) double rotation,
   }) = _Shelf;
 
   factory Shelf.fromJson(Map<String, dynamic> json) => _$ShelfFromJson(json);

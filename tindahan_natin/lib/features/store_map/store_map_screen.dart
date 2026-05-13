@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/features/store_map/map_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
+import 'package:tindahan_natin/features/products/product_service.dart';
+import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class StoreMapScreen extends ConsumerStatefulWidget {
@@ -15,7 +17,10 @@ class StoreMapScreen extends ConsumerStatefulWidget {
 class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final TransformationController _transformationController = TransformationController();
   final GlobalKey _containerKey = GlobalKey();
-  String? _selectedShelfId;
+  final Set<String> _selectedShelfIds = {};
+  bool _multiSelectMode = false;
+  bool _snapToGrid = true;
+  double _gridSize = 50.0;
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +40,33 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                 icon: const Icon(Icons.add),
                 onPressed: () => _showAddShelfDialog(context, ref, storeId),
               ),
-              if (_selectedShelfId != null)
+              IconButton(
+                icon: Icon(_snapToGrid ? Icons.grid_on : Icons.grid_off),
+                tooltip: _snapToGrid ? 'Grid: On' : 'Grid: Off',
+                onPressed: () => setState(() => _snapToGrid = !_snapToGrid),
+              ),
+              IconButton(
+                icon: Icon(_multiSelectMode ? Icons.check_box : Icons.check_box_outline_blank),
+                tooltip: 'Multi-select',
+                onPressed: () => setState(() {
+                  _multiSelectMode = !_multiSelectMode;
+                  if (!_multiSelectMode) _selectedShelfIds.clear();
+                }),
+              ),
+              if (!_multiSelectMode && _selectedShelfIds.length == 1)
                 IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () async {
                     final shelves = await ref.read(shelvesProvider(storeId).future);
-                    final shelf = shelves.firstWhere((s) => s.id == _selectedShelfId);
+                    final shelf = shelves.firstWhere((s) => s.id == _selectedShelfIds.first);
                     _showEditShelfDialog(context, ref, shelf, storeId);
                   },
                 ),
-              if (_selectedShelfId != null)
+              if (!_multiSelectMode && _selectedShelfIds.length == 1)
                 IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () async {
+                    final id = _selectedShelfIds.first;
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (c) => AlertDialog(
@@ -60,9 +79,34 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       ),
                     );
                     if (confirm == true) {
-                      await ref.read(mapServiceProvider).deleteShelf(_selectedShelfId!);
+                      await ref.read(mapServiceProvider).deleteShelf(id);
                       ref.invalidate(shelvesProvider(storeId));
-                      setState(() => _selectedShelfId = null);
+                      setState(() => _selectedShelfIds.clear());
+                    }
+                  },
+                ),
+              if (_multiSelectMode && _selectedShelfIds.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.delete_sweep),
+                  tooltip: 'Delete selected',
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: const Text('Delete Selected Shelves?'),
+                        content: Text('Delete ${_selectedShelfIds.length} selected shelves?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                          ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      for (final id in _selectedShelfIds) {
+                        await ref.read(mapServiceProvider).deleteShelf(id);
+                      }
+                      ref.invalidate(shelvesProvider(storeId));
+                      setState(() => _selectedShelfIds.clear());
                     }
                   },
                 ),
@@ -89,9 +133,24 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         storeId: storeId,
                         transformationController: _transformationController,
                         containerKey: _containerKey,
-                        selected: _selectedShelfId == shelf.id,
-                        onSelect: (id) => setState(() => _selectedShelfId = id),
+                        selected: _selectedShelfIds.contains(shelf.id),
+                        onSelect: (id) {
+                          setState(() {
+                            if (_multiSelectMode) {
+                              if (_selectedShelfIds.contains(id)) {
+                                _selectedShelfIds.remove(id);
+                              } else {
+                                _selectedShelfIds.add(id);
+                              }
+                            } else {
+                              _selectedShelfIds.clear();
+                              _selectedShelfIds.add(id);
+                            }
+                          });
+                        },
                         onDoubleTap: () => _showEditShelfDialog(context, ref, shelf, storeId),
+                        snapToGrid: _snapToGrid,
+                        gridSize: _gridSize,
                       )),
                 ],
               ),
@@ -136,8 +195,8 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                 await ref.read(mapServiceProvider).createShelf({
                   'name': controller.text,
                   'storeId': storeId,
-                  'x': cx,
-                  'y': cy,
+                  'x': _snapToGrid ? (cx / _gridSize).round() * _gridSize : cx,
+                  'y': _snapToGrid ? (cy / _gridSize).round() * _gridSize : cy,
                 });
                 ref.invalidate(shelvesProvider(storeId));
                 if (context.mounted) Navigator.pop(context);
@@ -163,32 +222,140 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
   void _showEditShelfDialog(BuildContext context, WidgetRef ref, Shelf shelf, String storeId) {
     final controller = TextEditingController(text: shelf.name);
+    double rotation = shelf.rotation;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Shelf'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Shelf Name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                await ref.read(mapServiceProvider).updateShelf(shelf.id, {
-                  'name': controller.text,
-                  'x': shelf.x,
-                  'y': shelf.y,
-                });
-                ref.invalidate(shelvesProvider(storeId));
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final productsAsync = ref.watch(productsProvider(storeId));
+        final productLocationsAsync = ref.watch(productLocationsProvider(storeId));
+
+        return StatefulBuilder(builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit Shelf'),
+            content: SizedBox(
+              width: 480,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(hintText: 'Shelf Name'),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('Rotation'),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Slider(
+                            value: rotation,
+                            min: 0,
+                            max: 360,
+                            divisions: 36,
+                            label: '${rotation.round()}°',
+                            onChanged: (v) => setDialogState(() => rotation = v),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('${rotation.round()}°'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Product Locations', style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextButton.icon(
+                          onPressed: () async {
+                            // open product picker
+                            final products = productsAsync.maybeWhen(data: (p) => p, orElse: () => null);
+                            if (products == null || products.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No products available')));
+                              return;
+                            }
+
+                            final selected = await showDialog<Map<String, dynamic>?>(
+                              context: context,
+                              builder: (ctx) => SimpleDialog(
+                                title: const Text('Select Product'),
+                                children: products.map((prod) => SimpleDialogOption(
+                                      onPressed: () => Navigator.pop(ctx, {'id': prod.id, 'name': prod.name}),
+                                      child: Text(prod.name),
+                                    )).toList(),
+                              ),
+                            );
+
+                            if (selected != null) {
+                              await ref.read(mapServiceProvider).createProductLocation({
+                                'productId': selected['id'],
+                                'shelfId': shelf.id,
+                                'position': 'default',
+                              });
+                              ref.invalidate(productLocationsProvider(storeId));
+                            }
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add'),
+                        ),
+                      ],
+                    ),
+                    productLocationsAsync.when(
+                      data: (locations) {
+                        final shelfLocations = locations.where((l) => l.shelfId == shelf.id).toList();
+                        if (shelfLocations.isEmpty) return const Text('No product locations.');
+                        return Column(
+                          children: shelfLocations.map((loc) {
+                            String productName = loc.productId;
+                            final productsList = productsAsync.asData?.value;
+                            if (productsList != null) {
+                              final matches = productsList.where((p) => p.id == loc.productId);
+                              if (matches.isNotEmpty) productName = matches.first.name;
+                            }
+                            return ListTile(
+                              title: Text(productName),
+                              subtitle: Text('Position: ${loc.position}'),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () async {
+                                  await ref.read(mapServiceProvider).deleteProductLocation(loc.id);
+                                  ref.invalidate(productLocationsProvider(storeId));
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator()),
+                      error: (e, s) => Text('Error loading product locations: $e'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () async {
+                  if (controller.text.isNotEmpty) {
+                    await ref.read(mapServiceProvider).updateShelf(shelf.id, {
+                      'name': controller.text,
+                      'x': shelf.x,
+                      'y': shelf.y,
+                      'rotation': rotation,
+                    });
+                    ref.invalidate(shelvesProvider(storeId));
+                    if (context.mounted) Navigator.pop(context);
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
+      },
     );
   }
 }
@@ -200,6 +367,8 @@ class DraggableShelf extends ConsumerStatefulWidget {
   final bool selected;
   final void Function(String) onSelect;
   final VoidCallback? onDoubleTap;
+  final bool snapToGrid;
+  final double gridSize;
 
   const DraggableShelf({
     super.key,
@@ -210,6 +379,8 @@ class DraggableShelf extends ConsumerStatefulWidget {
     required this.selected,
     required this.onSelect,
     this.onDoubleTap,
+    required this.snapToGrid,
+    required this.gridSize,
   });
 
   @override
@@ -219,6 +390,7 @@ class DraggableShelf extends ConsumerStatefulWidget {
 class _DraggableShelfState extends ConsumerState<DraggableShelf> {
   late double x;
   late double y;
+  late double rotation;
   Offset? _dragOffset;
   bool _dragging = false;
 
@@ -227,6 +399,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
     super.initState();
     x = widget.shelf.x;
     y = widget.shelf.y;
+    rotation = widget.shelf.rotation;
   }
 
   @override
@@ -236,6 +409,9 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
     if (widget.shelf.x != x || widget.shelf.y != y) {
       x = widget.shelf.x;
       y = widget.shelf.y;
+    }
+    if (widget.shelf.rotation != rotation) {
+      rotation = widget.shelf.rotation;
     }
   }
 
@@ -275,14 +451,19 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
         },
         onPanEnd: (details) async {
           setState(() => _dragging = false);
+          if (widget.snapToGrid) {
+            x = (x / widget.gridSize).round() * widget.gridSize;
+            y = (y / widget.gridSize).round() * widget.gridSize;
+          }
           await ref.read(mapServiceProvider).updateShelf(widget.shelf.id, {
             'name': widget.shelf.name,
             'x': x,
             'y': y,
+            'rotation': rotation,
           });
           ref.invalidate(shelvesProvider(widget.storeId));
         },
-        child: _ShelfWidget(name: widget.shelf.name, isDragging: _dragging, isSelected: widget.selected),
+        child: _ShelfWidget(name: widget.shelf.name, isDragging: _dragging, isSelected: widget.selected, rotation: rotation),
       ),
     );
   }
@@ -292,26 +473,32 @@ class _ShelfWidget extends StatelessWidget {
   final String name;
   final bool isDragging;
   final bool isSelected;
+  final double rotation;
 
-  const _ShelfWidget({required this.name, this.isDragging = false, this.isSelected = false});
+  const _ShelfWidget({required this.name, this.isDragging = false, this.isSelected = false, this.rotation = 0.0});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDragging ? Colors.blue.withOpacity(0.6) : Colors.blue,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-        border: isSelected ? Border.all(color: Colors.yellowAccent, width: 3) : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: Text(
-          name,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    final rotated = Transform.rotate(
+      angle: rotation * math.pi / 180.0,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDragging ? Colors.blue.withOpacity(0.6) : Colors.blue,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+          border: isSelected ? Border.all(color: Colors.yellowAccent, width: 3) : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Text(
+            name,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
+
+    return rotated;
   }
 }

@@ -12,6 +12,7 @@ _Shelf _$ShelfFromJson(Map<String, dynamic> json) => _Shelf(
   storeId: json['storeId'] as String,
   x: (json['x'] as num?)?.toDouble() ?? 0.0,
   y: (json['y'] as num?)?.toDouble() ?? 0.0,
+  rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
 );
 
 Map<String, dynamic> _$ShelfToJson(_Shelf instance) => <String, dynamic>{
@@ -20,6 +21,7 @@ Map<String, dynamic> _$ShelfToJson(_Shelf instance) => <String, dynamic>{
   'storeId': instance.storeId,
   'x': instance.x,
   'y': instance.y,
+  'rotation': instance.rotation,
 };
 
 _ProductLocation _$ProductLocationFromJson(Map<String, dynamic> json) =>

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Shelf {
 
- String get id; String get name; String get storeId; double get x; double get y;
+ String get id; String get name; String get storeId; double get x; double get y; double get rotation;
 /// Create a copy of Shelf
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ShelfCopyWith<Shelf> get copyWith => _$ShelfCopyWithImpl<Shelf>(this as Shelf, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Shelf&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Shelf&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y)&&(identical(other.rotation, rotation) || other.rotation == rotation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,storeId,x,y);
+int get hashCode => Object.hash(runtimeType,id,name,storeId,x,y,rotation);
 
 @override
 String toString() {
-  return 'Shelf(id: $id, name: $name, storeId: $storeId, x: $x, y: $y)';
+  return 'Shelf(id: $id, name: $name, storeId: $storeId, x: $x, y: $y, rotation: $rotation)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ShelfCopyWith<$Res>  {
   factory $ShelfCopyWith(Shelf value, $Res Function(Shelf) _then) = _$ShelfCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String storeId, double x, double y
+ String id, String name, String storeId, double x, double y, double rotation
 });
 
 
@@ -65,13 +65,14 @@ class _$ShelfCopyWithImpl<$Res>
 
 /// Create a copy of Shelf
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? storeId = null,Object? x = null,Object? y = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? storeId = null,Object? x = null,Object? y = null,Object? rotation = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
 as double,y: null == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
+as double,rotation: null == rotation ? _self.rotation : rotation // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String storeId,  double x,  double y)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String storeId,  double x,  double y,  double rotation)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Shelf() when $default != null:
-return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
+return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y,_that.rotation);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String storeId,  double x,  double y)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String storeId,  double x,  double y,  double rotation)  $default,) {final _that = this;
 switch (_that) {
 case _Shelf():
-return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
+return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y,_that.rotation);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String storeId,  double x,  double y)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String storeId,  double x,  double y,  double rotation)?  $default,) {final _that = this;
 switch (_that) {
 case _Shelf() when $default != null:
-return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
+return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y,_that.rotation);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
 @JsonSerializable()
 
 class _Shelf implements Shelf {
-  const _Shelf({required this.id, required this.name, required this.storeId, this.x = 0.0, this.y = 0.0});
+  const _Shelf({required this.id, required this.name, required this.storeId, this.x = 0.0, this.y = 0.0, this.rotation = 0.0});
   factory _Shelf.fromJson(Map<String, dynamic> json) => _$ShelfFromJson(json);
 
 @override final  String id;
@@ -221,6 +222,7 @@ class _Shelf implements Shelf {
 @override final  String storeId;
 @override@JsonKey() final  double x;
 @override@JsonKey() final  double y;
+@override@JsonKey() final  double rotation;
 
 /// Create a copy of Shelf
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +237,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Shelf&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Shelf&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y)&&(identical(other.rotation, rotation) || other.rotation == rotation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,storeId,x,y);
+int get hashCode => Object.hash(runtimeType,id,name,storeId,x,y,rotation);
 
 @override
 String toString() {
-  return 'Shelf(id: $id, name: $name, storeId: $storeId, x: $x, y: $y)';
+  return 'Shelf(id: $id, name: $name, storeId: $storeId, x: $x, y: $y, rotation: $rotation)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$ShelfCopyWith<$Res> implements $ShelfCopyWith<$Res> {
   factory _$ShelfCopyWith(_Shelf value, $Res Function(_Shelf) _then) = __$ShelfCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String storeId, double x, double y
+ String id, String name, String storeId, double x, double y, double rotation
 });
 
 
@@ -272,13 +274,14 @@ class __$ShelfCopyWithImpl<$Res>
 
 /// Create a copy of Shelf
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? storeId = null,Object? x = null,Object? y = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? storeId = null,Object? x = null,Object? y = null,Object? rotation = null,}) {
   return _then(_Shelf(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
 as double,y: null == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
+as double,rotation: null == rotation ? _self.rotation : rotation // ignore: cast_nullable_to_non_nullable
 as double,
   ));
 }
