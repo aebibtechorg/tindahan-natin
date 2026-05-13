@@ -7,7 +7,7 @@ part of 'store.dart';
 // **************************************************************************
 
 _Store _$StoreFromJson(Map<String, dynamic> json) => _Store(
-  id: (json['id'] as num).toInt(),
+  id: json['id'] as String,
   name: json['name'] as String,
   slug: json['slug'] as String,
   ownerId: json['ownerId'] as String,

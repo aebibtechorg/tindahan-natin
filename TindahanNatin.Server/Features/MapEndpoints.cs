@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
@@ -12,7 +13,7 @@ public static class MapEndpoints
         var group = routes.MapGroup("/api/map").WithTags("Store Map");
 
         // Shelves
-        group.MapGet("/shelves", async (TindahanDbContext db, int storeId) =>
+        group.MapGet("/shelves", async (TindahanDbContext db, Guid storeId) =>
         {
             return await db.Shelves
                 .Where(s => s.StoreId == storeId)
@@ -28,7 +29,7 @@ public static class MapEndpoints
             return Results.Created($"/api/map/shelves/{shelf.Id}", new ShelfDto(shelf.Id, shelf.Name, shelf.StoreId, shelf.X, shelf.Y));
         });
 
-        group.MapPut("/shelves/{id}", async (int id, UpdateShelfDto dto, TindahanDbContext db) =>
+        group.MapPut("/shelves/{id}", async (Guid id, UpdateShelfDto dto, TindahanDbContext db) =>
         {
             var shelf = await db.Shelves.FindAsync(id);
             if (shelf is null) return Results.NotFound();
@@ -41,7 +42,7 @@ public static class MapEndpoints
             return Results.NoContent();
         });
 
-        group.MapDelete("/shelves/{id}", async (int id, TindahanDbContext db) =>
+        group.MapDelete("/shelves/{id}", async (Guid id, TindahanDbContext db) =>
         {
             var shelf = await db.Shelves.FindAsync(id);
             if (shelf is null) return Results.NotFound();
@@ -51,7 +52,7 @@ public static class MapEndpoints
         });
 
         // Product Locations
-        group.MapGet("/locations", async (TindahanDbContext db, int storeId) =>
+        group.MapGet("/locations", async (TindahanDbContext db, Guid storeId) =>
         {
             // Join ProductLocations with Shelves for the specific store
             return await db.ProductLocations
@@ -78,7 +79,7 @@ public static class MapEndpoints
             return Results.Created($"/api/map/locations/{location.Id}", new ProductLocationDto(location.Id, location.ProductId, location.ShelfId, location.Position));
         });
 
-        group.MapDelete("/locations/{id}", async (int id, TindahanDbContext db) =>
+        group.MapDelete("/locations/{id}", async (Guid id, TindahanDbContext db) =>
         {
             var location = await db.ProductLocations.FindAsync(id);
             if (location is null) return Results.NotFound();

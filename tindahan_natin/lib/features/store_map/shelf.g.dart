@@ -7,9 +7,9 @@ part of 'shelf.dart';
 // **************************************************************************
 
 _Shelf _$ShelfFromJson(Map<String, dynamic> json) => _Shelf(
-  id: (json['id'] as num).toInt(),
+  id: json['id'] as String,
   name: json['name'] as String,
-  storeId: (json['storeId'] as num).toInt(),
+  storeId: json['storeId'] as String,
   x: (json['x'] as num?)?.toDouble() ?? 0.0,
   y: (json['y'] as num?)?.toDouble() ?? 0.0,
 );
@@ -24,9 +24,9 @@ Map<String, dynamic> _$ShelfToJson(_Shelf instance) => <String, dynamic>{
 
 _ProductLocation _$ProductLocationFromJson(Map<String, dynamic> json) =>
     _ProductLocation(
-      id: (json['id'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
-      shelfId: (json['shelfId'] as num).toInt(),
+      id: json['id'] as String,
+      productId: json['productId'] as String,
+      shelfId: json['shelfId'] as String,
       position: json['position'] as String,
     );
 

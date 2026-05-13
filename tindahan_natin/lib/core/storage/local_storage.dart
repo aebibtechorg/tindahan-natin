@@ -8,11 +8,11 @@ class LocalStorage {
   final Box _productsBox = Hive.box('products_cache');
   final Box _settingsBox = Hive.box('settings');
 
-  Future<void> cacheProducts(int storeId, List<Map<String, dynamic>> products) async {
+  Future<void> cacheProducts(String storeId, List<Map<String, dynamic>> products) async {
     await _productsBox.put('products_$storeId', products);
   }
 
-  List<Map<String, dynamic>>? getCachedProducts(int storeId) {
+  List<Map<String, dynamic>>? getCachedProducts(String storeId) {
     final data = _productsBox.get('products_$storeId');
     if (data == null) return null;
     return List<Map<String, dynamic>>.from(

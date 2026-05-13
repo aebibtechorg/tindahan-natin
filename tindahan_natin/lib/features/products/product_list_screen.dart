@@ -10,7 +10,7 @@ class ProductListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const storeId = 1; 
+    const storeId = "1"; 
     final productsAsync = ref.watch(productsProvider(storeId));
 
     return Scaffold(

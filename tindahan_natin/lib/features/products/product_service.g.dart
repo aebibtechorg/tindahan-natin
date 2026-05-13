@@ -57,7 +57,7 @@ final class ProductsProvider
     extends $AsyncNotifierProvider<Products, List<Product>> {
   ProductsProvider._({
     required ProductsFamily super.from,
-    required int super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'productsProvider',
@@ -91,7 +91,7 @@ final class ProductsProvider
   }
 }
 
-String _$productsHash() => r'6e4a0eaef9cb63ddb7dff4a83f9d7b3de44258f7';
+String _$productsHash() => r'7114a6f4024c2946f4276c7e5e5b348a7d4de3b0';
 
 final class ProductsFamily extends $Family
     with
@@ -100,7 +100,7 @@ final class ProductsFamily extends $Family
           AsyncValue<List<Product>>,
           List<Product>,
           FutureOr<List<Product>>,
-          int
+          String
         > {
   ProductsFamily._()
     : super(
@@ -111,7 +111,7 @@ final class ProductsFamily extends $Family
         isAutoDispose: true,
       );
 
-  ProductsProvider call(int storeId) =>
+  ProductsProvider call(String storeId) =>
       ProductsProvider._(argument: storeId, from: this);
 
   @override
@@ -119,10 +119,10 @@ final class ProductsFamily extends $Family
 }
 
 abstract class _$Products extends $AsyncNotifier<List<Product>> {
-  late final _$args = ref.$arg as int;
-  int get storeId => _$args;
+  late final _$args = ref.$arg as String;
+  String get storeId => _$args;
 
-  FutureOr<List<Product>> build(int storeId);
+  FutureOr<List<Product>> build(String storeId);
   @$mustCallSuper
   @override
   void runBuild() {

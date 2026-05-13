@@ -14,7 +14,7 @@ class ProductService {
 
   ProductService(this._dio, this._local);
 
-  Future<List<Product>> getProducts(int storeId) async {
+  Future<List<Product>> getProducts(String storeId) async {
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId});
       final List data = response.data;
@@ -34,11 +34,11 @@ class ProductService {
     return Product.fromJson(response.data);
   }
 
-  Future<void> updateProduct(int id, Map<String, dynamic> data) async {
+  Future<void> updateProduct(String id, Map<String, dynamic> data) async {
     await _dio.put('/products/$id', data: data);
   }
 
-  Future<void> deleteProduct(int id) async {
+  Future<void> deleteProduct(String id) async {
     await _dio.delete('/products/$id');
   }
 
@@ -59,7 +59,7 @@ ProductService productService(Ref ref) {
 @riverpod
 class Products extends _$Products {
   @override
-  Future<List<Product>> build(int storeId) {
+  Future<List<Product>> build(String storeId) {
     return ref.watch(productServiceProvider).getProducts(storeId);
   }
 
@@ -73,7 +73,7 @@ class Products extends _$Products {
     state = AsyncData([...state.value ?? [], newProduct]);
   }
 
-  Future<void> deleteProduct(int id) async {
+  Future<void> deleteProduct(String id) async {
     final previousState = state.value;
     state = AsyncData((state.value ?? []).where((p) => p.id != id).toList());
     

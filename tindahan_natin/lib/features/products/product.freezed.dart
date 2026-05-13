@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Product {
 
- int get id; String get name; double get price; int get quantity; int get categoryId; String? get description; String? get imageUrl; String? get barcode; int get storeId; int? get shelfId;
+ String get id; String get name; double get price; int get quantity; String get categoryId; String? get description; String? get imageUrl; String? get barcode; String get storeId; String? get shelfId;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, double price, int quantity, int categoryId, String? description, String? imageUrl, String? barcode, int storeId, int? shelfId
+ String id, String name, double price, int quantity, String categoryId, String? description, String? imageUrl, String? barcode, String storeId, String? shelfId
 });
 
 
@@ -68,16 +68,16 @@ class _$ProductCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? price = null,Object? quantity = null,Object? categoryId = null,Object? description = freezed,Object? imageUrl = freezed,Object? barcode = freezed,Object? storeId = null,Object? shelfId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as double,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as int,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
 as String?,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
-as int,shelfId: freezed == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
-as int?,
+as String,shelfId: freezed == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -162,7 +162,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  double price,  int quantity,  int categoryId,  String? description,  String? imageUrl,  String? barcode,  int storeId,  int? shelfId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  double price,  int quantity,  String categoryId,  String? description,  String? imageUrl,  String? barcode,  String storeId,  String? shelfId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
 return $default(_that.id,_that.name,_that.price,_that.quantity,_that.categoryId,_that.description,_that.imageUrl,_that.barcode,_that.storeId,_that.shelfId);case _:
@@ -183,7 +183,7 @@ return $default(_that.id,_that.name,_that.price,_that.quantity,_that.categoryId,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  double price,  int quantity,  int categoryId,  String? description,  String? imageUrl,  String? barcode,  int storeId,  int? shelfId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  double price,  int quantity,  String categoryId,  String? description,  String? imageUrl,  String? barcode,  String storeId,  String? shelfId)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
 return $default(_that.id,_that.name,_that.price,_that.quantity,_that.categoryId,_that.description,_that.imageUrl,_that.barcode,_that.storeId,_that.shelfId);case _:
@@ -203,7 +203,7 @@ return $default(_that.id,_that.name,_that.price,_that.quantity,_that.categoryId,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  double price,  int quantity,  int categoryId,  String? description,  String? imageUrl,  String? barcode,  int storeId,  int? shelfId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  double price,  int quantity,  String categoryId,  String? description,  String? imageUrl,  String? barcode,  String storeId,  String? shelfId)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
 return $default(_that.id,_that.name,_that.price,_that.quantity,_that.categoryId,_that.description,_that.imageUrl,_that.barcode,_that.storeId,_that.shelfId);case _:
@@ -221,16 +221,16 @@ class _Product implements Product {
   const _Product({required this.id, required this.name, required this.price, required this.quantity, required this.categoryId, this.description, this.imageUrl, this.barcode, required this.storeId, this.shelfId});
   factory _Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 
-@override final  int id;
+@override final  String id;
 @override final  String name;
 @override final  double price;
 @override final  int quantity;
-@override final  int categoryId;
+@override final  String categoryId;
 @override final  String? description;
 @override final  String? imageUrl;
 @override final  String? barcode;
-@override final  int storeId;
-@override final  int? shelfId;
+@override final  String storeId;
+@override final  String? shelfId;
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
@@ -265,7 +265,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, double price, int quantity, int categoryId, String? description, String? imageUrl, String? barcode, int storeId, int? shelfId
+ String id, String name, double price, int quantity, String categoryId, String? description, String? imageUrl, String? barcode, String storeId, String? shelfId
 });
 
 
@@ -285,16 +285,16 @@ class __$ProductCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? price = null,Object? quantity = null,Object? categoryId = null,Object? description = freezed,Object? imageUrl = freezed,Object? barcode = freezed,Object? storeId = null,Object? shelfId = freezed,}) {
   return _then(_Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as double,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as int,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
 as String?,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
-as int,shelfId: freezed == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
-as int?,
+as String,shelfId: freezed == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

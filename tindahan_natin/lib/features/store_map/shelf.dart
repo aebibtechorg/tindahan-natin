@@ -6,9 +6,9 @@ part 'shelf.g.dart';
 @freezed
 abstract class Shelf with _$Shelf {
   const factory Shelf({
-    required int id,
+    required String id,
     required String name,
-    required int storeId,
+    required String storeId,
     @Default(0.0) double x,
     @Default(0.0) double y,
   }) = _Shelf;
@@ -19,9 +19,9 @@ abstract class Shelf with _$Shelf {
 @freezed
 abstract class ProductLocation with _$ProductLocation {
   const factory ProductLocation({
-    required int id,
-    required int productId,
-    required int shelfId,
+    required String id,
+    required String productId,
+    required String shelfId,
     required String position,
   }) = _ProductLocation;
 

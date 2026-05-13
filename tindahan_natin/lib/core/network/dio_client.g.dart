@@ -48,7 +48,7 @@ final class ApiBaseUrlProvider
   }
 }
 
-String _$apiBaseUrlHash() => r'2297cb2b227a38d0edae9b0a45378adc3021ace6';
+String _$apiBaseUrlHash() => r'e2ae61255482c05121eb653f79304b3f08ae1e84';
 
 @ProviderFor(dioClient)
 final dioClientProvider = DioClientProvider._();

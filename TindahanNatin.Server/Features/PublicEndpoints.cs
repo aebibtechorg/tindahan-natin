@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
@@ -37,7 +38,7 @@ public static class PublicEndpoints
                                       p.ImageUrl,
                                       p.Barcode,
                                       p.StoreId,
-                                      ShelfId = (int?)subpl.ShelfId
+                                      ShelfId = (Guid?)subpl.ShelfId
                                   }).ToListAsync();
 
             return Results.Ok(products);

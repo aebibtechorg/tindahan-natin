@@ -15,7 +15,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const storeId = 1;
+    const storeId = "1";
     final shelvesAsync = ref.watch(shelvesProvider(storeId));
 
     return Scaffold(
@@ -56,7 +56,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     );
   }
 
-  void _showAddShelfDialog(BuildContext context, WidgetRef ref, int storeId) {
+  void _showAddShelfDialog(BuildContext context, WidgetRef ref, String storeId) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -91,7 +91,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
 class DraggableShelf extends ConsumerStatefulWidget {
   final Shelf shelf;
-  final int storeId;
+  final String storeId;
 
   const DraggableShelf({super.key, required this.shelf, required this.storeId});
 

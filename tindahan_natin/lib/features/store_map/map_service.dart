@@ -11,7 +11,7 @@ class MapService {
 
   MapService(this._dio);
 
-  Future<List<Shelf>> getShelves(int storeId) async {
+  Future<List<Shelf>> getShelves(String storeId) async {
     final response = await _dio.get('/map/shelves', queryParameters: {'storeId': storeId});
     return (response.data as List).map((e) => Shelf.fromJson(e)).toList();
   }
@@ -21,15 +21,15 @@ class MapService {
     return Shelf.fromJson(response.data);
   }
 
-  Future<void> updateShelf(int id, Map<String, dynamic> data) async {
+  Future<void> updateShelf(String id, Map<String, dynamic> data) async {
     await _dio.put('/map/shelves/$id', data: data);
   }
 
-  Future<void> deleteShelf(int id) async {
+  Future<void> deleteShelf(String id) async {
     await _dio.delete('/map/shelves/$id');
   }
 
-  Future<List<ProductLocation>> getProductLocations(int storeId) async {
+  Future<List<ProductLocation>> getProductLocations(String storeId) async {
     final response = await _dio.get('/map/locations', queryParameters: {'storeId': storeId});
     return (response.data as List).map((e) => ProductLocation.fromJson(e)).toList();
   }
@@ -39,7 +39,7 @@ class MapService {
     return ProductLocation.fromJson(response.data);
   }
 
-  Future<void> deleteProductLocation(int id) async {
+  Future<void> deleteProductLocation(String id) async {
     await _dio.delete('/map/locations/$id');
   }
 }
@@ -50,11 +50,11 @@ MapService mapService(Ref ref) {
 }
 
 @riverpod
-Future<List<Shelf>> shelves(Ref ref, int storeId) {
+Future<List<Shelf>> shelves(Ref ref, String storeId) {
   return ref.watch(mapServiceProvider).getShelves(storeId);
 }
 
 @riverpod
-Future<List<ProductLocation>> productLocations(Ref ref, int storeId) {
+Future<List<ProductLocation>> productLocations(Ref ref, String storeId) {
   return ref.watch(mapServiceProvider).getProductLocations(storeId);
 }

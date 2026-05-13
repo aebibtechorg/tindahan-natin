@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,17 +57,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
+      const storeId = "1";
       final data = {
         'name': _nameController.text,
         'price': double.parse(_priceController.text),
         'quantity': int.parse(_quantityController.text),
-        'categoryId': 1,
-        'storeId': 1,
+        'categoryId': '1',
+        'storeId': storeId,
         'imageUrl': _imageUrl,
       };
 
       try {
-        await ref.read(productsProvider(1).notifier).addProduct(data);
+        await ref.read(productsProvider(storeId).notifier).addProduct(data);
         if (mounted) {
           context.pop();
         }

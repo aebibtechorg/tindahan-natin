@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
@@ -11,7 +12,7 @@ public static class ProductEndpoints
     {
         var group = routes.MapGroup("/api/products").WithTags("Products");
 
-        group.MapGet("/", async (TindahanDbContext db, int storeId) =>
+        group.MapGet("/", async (TindahanDbContext db, Guid storeId) =>
         {
             return await db.Products
                 .Where(p => p.StoreId == storeId)
@@ -19,7 +20,7 @@ public static class ProductEndpoints
                 .ToListAsync();
         });
 
-        group.MapGet("/{id}", async (int id, TindahanDbContext db) =>
+        group.MapGet("/{id}", async (Guid id, TindahanDbContext db) =>
         {
             return await db.Products.FindAsync(id) switch
             {
@@ -47,7 +48,7 @@ public static class ProductEndpoints
             return Results.Created($"/api/products/{product.Id}", new ProductDto(product.Id, product.Name, product.Price, product.Quantity, product.CategoryId, product.Description, product.ImageUrl, product.Barcode, product.StoreId));
         });
 
-        group.MapPut("/{id}", async (int id, UpdateProductDto dto, TindahanDbContext db) =>
+        group.MapPut("/{id}", async (Guid id, UpdateProductDto dto, TindahanDbContext db) =>
         {
             var product = await db.Products.FindAsync(id);
             if (product is null) return Results.NotFound();
@@ -63,7 +64,7 @@ public static class ProductEndpoints
             return Results.NoContent();
         });
 
-        group.MapDelete("/{id}", async (int id, TindahanDbContext db) =>
+        group.MapDelete("/{id}", async (Guid id, TindahanDbContext db) =>
         {
             var product = await db.Products.FindAsync(id);
             if (product is null) return Results.NotFound();

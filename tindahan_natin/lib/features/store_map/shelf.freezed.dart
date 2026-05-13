@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Shelf {
 
- int get id; String get name; int get storeId; double get x; double get y;
+ String get id; String get name; String get storeId; double get x; double get y;
 /// Create a copy of Shelf
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $ShelfCopyWith<$Res>  {
   factory $ShelfCopyWith(Shelf value, $Res Function(Shelf) _then) = _$ShelfCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, int storeId, double x, double y
+ String id, String name, String storeId, double x, double y
 });
 
 
@@ -68,9 +68,9 @@ class _$ShelfCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? storeId = null,Object? x = null,Object? y = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
-as int,x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
+as String,x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
 as double,y: null == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
 as double,
   ));
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  int storeId,  double x,  double y)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String storeId,  double x,  double y)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Shelf() when $default != null:
 return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
@@ -178,7 +178,7 @@ return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  int storeId,  double x,  double y)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String storeId,  double x,  double y)  $default,) {final _that = this;
 switch (_that) {
 case _Shelf():
 return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
@@ -198,7 +198,7 @@ return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  int storeId,  double x,  double y)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String storeId,  double x,  double y)?  $default,) {final _that = this;
 switch (_that) {
 case _Shelf() when $default != null:
 return $default(_that.id,_that.name,_that.storeId,_that.x,_that.y);case _:
@@ -216,9 +216,9 @@ class _Shelf implements Shelf {
   const _Shelf({required this.id, required this.name, required this.storeId, this.x = 0.0, this.y = 0.0});
   factory _Shelf.fromJson(Map<String, dynamic> json) => _$ShelfFromJson(json);
 
-@override final  int id;
+@override final  String id;
 @override final  String name;
-@override final  int storeId;
+@override final  String storeId;
 @override@JsonKey() final  double x;
 @override@JsonKey() final  double y;
 
@@ -255,7 +255,7 @@ abstract mixin class _$ShelfCopyWith<$Res> implements $ShelfCopyWith<$Res> {
   factory _$ShelfCopyWith(_Shelf value, $Res Function(_Shelf) _then) = __$ShelfCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, int storeId, double x, double y
+ String id, String name, String storeId, double x, double y
 });
 
 
@@ -275,9 +275,9 @@ class __$ShelfCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? storeId = null,Object? x = null,Object? y = null,}) {
   return _then(_Shelf(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
-as int,x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
+as String,x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
 as double,y: null == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
 as double,
   ));
@@ -290,7 +290,7 @@ as double,
 /// @nodoc
 mixin _$ProductLocation {
 
- int get id; int get productId; int get shelfId; String get position;
+ String get id; String get productId; String get shelfId; String get position;
 /// Create a copy of ProductLocation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -323,7 +323,7 @@ abstract mixin class $ProductLocationCopyWith<$Res>  {
   factory $ProductLocationCopyWith(ProductLocation value, $Res Function(ProductLocation) _then) = _$ProductLocationCopyWithImpl;
 @useResult
 $Res call({
- int id, int productId, int shelfId, String position
+ String id, String productId, String shelfId, String position
 });
 
 
@@ -343,9 +343,9 @@ class _$ProductLocationCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? shelfId = null,Object? position = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,shelfId: null == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
-as int,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
+as String,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
+as String,shelfId: null == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
+as String,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -431,7 +431,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int productId,  int shelfId,  String position)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String productId,  String shelfId,  String position)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductLocation() when $default != null:
 return $default(_that.id,_that.productId,_that.shelfId,_that.position);case _:
@@ -452,7 +452,7 @@ return $default(_that.id,_that.productId,_that.shelfId,_that.position);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int productId,  int shelfId,  String position)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String productId,  String shelfId,  String position)  $default,) {final _that = this;
 switch (_that) {
 case _ProductLocation():
 return $default(_that.id,_that.productId,_that.shelfId,_that.position);case _:
@@ -472,7 +472,7 @@ return $default(_that.id,_that.productId,_that.shelfId,_that.position);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int productId,  int shelfId,  String position)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String productId,  String shelfId,  String position)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductLocation() when $default != null:
 return $default(_that.id,_that.productId,_that.shelfId,_that.position);case _:
@@ -490,9 +490,9 @@ class _ProductLocation implements ProductLocation {
   const _ProductLocation({required this.id, required this.productId, required this.shelfId, required this.position});
   factory _ProductLocation.fromJson(Map<String, dynamic> json) => _$ProductLocationFromJson(json);
 
-@override final  int id;
-@override final  int productId;
-@override final  int shelfId;
+@override final  String id;
+@override final  String productId;
+@override final  String shelfId;
 @override final  String position;
 
 /// Create a copy of ProductLocation
@@ -528,7 +528,7 @@ abstract mixin class _$ProductLocationCopyWith<$Res> implements $ProductLocation
   factory _$ProductLocationCopyWith(_ProductLocation value, $Res Function(_ProductLocation) _then) = __$ProductLocationCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int productId, int shelfId, String position
+ String id, String productId, String shelfId, String position
 });
 
 
@@ -548,9 +548,9 @@ class __$ProductLocationCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? shelfId = null,Object? position = null,}) {
   return _then(_ProductLocation(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,shelfId: null == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
-as int,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
+as String,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
+as String,shelfId: null == shelfId ? _self.shelfId : shelfId // ignore: cast_nullable_to_non_nullable
+as String,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

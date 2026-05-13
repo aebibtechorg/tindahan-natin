@@ -63,7 +63,7 @@ final class ShelvesProvider
     with $FutureModifier<List<Shelf>>, $FutureProvider<List<Shelf>> {
   ShelvesProvider._({
     required ShelvesFamily super.from,
-    required int super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'shelvesProvider',
@@ -90,7 +90,7 @@ final class ShelvesProvider
 
   @override
   FutureOr<List<Shelf>> create(Ref ref) {
-    final argument = this.argument as int;
+    final argument = this.argument as String;
     return shelves(ref, argument);
   }
 
@@ -105,10 +105,10 @@ final class ShelvesProvider
   }
 }
 
-String _$shelvesHash() => r'eca94903260fe2599f53e1863ab6ccc17ce9f70c';
+String _$shelvesHash() => r'b03095ff178560fa0dcc0c78adff60e8534aa5f8';
 
 final class ShelvesFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<Shelf>>, int> {
+    with $FunctionalFamilyOverride<FutureOr<List<Shelf>>, String> {
   ShelvesFamily._()
     : super(
         retry: null,
@@ -118,7 +118,7 @@ final class ShelvesFamily extends $Family
         isAutoDispose: true,
       );
 
-  ShelvesProvider call(int storeId) =>
+  ShelvesProvider call(String storeId) =>
       ShelvesProvider._(argument: storeId, from: this);
 
   @override
@@ -140,7 +140,7 @@ final class ProductLocationsProvider
         $FutureProvider<List<ProductLocation>> {
   ProductLocationsProvider._({
     required ProductLocationsFamily super.from,
-    required int super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'productLocationsProvider',
@@ -167,7 +167,7 @@ final class ProductLocationsProvider
 
   @override
   FutureOr<List<ProductLocation>> create(Ref ref) {
-    final argument = this.argument as int;
+    final argument = this.argument as String;
     return productLocations(ref, argument);
   }
 
@@ -182,10 +182,10 @@ final class ProductLocationsProvider
   }
 }
 
-String _$productLocationsHash() => r'46c34b38946b889f8a3e7c5b95a90b30f2206646';
+String _$productLocationsHash() => r'532f2518a70bceb813fca18b7fa37e2586021f92';
 
 final class ProductLocationsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<ProductLocation>>, int> {
+    with $FunctionalFamilyOverride<FutureOr<List<ProductLocation>>, String> {
   ProductLocationsFamily._()
     : super(
         retry: null,
@@ -195,7 +195,7 @@ final class ProductLocationsFamily extends $Family
         isAutoDispose: true,
       );
 
-  ProductLocationsProvider call(int storeId) =>
+  ProductLocationsProvider call(String storeId) =>
       ProductLocationsProvider._(argument: storeId, from: this);
 
   @override
