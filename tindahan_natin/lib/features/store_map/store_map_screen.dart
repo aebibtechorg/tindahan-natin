@@ -7,6 +7,8 @@ import 'package:tindahan_natin/features/products/product_service.dart';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart' as vm;
 
+const double _kCanvasSize = 100000.0;
+
 class StoreMapScreen extends ConsumerStatefulWidget {
   const StoreMapScreen({super.key});
 
@@ -21,6 +23,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   bool _multiSelectMode = false;
   bool _snapToGrid = true;
   double _gridSize = 50.0;
+  final double _canvasSize = 100000.0;
+  final Map<String, Shelf> _optimisticShelves = {};
+  final Set<String> _optimisticRemovedIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +84,18 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       ),
                     );
                     if (confirm == true) {
-                      await ref.read(mapServiceProvider).deleteShelf(id);
-                      ref.invalidate(shelvesProvider(storeId));
-                      setState(() => _selectedShelfIds.clear());
+                        setState(() {
+                          _optimisticRemovedIds.add(id);
+                          _selectedShelfIds.clear();
+                        });
+                        try {
+                          await ref.read(mapServiceProvider).deleteShelf(id);
+                          ref.invalidate(shelvesProvider(storeId));
+                          setState(() => _optimisticRemovedIds.remove(id));
+                        } catch (e) {
+                          setState(() => _optimisticRemovedIds.remove(id));
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+                        }
                     }
                   },
                 ),
@@ -102,59 +116,85 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       ),
                     );
                     if (confirm == true) {
-                      for (final id in _selectedShelfIds) {
-                        await ref.read(mapServiceProvider).deleteShelf(id);
+                      final idsToDelete = List<String>.from(_selectedShelfIds);
+                      setState(() {
+                        _optimisticRemovedIds.addAll(idsToDelete);
+                        _selectedShelfIds.clear();
+                      });
+                      for (final id in idsToDelete) {
+                        try {
+                          await ref.read(mapServiceProvider).deleteShelf(id);
+                        } catch (e) {
+                          setState(() => _optimisticRemovedIds.remove(id));
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed for $id: $e')));
+                        }
                       }
                       ref.invalidate(shelvesProvider(storeId));
-                      setState(() => _selectedShelfIds.clear());
                     }
                   },
                 ),
             ],
           ),
           body: shelvesAsync.when(
-            data: (shelves) => InteractiveViewer(
-              transformationController: _transformationController,
-              boundaryMargin: const EdgeInsets.all(1000),
-              minScale: 0.1,
-              maxScale: 2.0,
-              child: Stack(
-                children: [
-                  // Grid or Background
-                  Container(
-                    key: _containerKey,
-                    width: 2000,
-                    height: 2000,
-                    color: Colors.grey[100],
-                  ),
-                  ...shelves.map((shelf) => DraggableShelf(
-                        key: ValueKey(shelf.id),
-                        shelf: shelf,
-                        storeId: storeId,
-                        transformationController: _transformationController,
-                        containerKey: _containerKey,
-                        selected: _selectedShelfIds.contains(shelf.id),
-                        onSelect: (id) {
-                          setState(() {
-                            if (_multiSelectMode) {
-                              if (_selectedShelfIds.contains(id)) {
-                                _selectedShelfIds.remove(id);
+            data: (shelves) {
+              // Merge server shelves with optimistic client updates and removals
+              final serverById = {for (var s in shelves) s.id: s};
+              final List<Shelf> displayedShelves = [];
+              for (final s in shelves) {
+                if (_optimisticRemovedIds.contains(s.id)) continue;
+                displayedShelves.add(_optimisticShelves[s.id] ?? s);
+              }
+              // include optimistic (temporary) shelves not yet on server
+              for (final s in _optimisticShelves.values) {
+                if (!serverById.containsKey(s.id) && !_optimisticRemovedIds.contains(s.id)) {
+                  displayedShelves.add(s);
+                }
+              }
+
+              return InteractiveViewer(
+                transformationController: _transformationController,
+                boundaryMargin: EdgeInsets.all(_canvasSize),
+                minScale: 0.1,
+                maxScale: 2.0,
+                child: Stack(
+                  children: [
+                    // Grid or Background (large canvas to simulate limitless map)
+                    Container(
+                      key: _containerKey,
+                      width: _canvasSize,
+                      height: _canvasSize,
+                      color: Colors.grey[100],
+                    ),
+                    ...displayedShelves.map((shelf) => DraggableShelf(
+                          key: ValueKey(shelf.id),
+                          shelf: shelf,
+                          storeId: storeId,
+                          transformationController: _transformationController,
+                          containerKey: _containerKey,
+                          selected: _selectedShelfIds.contains(shelf.id),
+                          onSelect: (id) {
+                            setState(() {
+                              if (_multiSelectMode) {
+                                if (_selectedShelfIds.contains(id)) {
+                                  _selectedShelfIds.remove(id);
+                                } else {
+                                  _selectedShelfIds.add(id);
+                                }
                               } else {
+                                _selectedShelfIds.clear();
                                 _selectedShelfIds.add(id);
                               }
-                            } else {
-                              _selectedShelfIds.clear();
-                              _selectedShelfIds.add(id);
-                            }
-                          });
-                        },
-                        onDoubleTap: () => _showEditShelfDialog(context, ref, shelf, storeId),
-                        snapToGrid: _snapToGrid,
-                        gridSize: _gridSize,
-                      )),
-                ],
-              ),
-            ),
+                            });
+                          },
+                          onDoubleTap: () => _showEditShelfDialog(context, ref, shelf, storeId),
+                          snapToGrid: _snapToGrid,
+                          gridSize: _gridSize,
+                          onOptimisticUpdate: (updated) => setState(() => _optimisticShelves[updated.id] = updated),
+                        )),
+                  ],
+                ),
+              );
+            },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(child: Text('Error: $e')),
           ),
@@ -179,9 +219,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
-              if (controller.text.isNotEmpty) {
+                if (controller.text.isNotEmpty) {
                 // Place at center of container (taking current transform into account)
-                double cx = 500.0, cy = 500.0;
+                double cx = _canvasSize / 2, cy = _canvasSize / 2;
                 final containerContext = _containerKey.currentContext;
                 if (containerContext != null) {
                   final rb = containerContext.findRenderObject() as RenderBox;
@@ -191,15 +231,28 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                   cx = sceneCenter.dx;
                   cy = sceneCenter.dy;
                 }
-
-                await ref.read(mapServiceProvider).createShelf({
-                  'name': controller.text,
-                  'storeId': storeId,
-                  'x': _snapToGrid ? (cx / _gridSize).round() * _gridSize : cx,
-                  'y': _snapToGrid ? (cy / _gridSize).round() * _gridSize : cy,
-                });
-                ref.invalidate(shelvesProvider(storeId));
+                final snapX = _snapToGrid ? (cx / _gridSize).round() * _gridSize : cx;
+                final snapY = _snapToGrid ? (cy / _gridSize).round() * _gridSize : cy;
+                final tempId = 'tmp-${DateTime.now().microsecondsSinceEpoch}';
+                final tempShelf = Shelf(id: tempId, name: controller.text, storeId: storeId, x: snapX, y: snapY, rotation: 0.0);
+                setState(() => _optimisticShelves[tempId] = tempShelf);
                 if (context.mounted) Navigator.pop(context);
+                try {
+                  final created = await ref.read(mapServiceProvider).createShelf({
+                    'name': controller.text,
+                    'storeId': storeId,
+                    'x': snapX,
+                    'y': snapY,
+                  });
+                  // Replace temporary shelf with server-provided shelf to avoid flicker
+                  setState(() {
+                    _optimisticShelves.remove(tempId);
+                    _optimisticShelves[created.id] = created;
+                  });
+                } catch (e) {
+                  setState(() => _optimisticShelves.remove(tempId));
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Create failed: $e')));
+                }
               }
             },
             child: const Text('Add'),
@@ -223,6 +276,8 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   void _showEditShelfDialog(BuildContext context, WidgetRef ref, Shelf shelf, String storeId) {
     final controller = TextEditingController(text: shelf.name);
     double rotation = shelf.rotation;
+    final Map<String, ProductLocation> localProductLocationOverrides = {};
+    final Set<String> localDeletedProductLocationIds = {};
 
     showDialog(
       context: context,
@@ -289,12 +344,24 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                             );
 
                             if (selected != null) {
-                              await ref.read(mapServiceProvider).createProductLocation({
-                                'productId': selected['id'],
-                                'shelfId': shelf.id,
-                                'position': 'default',
-                              });
-                              ref.invalidate(productLocationsProvider(storeId));
+                              final tempLocId = 'tmp-loc-${DateTime.now().microsecondsSinceEpoch}';
+                              final tempLoc = ProductLocation(id: tempLocId, productId: selected['id'], shelfId: shelf.id, position: 'default');
+                              setDialogState(() => localProductLocationOverrides[tempLocId] = tempLoc);
+                              try {
+                                final created = await ref.read(mapServiceProvider).createProductLocation({
+                                  'productId': selected['id'],
+                                  'shelfId': shelf.id,
+                                  'position': 'default',
+                                });
+                                // reconcile temp id to server id
+                                setDialogState(() {
+                                  localProductLocationOverrides.remove(tempLocId);
+                                  localProductLocationOverrides[created.id] = created;
+                                });
+                              } catch (e) {
+                                setDialogState(() => localProductLocationOverrides.remove(tempLocId));
+                                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Add location failed: $e')));
+                              }
                             }
                           },
                           icon: const Icon(Icons.add),
@@ -304,10 +371,20 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                     ),
                     productLocationsAsync.when(
                       data: (locations) {
-                        final shelfLocations = locations.where((l) => l.shelfId == shelf.id).toList();
-                        if (shelfLocations.isEmpty) return const Text('No product locations.');
+                        final serverById = {for (var l in locations) l.id: l};
+                        final merged = <ProductLocation>[];
+                        for (final l in locations.where((l) => l.shelfId == shelf.id)) {
+                          if (localDeletedProductLocationIds.contains(l.id)) continue;
+                          merged.add(localProductLocationOverrides[l.id] ?? l);
+                        }
+                        for (final l in localProductLocationOverrides.values) {
+                          if (!serverById.containsKey(l.id) && l.shelfId == shelf.id && !localDeletedProductLocationIds.contains(l.id)) {
+                            merged.add(l);
+                          }
+                        }
+                        if (merged.isEmpty) return const Text('No product locations.');
                         return Column(
-                          children: shelfLocations.map((loc) {
+                          children: merged.map((loc) {
                             String productName = loc.productId;
                             final productsList = productsAsync.asData?.value;
                             if (productsList != null) {
@@ -320,8 +397,19 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete),
                                 onPressed: () async {
-                                  await ref.read(mapServiceProvider).deleteProductLocation(loc.id);
-                                  ref.invalidate(productLocationsProvider(storeId));
+                                  if (loc.id.startsWith('tmp-')) {
+                                    setDialogState(() => localProductLocationOverrides.remove(loc.id));
+                                    return;
+                                  }
+                                  setDialogState(() => localDeletedProductLocationIds.add(loc.id));
+                                  try {
+                                    await ref.read(mapServiceProvider).deleteProductLocation(loc.id);
+                                    setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
+                                    ref.invalidate(productLocationsProvider(storeId));
+                                  } catch (e) {
+                                    setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
+                                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete location failed: $e')));
+                                  }
                                 },
                               ),
                             );
@@ -340,14 +428,23 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
               ElevatedButton(
                 onPressed: () async {
                   if (controller.text.isNotEmpty) {
-                    await ref.read(mapServiceProvider).updateShelf(shelf.id, {
-                      'name': controller.text,
-                      'x': shelf.x,
-                      'y': shelf.y,
-                      'rotation': rotation,
-                    });
-                    ref.invalidate(shelvesProvider(storeId));
+                    final updatedShelf = shelf.copyWith(name: controller.text, rotation: rotation);
+                    setState(() => _optimisticShelves[shelf.id] = updatedShelf);
                     if (context.mounted) Navigator.pop(context);
+                        try {
+                          await ref.read(mapServiceProvider).updateShelf(shelf.id, {
+                            'name': controller.text,
+                            'x': updatedShelf.x,
+                            'y': updatedShelf.y,
+                            'rotation': rotation,
+                          });
+                          // keep optimistic value as UI state; don't refetch immediately
+                          setState(() => _optimisticShelves[shelf.id] = updatedShelf);
+                        } catch (e) {
+                          // remove optimistic override so UI falls back to server value
+                          setState(() => _optimisticShelves.remove(shelf.id));
+                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+                        }
                   }
                 },
                 child: const Text('Save'),
@@ -369,6 +466,8 @@ class DraggableShelf extends ConsumerStatefulWidget {
   final VoidCallback? onDoubleTap;
   final bool snapToGrid;
   final double gridSize;
+  final void Function(Shelf)? onOptimisticUpdate;
+  final void Function(String)? onConfirmedUpdate;
 
   const DraggableShelf({
     super.key,
@@ -379,6 +478,8 @@ class DraggableShelf extends ConsumerStatefulWidget {
     required this.selected,
     required this.onSelect,
     this.onDoubleTap,
+    this.onOptimisticUpdate,
+    this.onConfirmedUpdate,
     required this.snapToGrid,
     required this.gridSize,
   });
@@ -445,23 +546,55 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
           final newX = scenePoint.dx - (_dragOffset?.dx ?? 0);
           final newY = scenePoint.dy - (_dragOffset?.dy ?? 0);
           setState(() {
-            x = newX.clamp(0.0, 2000.0 - 50.0).toDouble();
-            y = newY.clamp(0.0, 2000.0 - 50.0).toDouble();
+            final containerRB = widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
+            final maxW = containerRB?.size.width ?? _kCanvasSize;
+            final maxH = containerRB?.size.height ?? _kCanvasSize;
+            x = newX.clamp(0.0, maxW - 50.0).toDouble();
+            y = newY.clamp(0.0, maxH - 50.0).toDouble();
           });
         },
-        onPanEnd: (details) async {
+                          onPanEnd: (details) async {
           setState(() => _dragging = false);
+          final prevX = widget.shelf.x;
+          final prevY = widget.shelf.y;
+          final prevRotation = widget.shelf.rotation;
           if (widget.snapToGrid) {
             x = (x / widget.gridSize).round() * widget.gridSize;
             y = (y / widget.gridSize).round() * widget.gridSize;
           }
-          await ref.read(mapServiceProvider).updateShelf(widget.shelf.id, {
-            'name': widget.shelf.name,
-            'x': x,
-            'y': y,
-            'rotation': rotation,
-          });
-          ref.invalidate(shelvesProvider(widget.storeId));
+          // ensure within container bounds
+          final containerRB = widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
+          final maxW = containerRB?.size.width ?? _kCanvasSize;
+          final maxH = containerRB?.size.height ?? _kCanvasSize;
+          x = x.clamp(0.0, maxW - 50.0).toDouble();
+          y = y.clamp(0.0, maxH - 50.0).toDouble();
+
+          final updatedShelf = widget.shelf.copyWith(x: x, y: y, rotation: rotation);
+          // apply optimistic update locally
+          widget.onOptimisticUpdate?.call(updatedShelf);
+
+          // if this is a temporary shelf (not yet created on server), skip server update
+          if (widget.shelf.id.startsWith('tmp-')) return;
+
+          try {
+            await ref.read(mapServiceProvider).updateShelf(widget.shelf.id, {
+              'name': widget.shelf.name,
+              'x': x,
+              'y': y,
+              'rotation': rotation,
+            });
+            // keep optimistic mapping as the authoritative UI state (no immediate refetch)
+            widget.onOptimisticUpdate?.call(updatedShelf);
+          } catch (e) {
+            // revert to previous server-provided values both locally and upstream
+            setState(() {
+              x = prevX;
+              y = prevY;
+              rotation = prevRotation;
+            });
+            widget.onOptimisticUpdate?.call(widget.shelf.copyWith(x: prevX, y: prevY, rotation: prevRotation));
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+          }
         },
         child: _ShelfWidget(name: widget.shelf.name, isDragging: _dragging, isSelected: widget.selected, rotation: rotation),
       ),
@@ -483,11 +616,10 @@ class _ShelfWidget extends StatelessWidget {
       angle: rotation * math.pi / 180.0,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
+          decoration: BoxDecoration(
           color: isDragging ? Colors.blue.withOpacity(0.6) : Colors.blue,
           borderRadius: BorderRadius.circular(8),
           boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-          border: isSelected ? Border.all(color: Colors.yellowAccent, width: 3) : null,
         ),
         child: Material(
           color: Colors.transparent,
