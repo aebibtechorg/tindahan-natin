@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.3.1">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>a8402a06-9fff-4cbc-be5d-0b9416182496</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TindahanNatin.Server\TindahanNatin.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.3.1" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.3.1" />
+  </ItemGroup>
+</Project>
