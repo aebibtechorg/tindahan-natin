@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
@@ -19,6 +20,7 @@ class PublicStoreService {
   }
 
   Future<Map<String, dynamic>> getStoreInfo(String slug) async {
+    debugPrint('Fetching public store info for slug: $slug');
     final response = await _dio.get('/public/stores/$slug');
     return {
       'store': Store.fromJson(response.data['store']),

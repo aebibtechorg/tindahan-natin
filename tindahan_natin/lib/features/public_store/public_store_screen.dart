@@ -78,7 +78,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                           trailing: product.shelfId != null
                               ? ElevatedButton(
                                   onPressed: () {
-                                    context.push('/store/${widget.slug}/map?shelfId=${product.shelfId}');
+                                    context.push('map?shelfId=${product.shelfId}');
                                   },
                                   child: const Text('Find'),
                                 )

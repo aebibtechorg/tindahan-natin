@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
+import 'package:tindahan_natin/features/auth/auth_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -77,6 +78,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ElevatedButton(
                       onPressed: _loading ? null : _save,
                       child: const Text('Save'),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _loading
+                          ? null
+                          : () async {
+                              setState(() => _loading = true);
+                              try {
+                                await ref.read(authStateProvider.notifier).logout();
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logged out')));
+                              } catch (e) {
+                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to log out')));
+                              } finally {
+                                if (mounted) setState(() => _loading = false);
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                      child: const Text('Log out'),
                     ),
                   ],
                 ),

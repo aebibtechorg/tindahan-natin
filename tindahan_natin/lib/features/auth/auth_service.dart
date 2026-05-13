@@ -11,11 +11,24 @@ class AuthService {
   }
   final Auth0 _auth0 = Auth0(AuthConfig.domain, AuthConfig.clientId);
 
+  Future<Credentials?> getStoredCredentials({int minTtl = 0}) async {
+    try {
+      final creds = await _auth0.credentialsManager.credentials(minTtl: minTtl);
+      return creds;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Credentials?> login() async {
     try {
       final credentials = await _auth0.webAuthentication(scheme: "demo").login(
             audience: AuthConfig.audience,
           );
+      // Ensure credentials are stored in the native CredentialsManager
+      try {
+        await _auth0.credentialsManager.storeCredentials(credentials);
+      } catch (_) {}
       return credentials;
     } catch (e) {
       // Handle login error
@@ -24,7 +37,12 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _auth0.webAuthentication(scheme: "demo").logout();
+    try {
+      await _auth0.webAuthentication(scheme: "demo").logout();
+    } catch (_) {}
+    try {
+      await _auth0.credentialsManager.clearCredentials();
+    } catch (_) {}
   }
 }
 
@@ -37,8 +55,13 @@ AuthService authService(Ref ref) {
 class AuthState extends _$AuthState {
   @override
   FutureOr<Credentials?> build() async {
-    // Check for existing session if possible
-    return null;
+    // Attempt to restore credentials using Auth0's CredentialsManager
+    try {
+      final creds = await ref.read(authServiceProvider).getStoredCredentials();
+      return creds;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> login() async {

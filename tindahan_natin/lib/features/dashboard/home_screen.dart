@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/features/settings/store_service.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -63,7 +64,16 @@ class HomeScreen extends ConsumerWidget {
               subtitle: 'See what customers see',
               icon: Icons.launch_outlined,
               color: Colors.green,
-              onTap: () => context.push('/store/my-store'), // Mock slug
+              onTap: () async {
+                final myStore = await ref.read(myStoreProvider.future);
+                if (myStore == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No store available')),
+                  );
+                  return;
+                }
+                context.push('/store/${myStore.slug}');
+              },
             ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.1),
           ],
         ),
