@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+// material import not needed here
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -8,9 +8,12 @@ import 'package:tindahan_natin/features/auth/login_screen.dart';
 import 'package:tindahan_natin/features/dashboard/home_screen.dart';
 import 'package:tindahan_natin/features/products/product_list_screen.dart';
 import 'package:tindahan_natin/features/products/add_product_screen.dart';
+import 'package:tindahan_natin/features/products/edit_product_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_store_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_map_screen.dart';
 import 'package:tindahan_natin/features/store_map/store_map_screen.dart';
+import 'package:tindahan_natin/features/settings/settings_screen.dart';
+import 'package:tindahan_natin/features/categories/category_list_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -37,11 +40,23 @@ GoRouter appRouter(Ref ref) {
             path: 'add',
             builder: (context, state) => const AddProductScreen(),
           ),
+          GoRoute(
+            path: 'edit/:id',
+            builder: (context, state) => EditProductScreen(id: state.pathParameters['id']!),
+          ),
         ],
+      ),
+      GoRoute(
+        path: '/categories',
+        builder: (context, state) => const CategoryListScreen(),
       ),
       GoRoute(
         path: '/map',
         builder: (context, state) => const StoreMapScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/store/:slug',
@@ -53,7 +68,7 @@ GoRouter appRouter(Ref ref) {
             path: 'map',
             builder: (context, state) => PublicMapScreen(
               slug: state.pathParameters['slug']!,
-              highlightShelfId: int.tryParse(state.uri.queryParameters['shelfId'] ?? ''),
+              highlightShelfId: state.uri.queryParameters['shelfId'],
             ),
           ),
         ],

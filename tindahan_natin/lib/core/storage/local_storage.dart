@@ -6,7 +6,6 @@ part 'local_storage.g.dart';
 
 class LocalStorage {
   final Box _productsBox = Hive.box('products_cache');
-  final Box _settingsBox = Hive.box('settings');
 
   Future<void> cacheProducts(String storeId, List<Map<String, dynamic>> products) async {
     await _productsBox.put('products_$storeId', products);

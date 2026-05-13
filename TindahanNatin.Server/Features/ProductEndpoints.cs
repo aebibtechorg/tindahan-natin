@@ -12,11 +12,20 @@ public static class ProductEndpoints
     {
         var group = routes.MapGroup("/api/products").WithTags("Products");
 
-        group.MapGet("/", async (TindahanDbContext db, Guid storeId) =>
+        group.MapGet("/", async (TindahanDbContext db, Guid storeId, Guid? categoryId, Guid? shelfId) =>
         {
-            return await db.Products
-                .Where(p => p.StoreId == storeId)
-                .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.Description, p.ImageUrl, p.Barcode, p.StoreId))
+            var query = db.Products.Where(p => p.StoreId == storeId);
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+            if (shelfId.HasValue)
+            {
+                query = query.Where(p => p.ShelfId == shelfId.Value);
+            }
+
+            return await query
+                .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId))
                 .ToListAsync();
         });
 
@@ -24,7 +33,7 @@ public static class ProductEndpoints
         {
             return await db.Products.FindAsync(id) switch
             {
-                Product p => Results.Ok(new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.Description, p.ImageUrl, p.Barcode, p.StoreId)),
+                Product p => Results.Ok(new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId)),
                 null => Results.NotFound()
             };
         });
@@ -37,6 +46,7 @@ public static class ProductEndpoints
                 Price = dto.Price,
                 Quantity = dto.Quantity,
                 CategoryId = dto.CategoryId,
+                ShelfId = dto.ShelfId,
                 Description = dto.Description,
                 Barcode = dto.Barcode,
                 StoreId = dto.StoreId
@@ -45,7 +55,7 @@ public static class ProductEndpoints
             db.Products.Add(product);
             await db.SaveChangesAsync();
 
-            return Results.Created($"/api/products/{product.Id}", new ProductDto(product.Id, product.Name, product.Price, product.Quantity, product.CategoryId, product.Description, product.ImageUrl, product.Barcode, product.StoreId));
+            return Results.Created($"/api/products/{product.Id}", new ProductDto(product.Id, product.Name, product.Price, product.Quantity, product.CategoryId, product.ShelfId, product.Description, product.ImageUrl, product.Barcode, product.StoreId));
         });
 
         group.MapPut("/{id}", async (Guid id, UpdateProductDto dto, TindahanDbContext db) =>
@@ -57,6 +67,7 @@ public static class ProductEndpoints
             product.Price = dto.Price;
             product.Quantity = dto.Quantity;
             product.CategoryId = dto.CategoryId;
+            product.ShelfId = dto.ShelfId;
             product.Description = dto.Description;
             product.Barcode = dto.Barcode;
 

@@ -1,4 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using TindahanNatin.Server.Data;
+using TindahanNatin.Server.Models;
 using TindahanNatin.Server.Features;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,14 +48,83 @@ app.UseAuthorization();
 app.MapProductEndpoints();
 app.MapStorageEndpoints();
 app.MapMapEndpoints();
+app.MapStoreEndpoints();
 app.MapPublicEndpoints();
+app.MapCategoryEndpoints();
 
 app.Use(async (context, next) =>
 {
     if (context.User.Identity?.IsAuthenticated == true)
     {
-        var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        // Logic to sync user to DB can go here
+        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? context.User.FindFirst("sub")?.Value;
+        var name = context.User.FindFirst("name")?.Value ?? string.Empty;
+        var email = context.User.FindFirst("email")?.Value ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            try
+            {
+                var db = context.RequestServices.GetRequiredService<TindahanDbContext>();
+
+                // Ensure a `User` record exists (mapped by email). Default new users to StoreOwner role.
+                if (!string.IsNullOrEmpty(email))
+                {
+                    var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+                    if (existingUser == null)
+                    {
+                        var newUser = new User
+                        {
+                            Name = name ?? string.Empty,
+                            Email = email,
+                            Role = "StoreOwner"
+                        };
+                        db.Users.Add(newUser);
+                        await db.SaveChangesAsync();
+                    }
+                }
+
+                // Ensure the owner has a Store. We store the identity provider id (sub) in Store.OwnerId.
+                var existingStore = await db.Stores.FirstOrDefaultAsync(s => s.OwnerId == userId);
+                if (existingStore == null)
+                {
+                    // Build a readable slug from name, fallback to a short guid if empty.
+                    string baseSlug;
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        baseSlug = name.ToLowerInvariant();
+                        baseSlug = Regex.Replace(baseSlug, "[^a-z0-9\\s-]", string.Empty);
+                        baseSlug = Regex.Replace(baseSlug, "\\s+", "-").Trim('-');
+                        if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = $"store-{Guid.NewGuid():N}".Substring(0, 8);
+                    }
+                    else
+                    {
+                        baseSlug = $"store-{Guid.NewGuid():N}".Substring(0, 8);
+                    }
+
+                    var slug = baseSlug;
+                    var suffix = 1;
+                    while (await db.Stores.AnyAsync(s => s.Slug == slug))
+                    {
+                        slug = $"{baseSlug}-{suffix++}";
+                    }
+
+                    var storeName = !string.IsNullOrWhiteSpace(name) ? $"{name}'s Store" : "My Store";
+
+                    var store = new Store
+                    {
+                        Name = storeName,
+                        Slug = slug,
+                        OwnerId = userId
+                    };
+                    db.Stores.Add(store);
+                    await db.SaveChangesAsync();
+                }
+            }
+            catch
+            {
+                // Silence any DB errors here to avoid breaking requests during auth.
+            }
+        }
     }
     await next();
 });

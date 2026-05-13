@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -30,7 +31,13 @@ class ProductService {
   }
 
   Future<Product> createProduct(Map<String, dynamic> data) async {
+    debugPrint('Creating product with data: $data');
     final response = await _dio.post('/products', data: data);
+    return Product.fromJson(response.data);
+  }
+
+  Future<Product> getProduct(String id) async {
+    final response = await _dio.get('/products/$id');
     return Product.fromJson(response.data);
   }
 
@@ -71,6 +78,19 @@ class Products extends _$Products {
   Future<void> addProduct(Map<String, dynamic> data) async {
     final newProduct = await ref.read(productServiceProvider).createProduct(data);
     state = AsyncData([...state.value ?? [], newProduct]);
+  }
+
+  Future<void> updateProduct(String id, Map<String, dynamic> data) async {
+    final previousState = state.value;
+    try {
+      await ref.read(productServiceProvider).updateProduct(id, data);
+      // reload products for this store
+      state = const AsyncLoading();
+      state = await AsyncValue.guard(() => ref.read(productServiceProvider).getProducts(storeId));
+    } catch (e) {
+      state = AsyncData(previousState ?? []);
+      rethrow;
+    }
   }
 
   Future<void> deleteProduct(String id) async {

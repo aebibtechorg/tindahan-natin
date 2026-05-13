@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/features/store_map/map_service.dart';
+import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
 
 class StoreMapScreen extends ConsumerStatefulWidget {
@@ -15,44 +16,53 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const storeId = "1";
-    final shelvesAsync = ref.watch(shelvesProvider(storeId));
+    final myStoreAsync = ref.watch(myStoreProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Store Map'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddShelfDialog(context, ref, storeId),
-          ),
-        ],
-      ),
-      body: shelvesAsync.when(
-        data: (shelves) => InteractiveViewer(
-          transformationController: _transformationController,
-          boundaryMargin: const EdgeInsets.all(1000),
-          minScale: 0.1,
-          maxScale: 2.0,
-          child: Stack(
-            children: [
-              // Grid or Background
-              Container(
-                width: 2000,
-                height: 2000,
-                color: Colors.grey[100],
+    return myStoreAsync.when(
+      data: (store) {
+        if (store == null) return const Center(child: Text('No store found'));
+        final storeId = store.id;
+        final shelvesAsync = ref.watch(shelvesProvider(storeId));
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Store Map'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () => _showAddShelfDialog(context, ref, storeId),
               ),
-              ...shelves.map((shelf) => Positioned(
-                    left: shelf.x,
-                    top: shelf.y,
-                    child: DraggableShelf(shelf: shelf, storeId: storeId),
-                  )),
             ],
           ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
-      ),
+          body: shelvesAsync.when(
+            data: (shelves) => InteractiveViewer(
+              transformationController: _transformationController,
+              boundaryMargin: const EdgeInsets.all(1000),
+              minScale: 0.1,
+              maxScale: 2.0,
+              child: Stack(
+                children: [
+                  // Grid or Background
+                  Container(
+                    width: 2000,
+                    height: 2000,
+                    color: Colors.grey[100],
+                  ),
+                  ...shelves.map((shelf) => Positioned(
+                        left: shelf.x,
+                        top: shelf.y,
+                        child: DraggableShelf(shelf: shelf, storeId: storeId),
+                      )),
+                ],
+              ),
+            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, s) => Center(child: Text('Error: $e')),
+          ),
+        );
+      },
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) => Scaffold(body: Center(child: Text('Error loading store: $e'))),
     );
   }
 

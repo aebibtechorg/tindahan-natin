@@ -30,6 +30,7 @@ public class TindahanDbContext : DbContext
 
         modelBuilder.Entity<Product>().Property(p => p.Id).HasColumnType("uuid");
         modelBuilder.Entity<Product>().Property(p => p.CategoryId).HasColumnType("uuid");
+        modelBuilder.Entity<Product>().Property(p => p.ShelfId).HasColumnType("uuid");
         modelBuilder.Entity<Product>().Property(p => p.StoreId).HasColumnType("uuid");
 
         modelBuilder.Entity<Shelf>().Property(s => s.Id).HasColumnType("uuid");

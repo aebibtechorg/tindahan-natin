@@ -8,6 +8,7 @@ public record ProductDto(
     decimal Price,
     int Quantity,
     Guid CategoryId,
+    Guid? ShelfId,
     string? Description,
     string? ImageUrl,
     string? Barcode,
@@ -19,6 +20,7 @@ public record CreateProductDto(
     decimal Price,
     int Quantity,
     Guid CategoryId,
+    Guid? ShelfId,
     string? Description,
     string? Barcode,
     Guid StoreId
@@ -29,6 +31,7 @@ public record UpdateProductDto(
     decimal Price,
     int Quantity,
     Guid CategoryId,
+    Guid? ShelfId,
     string? Description,
     string? Barcode
 );

@@ -11,6 +11,12 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tindahan Natin'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -35,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 50),
             _buildMenuCard(
               context,
-              title: 'Inventory',
+              title: 'Products',
               subtitle: 'Add, edit, and track products',
               icon: Icons.inventory_2_outlined,
               color: Colors.blue,

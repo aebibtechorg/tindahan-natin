@@ -5,7 +5,7 @@ import 'package:tindahan_natin/features/store_map/shelf.dart';
 
 class PublicMapScreen extends ConsumerWidget {
   final String slug;
-  final int? highlightShelfId;
+  final String? highlightShelfId;
 
   const PublicMapScreen({super.key, required this.slug, this.highlightShelfId});
 
