@@ -643,13 +643,18 @@ class _ShelfWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = isSelected ? Colors.orange : Colors.blue;
+
     final rotated = Transform.rotate(
       angle: rotation * math.pi / 180.0,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDragging ? Colors.blue.withOpacity(0.6) : Colors.blue,
+          color: isDragging ? backgroundColor.withOpacity(0.6) : backgroundColor,
           borderRadius: BorderRadius.circular(8),
+          border: isSelected
+              ? Border.all(color: Colors.white, width: 3)
+              : null,
           boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
         ),
         child: Material(
