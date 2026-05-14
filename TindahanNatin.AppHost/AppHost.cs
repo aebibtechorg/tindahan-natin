@@ -2,6 +2,8 @@ using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var frontendPort = 8000;
+
 var cache = builder.AddRedis("cache");
 var postgres = builder.AddPostgres("postgres").WithDataVolume().WithPgAdmin();
 
@@ -14,6 +16,10 @@ server.WithReference(db);
 server.WithReference(minio);
 server.WithHttpHealthCheck("/health");
 server.WithExternalHttpEndpoints();
+server.WithEnvironment(e =>
+{
+    e.EnvironmentVariables.Add("Cors__AllowedOrigins__0", $"http://localhost:{frontendPort}");
+});
 
 var apiTunnel = builder.AddDevTunnel("api-tunnel", "tindahannatin-api-tunnel")
     .WithReference(server)
@@ -37,16 +43,19 @@ flutterWeb.WithArgs(ctx => {
 });
 flutterWeb.WithReference(server);
 flutterWeb.WaitFor(server);
-flutterWeb.WithExternalHttpEndpoints();
+flutterWeb.WithHttpEndpoint(env: "PORT", targetPort: frontendPort, isProxied: false);
+flutterWeb.WithUrlForEndpoint("http", c => {
+    c.Url = "/#/store";
+});
 
-var flutterAndroid = builder.AddExecutable("flutter-android", "/bin/bash", "../tindahan_natin");
-flutterAndroid.WithArgs(ctx => {
-	ctx.Args.Add("./scripts/run_flutter.sh");
-	ctx.Args.Add("android");
-});
-flutterAndroid.WaitFor(apiTunnel);
-flutterAndroid.WithEnvironment(e => {
-    e.EnvironmentVariables.Add("SERVER_HTTP", apiTunnel.GetEndpoint("https"));
-});
+// var flutterAndroid = builder.AddExecutable("flutter-android", "/bin/bash", "../tindahan_natin");
+// flutterAndroid.WithArgs(ctx => {
+// 	ctx.Args.Add("./scripts/run_flutter.sh");
+// 	ctx.Args.Add("android");
+// });
+// flutterAndroid.WaitFor(apiTunnel);
+// flutterAndroid.WithEnvironment(e => {
+//     e.EnvironmentVariables.Add("SERVER_HTTP", apiTunnel.GetEndpoint("https"));
+// });
 
 builder.Build().Run();

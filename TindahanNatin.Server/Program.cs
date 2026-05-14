@@ -9,12 +9,24 @@ using TindahanNatin.Server.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var corsPolicy = "AllowStore";
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+builder.Services.AddCors(o =>
+{
+    o.AddPolicy(corsPolicy, builder =>
+    {
+        builder.WithOrigins(corsOrigins)
+            .WithMethods("GET");
+    });
+});
+
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 builder.AddRedisClientBuilder("cache")
     .WithOutputCache();
 
-builder.AddNpgsqlDbContext<TindahanNatin.Server.Data.TindahanDbContext>("tindahandb");
+builder.AddNpgsqlDbContext<TindahanDbContext>("tindahandb");
 builder.AddMinioClient("minio");
 
 // Add services to the container.
@@ -41,6 +53,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors(corsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();

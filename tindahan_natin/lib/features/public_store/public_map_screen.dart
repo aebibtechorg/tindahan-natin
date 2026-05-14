@@ -13,9 +13,8 @@ class PublicMapScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final storeInfoAsync = ref.watch(publicStoreInfoProvider(slug));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Store Map')),
-      body: storeInfoAsync.when(
+    return SizedBox.expand(
+      child: storeInfoAsync.when(
         data: (info) {
           final List<Shelf> shelves = info['shelves'];
 

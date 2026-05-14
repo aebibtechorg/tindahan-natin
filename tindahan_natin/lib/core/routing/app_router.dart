@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,8 +8,8 @@ import 'package:tindahan_natin/features/dashboard/home_screen.dart';
 import 'package:tindahan_natin/features/products/product_list_screen.dart';
 import 'package:tindahan_natin/features/products/add_product_screen.dart';
 import 'package:tindahan_natin/features/products/edit_product_screen.dart';
-import 'package:tindahan_natin/features/public_store/public_store_screen.dart';
-import 'package:tindahan_natin/features/public_store/public_map_screen.dart';
+import 'package:tindahan_natin/features/public_store/store_lookup_screen.dart';
+import 'package:tindahan_natin/features/public_store/public_store_shell.dart';
 import 'package:tindahan_natin/features/store_map/store_map_screen.dart';
 import 'package:tindahan_natin/features/settings/settings_screen.dart';
 import 'package:tindahan_natin/features/categories/category_list_screen.dart';
@@ -64,17 +64,25 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
-        path: '/store/:slug',
-        builder: (context, state) => PublicStoreScreen(
+        path: '/store',
+        builder: (context, state) => const StoreLookupScreen(),
+      ),
+      ShellRoute(
+        builder: (context, state, child) => PublicStoreShell(
           slug: state.pathParameters['slug']!,
+          currentLocation: state.uri.path,
+          highlightShelfId: state.uri.queryParameters['shelfId'],
         ),
         routes: [
           GoRoute(
-            path: 'map',
-            builder: (context, state) => PublicMapScreen(
-              slug: state.pathParameters['slug']!,
-              highlightShelfId: state.uri.queryParameters['shelfId'],
-            ),
+            path: '/store/:slug',
+            builder: (context, state) => const SizedBox.shrink(),
+            routes: [
+              GoRoute(
+                path: 'map',
+                builder: (context, state) => const SizedBox.shrink(),
+              ),
+            ],
           ),
         ],
       ),
@@ -84,7 +92,7 @@ GoRouter appRouter(Ref ref) {
       final matchedLocation = state.matchedLocation;
 
       // Allow public store access
-      if (matchedLocation.startsWith('/store/')) return null;
+      if (matchedLocation == '/store' || matchedLocation.startsWith('/store/')) return null;
 
       final loggingIn = matchedLocation == '/login';
 

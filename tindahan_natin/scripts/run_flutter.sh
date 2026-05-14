@@ -33,7 +33,8 @@ done
 case "$PLATFORM" in
   web)
     # Use web-server so we can control hostname/port. Let Aspire provide external endpoint.
-    exec flutter run -d web-server --web-hostname 0.0.0.0 --web-port 0 "${DART_DEFINES[@]}" "$@"
+    echo flutter run -d web-server --web-hostname 0.0.0.0 --web-port ${PORT-0} "${DART_DEFINES[@]}" "$@"
+    exec flutter run -d web-server --hot --web-hostname 0.0.0.0 --web-port ${PORT-0} "${DART_DEFINES[@]}" "$@"
     ;;
   android)
     # For Android, assume a connected device / emulator is available. Pass dart defines.
