@@ -78,7 +78,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         title: const Text('Delete Shelf?'),
                         content: const Text('Are you sure you want to delete this shelf?'),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
                           ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
                         ],
                       ),
@@ -110,7 +109,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         title: const Text('Delete Selected Shelves?'),
                         content: Text('Delete ${_selectedShelfIds.length} selected shelves?'),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
                           ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
                         ],
                       ),
@@ -216,7 +214,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           decoration: const InputDecoration(hintText: 'Shelf Name'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
                 if (controller.text.isNotEmpty) {
@@ -424,7 +421,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: () async {
                   if (controller.text.isNotEmpty) {

@@ -222,10 +222,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                                     ),
                                   ),
                                   actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      child: const Text('Cancel'),
-                                    ),
                                     ElevatedButton(
                                       onPressed: () => Navigator.of(
                                         ctx,

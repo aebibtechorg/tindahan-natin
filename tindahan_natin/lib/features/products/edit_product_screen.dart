@@ -135,10 +135,6 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
         title: const Text('Delete product?'),
         content: const Text('This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Delete'),
@@ -301,11 +297,6 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                                           ),
                                         ),
                                         actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.of(ctx).pop(),
-                                            child: const Text('Cancel'),
-                                          ),
                                           ElevatedButton(
                                             onPressed: () => Navigator.of(
                                               ctx,

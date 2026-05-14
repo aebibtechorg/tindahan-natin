@@ -110,7 +110,6 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                                 title: const Text('Edit Category'),
                                 content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name')),
                                 actions: [
-                                  TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
                                   ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
                                 ],
                               ),
@@ -135,7 +134,6 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                                 title: const Text('Delete Category'),
                                 content: Text('Delete category "${c.name}"? This cannot be undone.'),
                                 actions: [
-                                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
                                   ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
                                 ],
                               ),
@@ -169,7 +167,6 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                   title: const Text('Add Category'),
                   content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name')),
                   actions: [
-                    TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
                     ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
                   ],
                 ),
