@@ -31,7 +31,7 @@ class PublicMapScreen extends ConsumerWidget {
                 Container(
                   width: _boardExtent,
                   height: _boardExtent,
-                  color: Colors.grey[100],
+                  color: Colors.transparent,
                 ),
                 ...shelves.map((shelf) {
                   final isHighlighted = shelf.id == highlightShelfId;
