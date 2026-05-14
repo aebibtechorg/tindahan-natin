@@ -178,3 +178,23 @@ cd tindahan_natin && flutter test
 # Analyze Flutter code
 cd tindahan_natin && flutter analyze
 ```
+
+## Production Deployment
+
+The project is configured for deployment to **Google Cloud Run** using **Terraform** and **GitHub Actions**.
+
+### Infrastructure
+*   **API**: Google Cloud Run
+*   **Container Registry**: Google Cloud Artifact Registry
+*   **Object Storage**: Cloudflare R2 (S3-compatible)
+*   **Database**: External PostgreSQL (e.g., Supabase, Neon)
+*   **Cache**: External Redis (e.g., Upstash)
+
+### CI/CD Pipeline
+The deployment is automated via the `.github/workflows/deploy.yml` workflow, which:
+1.  Builds the .NET container using the SDK's native container support.
+2.  Pushes the image to Google Artifact Registry.
+3.  Runs `terraform apply` to provision/update the infrastructure and deploy the new image.
+
+### Manual Setup Required
+See the `Manual Preparations Required` section in the [Deployment Plan](deploy-cloudrun.md) for details on GCP Project setup, Cloudflare configuration, and GitHub Secrets.

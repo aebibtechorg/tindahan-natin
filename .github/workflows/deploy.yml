@@ -1,0 +1,73 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: asia-southeast1
+  IMAGE_NAME: tindahannatin-server
+  REPO_NAME: tindahannatin-server
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Google Auth
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+        service_account: ${{ secrets.GCP_WIF_SA }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Publish Container
+      run: |
+        dotnet publish TindahanNatin.Server/TindahanNatin.Server.csproj \
+          -c Release \
+          -t:PublishContainer \
+          -p:ContainerRegistry=${{ env.GCP_REGION }}-docker.pkg.dev \
+          -p:ContainerRepository=${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }} \
+          -p:ContainerImageTag=${{ github.sha }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
+      working-directory: ./terraform
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      working-directory: ./terraform
+      env:
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        TF_VAR_region: ${{ env.GCP_REGION }}
+        TF_VAR_image_tag: ${{ github.sha }}
+        TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        TF_VAR_postgres_connection_string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
+        TF_VAR_redis_connection_string: ${{ secrets.REDIS_CONNECTION_STRING }}
+        TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
+        TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
+        TF_VAR_auth0_domain: ${{ secrets.AUTH0_DOMAIN }}
+        TF_VAR_auth0_audience: ${{ secrets.AUTH0_AUDIENCE }}
