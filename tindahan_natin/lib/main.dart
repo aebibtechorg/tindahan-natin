@@ -16,6 +16,8 @@ void main() async {
     debugPrint('Opening Hive boxes...');
     await Hive.openBox('settings');
     await Hive.openBox('products_cache');
+    await Hive.openBox('entity_cache');
+    await Hive.openBox('pending_mutations');
     
     debugPrint('Running App...');
     runApp(

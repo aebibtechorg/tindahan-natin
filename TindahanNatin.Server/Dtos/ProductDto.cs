@@ -12,10 +12,15 @@ public record ProductDto(
     string? Description,
     string? ImageUrl,
     string? Barcode,
-    Guid StoreId
+    Guid StoreId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    bool IsDeleted,
+    DateTimeOffset? DeletedAt
 );
 
 public record CreateProductDto(
+    Guid? Id,
     string Name,
     decimal Price,
     int Quantity,

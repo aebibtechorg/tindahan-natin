@@ -15,6 +15,10 @@ public class Product
     public string? ImageUrl { get; set; }
     public string? Barcode { get; set; }
     public Guid StoreId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public bool IsDeleted { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
 
     // PostgreSQL full-text search vector (generated column)
     public NpgsqlTsVector? SearchVector { get; set; }

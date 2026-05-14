@@ -23,7 +23,7 @@ public static class StoreEndpoints
             var store = await db.Stores.FirstOrDefaultAsync(s => s.OwnerId == userId);
             if (store == null) return Results.NotFound();
 
-            return Results.Ok(new StoreDto(store.Id, store.Name, store.Slug, store.OwnerId));
+            return Results.Ok(new StoreDto(store.Id, store.Name, store.Slug, store.OwnerId, store.CreatedAt, store.UpdatedAt));
         }).RequireAuthorization();
 
         // Update the authenticated user's store (e.g., name)
@@ -36,6 +36,7 @@ public static class StoreEndpoints
             if (store == null) return Results.NotFound();
 
             store.Name = dto.Name;
+            store.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).RequireAuthorization();

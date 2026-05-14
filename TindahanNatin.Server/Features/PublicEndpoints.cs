@@ -35,6 +35,10 @@ public static class PublicEndpoints
                                           p.ImageUrl,
                                           p.Barcode,
                                           p.StoreId,
+                                          p.CreatedAt,
+                                          p.UpdatedAt,
+                                          p.IsDeleted,
+                                          p.DeletedAt,
                                           ShelfId = (Guid?)subpl.ShelfId
                                       }).ToListAsync();
 
@@ -61,6 +65,10 @@ public static class PublicEndpoints
                 p.ImageUrl,
                 p.Barcode,
                 p.StoreId,
+                p.CreatedAt,
+                p.UpdatedAt,
+                p.IsDeleted,
+                p.DeletedAt,
                 ShelfId = (Guid?)locations.FirstOrDefault(l => l.ProductId == p.Id)?.ShelfId
             }).ToList();
 
@@ -75,7 +83,7 @@ public static class PublicEndpoints
 
             var shelves = await db.Shelves
                 .Where(s => s.StoreId == store.Id)
-                .Select(s => new ShelfDto(s.Id, s.Name, s.StoreId, s.X, s.Y))
+                .Select(s => new ShelfDto(s.Id, s.Name, s.StoreId, s.X, s.Y, s.CreatedAt, s.UpdatedAt, s.IsDeleted, s.DeletedAt))
                 .ToListAsync();
 
             return Results.Ok(new { Store = store, Shelves = shelves });

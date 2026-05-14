@@ -12,4 +12,12 @@ class Category {
       storeId: json['storeId'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'storeId': storeId,
+    };
+  }
 }

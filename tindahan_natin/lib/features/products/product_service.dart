@@ -6,14 +6,33 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
 import 'package:tindahan_natin/features/products/product.dart';
+import 'package:uuid/uuid.dart';
 
 part 'product_service.g.dart';
 
 class ProductService {
   final Dio _dio;
   final LocalStorage _local;
+  final _uuid = const Uuid();
 
   ProductService(this._dio, this._local);
+
+  String _cacheKey(String storeId) => 'products_$storeId';
+
+  List<Product> _filterCachedProducts(String storeId, String query) {
+    final cached = _local.getCachedProducts(storeId) ?? const [];
+    final lowerQuery = query.toLowerCase();
+    return cached
+        .map(Product.fromJson)
+        .where((product) {
+          if (product.id.isEmpty) return false;
+          if (query.isEmpty) return true;
+          return product.name.toLowerCase().contains(lowerQuery) ||
+              (product.description?.toLowerCase().contains(lowerQuery) ?? false) ||
+              (product.barcode?.toLowerCase().contains(lowerQuery) ?? false);
+        })
+        .toList();
+  }
 
   Future<List<Product>> getProducts(String storeId) async {
     try {
@@ -32,21 +51,90 @@ class ProductService {
 
   Future<Product> createProduct(Map<String, dynamic> data) async {
     debugPrint('Creating product with data: $data');
-    final response = await _dio.post('/products', data: data);
-    return Product.fromJson(response.data);
+    final requestData = Map<String, dynamic>.from(data);
+    requestData['id'] ??= _uuid.v4();
+    final storeId = requestData['storeId']?.toString();
+    final draft = Product.fromJson(requestData);
+
+    try {
+      final response = await _dio.post('/products', data: requestData);
+      final created = Product.fromJson(Map<String, dynamic>.from(response.data as Map));
+      if (storeId != null) {
+        await _local.upsertCachedRecord(_cacheKey(storeId), created.toJson());
+      }
+      return created;
+    } catch (error) {
+      if (storeId != null) {
+        await _local.upsertCachedRecord(_cacheKey(storeId), draft.toJson());
+      }
+      await _local.queueMutation({
+        'resource': 'products',
+        'method': 'POST',
+        'path': '/products',
+        'body': requestData,
+        'storeId': storeId,
+      });
+      return draft;
+    }
   }
 
   Future<Product> getProduct(String id) async {
     final response = await _dio.get('/products/$id');
-    return Product.fromJson(response.data);
+    final product = Product.fromJson(response.data);
+    await _local.upsertCachedRecord(_cacheKey(product.storeId), product.toJson());
+    return product;
   }
 
   Future<void> updateProduct(String id, Map<String, dynamic> data) async {
-    await _dio.put('/products/$id', data: data);
+    final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
+    final storeId = existing?['storeId']?.toString();
+    final optimisticMap = {
+      ...?existing,
+      ...data,
+      'id': id,
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    };
+
+    try {
+      await _dio.put('/products/$id', data: data);
+      if (storeId != null) {
+        await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
+      }
+    } catch (error) {
+      if (storeId != null) {
+        await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
+      }
+      await _local.queueMutation({
+        'resource': 'products',
+        'method': 'PUT',
+        'path': '/products/$id',
+        'body': data,
+        'storeId': storeId,
+        'entityId': id,
+      });
+    }
   }
 
   Future<void> deleteProduct(String id) async {
-    await _dio.delete('/products/$id');
+    final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
+    final storeId = existing?['storeId']?.toString();
+    try {
+      await _dio.delete('/products/$id');
+      if (storeId != null) {
+        await _local.removeCachedRecord(_cacheKey(storeId), id);
+      }
+    } catch (error) {
+      if (storeId != null) {
+        await _local.removeCachedRecord(_cacheKey(storeId), id);
+      }
+      await _local.queueMutation({
+        'resource': 'products',
+        'method': 'DELETE',
+        'path': '/products/$id',
+        'storeId': storeId,
+        'entityId': id,
+      });
+    }
   }
 
   Future<String> uploadImage(XFile file) async {
@@ -58,9 +146,14 @@ class ProductService {
   }
 
   Future<List<Product>> searchProducts(String storeId, String query) async {
-    final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
-    final List data = response.data as List;
-    return data.map((e) => Product.fromJson(e)).toList();
+    try {
+      final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
+      final List data = response.data as List;
+      await _local.cacheProducts(storeId, data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
+      return data.map((e) => Product.fromJson(e)).toList();
+    } catch (error) {
+      return _filterCachedProducts(storeId, query);
+    }
   }
 }
 
@@ -87,28 +180,25 @@ class Products extends _$Products {
   }
 
   Future<void> updateProduct(String id, Map<String, dynamic> data) async {
-    final previousState = state.value;
-    try {
-      await ref.read(productServiceProvider).updateProduct(id, data);
-      // reload products for this store
-      state = const AsyncLoading();
-      state = await AsyncValue.guard(() => ref.read(productServiceProvider).getProducts(storeId));
-    } catch (e) {
-      state = AsyncData(previousState ?? []);
-      rethrow;
-    }
+    final previousState = state.value ?? [];
+    final updated = previousState
+        .map((product) {
+          if (product.id != id) return product;
+          return Product.fromJson({
+            ...product.toJson(),
+            ...data,
+            'id': product.id,
+          });
+        })
+        .toList();
+    await ref.read(productServiceProvider).updateProduct(id, data);
+    state = AsyncData(updated);
   }
 
   Future<void> deleteProduct(String id) async {
-    final previousState = state.value;
-    state = AsyncData((state.value ?? []).where((p) => p.id != id).toList());
-    
-    try {
-      await ref.read(productServiceProvider).deleteProduct(id);
-    } catch (e) {
-      state = AsyncData(previousState ?? []);
-      rethrow;
-    }
+    final previousState = state.value ?? [];
+    state = AsyncData(previousState.where((p) => p.id != id).toList());
+    await ref.read(productServiceProvider).deleteProduct(id);
   }
 }
 
