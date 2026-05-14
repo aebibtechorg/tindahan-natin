@@ -117,6 +117,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                                 ),
                               )
                             : null,
+                        onTap: () => widget.onOpenMap?.call(product.shelfId),
                       );
                     },
                   ),
