@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
 
+const double _boardExtent = 100000.0;
+
 class PublicMapScreen extends ConsumerWidget {
   final String slug;
   final String? highlightShelfId;
@@ -20,15 +22,15 @@ class PublicMapScreen extends ConsumerWidget {
 
           return InteractiveViewer(
             clipBehavior: Clip.none,
-            boundaryMargin: const EdgeInsets.all(4000),
+            boundaryMargin: EdgeInsets.all(_boardExtent * 2),
             minScale: 0.05,
             maxScale: 4.0,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 6000,
-                  height: 6000,
+                  width: _boardExtent,
+                  height: _boardExtent,
                   color: Colors.grey[100],
                 ),
                 ...shelves.map((shelf) {
