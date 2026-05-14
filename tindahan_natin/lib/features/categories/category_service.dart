@@ -27,6 +27,11 @@ class CategoryService {
   }
 
   Future<List<Category>> getCategories(String storeId) async {
+    final cached = _filterCachedCategories(storeId, '');
+    if (cached.isNotEmpty) {
+      return _filterCachedCategories(storeId, '');
+    }
+
     try {
       final res = await _dio.get('/categories', queryParameters: {'storeId': storeId});
       final List data = res.data as List;
@@ -41,6 +46,11 @@ class CategoryService {
   }
 
   Future<List<Category>> searchCategories(String storeId, String query) async {
+    final cached = _filterCachedCategories(storeId, query);
+    if (cached.isNotEmpty) {
+      return _filterCachedCategories(storeId, query);
+    }
+
     try {
       final res = await _dio.get('/categories', queryParameters: {'storeId': storeId, 'q': query});
       final List data = res.data as List;

@@ -35,6 +35,11 @@ class ProductService {
   }
 
   Future<List<Product>> getProducts(String storeId) async {
+    final cached = _local.getCachedProducts(storeId);
+    if (cached != null && cached.isNotEmpty) {
+      return cached.map((e) => Product.fromJson(e)).toList();
+    }
+
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId});
       final List data = response.data;
@@ -146,6 +151,11 @@ class ProductService {
   }
 
   Future<List<Product>> searchProducts(String storeId, String query) async {
+    final cached = _filterCachedProducts(storeId, query);
+    if (cached.isNotEmpty) {
+      return _filterCachedProducts(storeId, query);
+    }
+
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
       final List data = response.data as List;
