@@ -7,8 +7,6 @@ import 'package:tindahan_natin/features/products/product_service.dart';
 import 'dart:math' as math;
 import 'package:vector_math/vector_math_64.dart' as vm;
 
-const double _kCanvasSize = 100000.0;
-
 class StoreMapScreen extends ConsumerStatefulWidget {
   const StoreMapScreen({super.key});
 
@@ -150,12 +148,14 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                 }
               }
 
-              return InteractiveViewer(
+                return InteractiveViewer(
+                clipBehavior: Clip.none,
                 transformationController: _transformationController,
-                boundaryMargin: EdgeInsets.all(_canvasSize),
-                minScale: 0.1,
-                maxScale: 2.0,
+                boundaryMargin: EdgeInsets.all(_canvasSize * 2),
+                minScale: 0.05,
+                maxScale: 4.0,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     // Tap the empty canvas to clear the current selection.
                     GestureDetector(
@@ -285,16 +285,12 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   }
 
   void _applyBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds, Offset delta) {
-    final containerRB = _containerKey.currentContext?.findRenderObject() as RenderBox?;
-    final maxW = containerRB?.size.width ?? _canvasSize;
-    final maxH = containerRB?.size.height ?? _canvasSize;
-
     setState(() {
       for (final shelf in shelves) {
         if (!shelfIds.contains(shelf.id)) continue;
         final base = _bulkMoveStartShelves[shelf.id] ?? _optimisticShelves[shelf.id] ?? shelf;
-        final updatedX = (base.x + delta.dx).clamp(0.0, maxW - 50.0).toDouble();
-        final updatedY = (base.y + delta.dy).clamp(0.0, maxH - 50.0).toDouble();
+        final updatedX = base.x + delta.dx;
+        final updatedY = base.y + delta.dy;
         _optimisticShelves[shelf.id] = base.copyWith(x: updatedX, y: updatedY);
       }
     });
@@ -662,11 +658,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
           final newX = scenePoint.dx - (_dragOffset?.dx ?? 0);
           final newY = scenePoint.dy - (_dragOffset?.dy ?? 0);
           setState(() {
-            final containerRB = widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
-            final maxW = containerRB?.size.width ?? _kCanvasSize;
-            final maxH = containerRB?.size.height ?? _kCanvasSize;
-            x = newX.clamp(0.0, maxW - 50.0).toDouble();
-            y = newY.clamp(0.0, maxH - 50.0).toDouble();
+            x = newX;
+            y = newY;
           });
           if (_isBulkMoveTarget) {
             widget.onBulkOptimisticUpdate?.call(widget.selectedShelfIds, Offset(x - _dragStartX, y - _dragStartY));
@@ -681,11 +674,6 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             x = (x / widget.gridSize).round() * widget.gridSize;
             y = (y / widget.gridSize).round() * widget.gridSize;
           }
-          final containerRB = widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
-          final maxW = containerRB?.size.width ?? _kCanvasSize;
-          final maxH = containerRB?.size.height ?? _kCanvasSize;
-          x = x.clamp(0.0, maxW - 50.0).toDouble();
-          y = y.clamp(0.0, maxH - 50.0).toDouble();
 
           final updatedShelf = widget.shelf.copyWith(x: x, y: y, rotation: rotation);
           widget.onOptimisticUpdate?.call(updatedShelf);

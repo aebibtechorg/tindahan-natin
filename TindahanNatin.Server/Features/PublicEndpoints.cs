@@ -140,7 +140,7 @@ public static class PublicEndpoints
 
             var shelves = await db.Shelves
                 .Where(s => s.StoreId == store.Id)
-                .Select(s => new ShelfDto(s.Id, s.Name, s.StoreId, s.X, s.Y, s.CreatedAt, s.UpdatedAt, s.IsDeleted, s.DeletedAt))
+                .Select(s => new ShelfDto(s.Id, s.Name, s.StoreId, s.X, s.Y, s.Rotation, s.CreatedAt, s.UpdatedAt, s.IsDeleted, s.DeletedAt))
                 .ToListAsync();
 
             return Results.Ok(new { Store = store, Shelves = shelves });

@@ -19,14 +19,16 @@ class PublicMapScreen extends ConsumerWidget {
           final List<Shelf> shelves = info['shelves'];
 
           return InteractiveViewer(
-            boundaryMargin: const EdgeInsets.all(1000),
-            minScale: 0.1,
-            maxScale: 2.0,
+            clipBehavior: Clip.none,
+            boundaryMargin: const EdgeInsets.all(4000),
+            minScale: 0.05,
+            maxScale: 4.0,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 2000,
-                  height: 2000,
+                  width: 6000,
+                  height: 6000,
                   color: Colors.grey[100],
                 ),
                 ...shelves.map((shelf) {

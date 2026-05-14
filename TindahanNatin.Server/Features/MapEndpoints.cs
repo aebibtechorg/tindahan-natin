@@ -24,16 +24,16 @@ public static class MapEndpoints
             }
 
             return await shelvesQuery
-                .Select(s => new ShelfDto(s.Id, s.Name, s.StoreId, s.X, s.Y, s.CreatedAt, s.UpdatedAt, s.IsDeleted, s.DeletedAt))
+                .Select(s => new ShelfDto(s.Id, s.Name, s.StoreId, s.X, s.Y, s.Rotation, s.CreatedAt, s.UpdatedAt, s.IsDeleted, s.DeletedAt))
                 .ToListAsync();
         });
 
         group.MapPost("/shelves", async (CreateShelfDto dto, TindahanDbContext db) =>
         {
-            var shelf = new Shelf { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId, X = dto.X, Y = dto.Y, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+            var shelf = new Shelf { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId, X = dto.X, Y = dto.Y, Rotation = dto.Rotation, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
             db.Shelves.Add(shelf);
             await db.SaveChangesAsync();
-            return Results.Created($"/api/map/shelves/{shelf.Id}", new ShelfDto(shelf.Id, shelf.Name, shelf.StoreId, shelf.X, shelf.Y, shelf.CreatedAt, shelf.UpdatedAt, shelf.IsDeleted, shelf.DeletedAt));
+            return Results.Created($"/api/map/shelves/{shelf.Id}", new ShelfDto(shelf.Id, shelf.Name, shelf.StoreId, shelf.X, shelf.Y, shelf.Rotation, shelf.CreatedAt, shelf.UpdatedAt, shelf.IsDeleted, shelf.DeletedAt));
         });
 
         group.MapPut("/shelves/{id}", async (Guid id, UpdateShelfDto dto, TindahanDbContext db) =>
@@ -44,6 +44,7 @@ public static class MapEndpoints
             shelf.Name = dto.Name;
             shelf.X = dto.X;
             shelf.Y = dto.Y;
+            shelf.Rotation = dto.Rotation;
             shelf.UpdatedAt = DateTimeOffset.UtcNow;
 
             await db.SaveChangesAsync();
