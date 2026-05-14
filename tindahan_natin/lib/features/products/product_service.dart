@@ -65,11 +65,13 @@ class ProductService {
       final response = await _dio.post('/products', data: requestData);
       final created = Product.fromJson(Map<String, dynamic>.from(response.data as Map));
       if (storeId != null) {
+        await _local.upsertCachedProduct(storeId, created.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), created.toJson());
       }
       return created;
     } catch (error) {
       if (storeId != null) {
+        await _local.upsertCachedProduct(storeId, draft.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), draft.toJson());
       }
       await _local.queueMutation({
@@ -103,10 +105,12 @@ class ProductService {
     try {
       await _dio.put('/products/$id', data: data);
       if (storeId != null) {
+        await _local.upsertCachedProduct(storeId, optimisticMap);
         await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
       }
     } catch (error) {
       if (storeId != null) {
+        await _local.upsertCachedProduct(storeId, optimisticMap);
         await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
       }
       await _local.queueMutation({
@@ -126,10 +130,12 @@ class ProductService {
     try {
       await _dio.delete('/products/$id');
       if (storeId != null) {
+        await _local.removeCachedProduct(storeId, id);
         await _local.removeCachedRecord(_cacheKey(storeId), id);
       }
     } catch (error) {
       if (storeId != null) {
+        await _local.removeCachedProduct(storeId, id);
         await _local.removeCachedRecord(_cacheKey(storeId), id);
       }
       await _local.queueMutation({

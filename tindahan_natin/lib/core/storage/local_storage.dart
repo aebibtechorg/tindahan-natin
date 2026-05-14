@@ -1,5 +1,4 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'local_storage.g.dart';
@@ -11,6 +10,40 @@ class LocalStorage {
 
   Future<void> cacheProducts(String storeId, List<Map<String, dynamic>> products) async {
     await _productsBox.put('products_$storeId', products);
+  }
+
+  Future<void> upsertCachedProduct(String storeId, Map<String, dynamic> record) async {
+    final records = getCachedProducts(storeId) ?? [];
+    final recordId = record['id']?.toString();
+    if (recordId == null) {
+      await cacheProducts(storeId, [...records, record]);
+      return;
+    }
+
+    final nextRecords = <Map<String, dynamic>>[];
+    var replaced = false;
+    for (final existing in records) {
+      if (existing['id']?.toString() == recordId) {
+        nextRecords.add(record);
+        replaced = true;
+      } else {
+        nextRecords.add(existing);
+      }
+    }
+
+    if (!replaced) {
+      nextRecords.add(record);
+    }
+
+    await cacheProducts(storeId, nextRecords);
+  }
+
+  Future<void> removeCachedProduct(String storeId, String id) async {
+    final records = getCachedProducts(storeId) ?? [];
+    await cacheProducts(
+      storeId,
+      records.where((record) => record['id']?.toString() != id).toList(),
+    );
   }
 
   List<Map<String, dynamic>>? getCachedProducts(String storeId) {
