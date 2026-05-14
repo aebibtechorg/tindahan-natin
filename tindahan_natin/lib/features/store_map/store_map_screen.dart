@@ -26,6 +26,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final double _canvasSize = 100000.0;
   final Map<String, Shelf> _optimisticShelves = {};
   final Set<String> _optimisticRemovedIds = {};
+  final Map<String, Shelf> _bulkMoveStartShelves = {};
 
   @override
   Widget build(BuildContext context) {
@@ -156,12 +157,20 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                 maxScale: 2.0,
                 child: Stack(
                   children: [
-                    // Grid or Background (large canvas to simulate limitless map)
-                    Container(
-                      key: _containerKey,
-                      width: _canvasSize,
-                      height: _canvasSize,
-                      color: Colors.grey[100],
+                    // Tap the empty canvas to clear the current selection.
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        if (_selectedShelfIds.isNotEmpty) {
+                          setState(_selectedShelfIds.clear);
+                        }
+                      },
+                      child: Container(
+                        key: _containerKey,
+                        width: _canvasSize,
+                        height: _canvasSize,
+                        color: Colors.grey[100],
+                      ),
                     ),
                     ...displayedShelves.map((shelf) => DraggableShelf(
                           key: ValueKey(shelf.id),
@@ -170,6 +179,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           transformationController: _transformationController,
                           containerKey: _containerKey,
                           selected: _selectedShelfIds.contains(shelf.id),
+                                selectedShelfIds: _selectedShelfIds,
                           onSelect: (id) {
                             setState(() {
                               if (_multiSelectMode) {
@@ -188,6 +198,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           snapToGrid: _snapToGrid,
                           gridSize: _gridSize,
                           onOptimisticUpdate: (updated) => setState(() => _optimisticShelves[updated.id] = updated),
+                          onBulkMoveStart: (ids) => _startBulkShelfMove(displayedShelves, ids),
+                          onBulkOptimisticUpdate: (ids, delta) => _applyBulkShelfMove(displayedShelves, ids, delta),
+                          onBulkCommit: (ids) => _commitBulkShelfMove(displayedShelves, ids),
                         )),
                   ],
                 ),
@@ -269,6 +282,58 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     final vec = vm.Vector3(local.dx, local.dy, 0);
     final scene = inverse.transform3(vec);
     return Offset(scene.x, scene.y);
+  }
+
+  void _applyBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds, Offset delta) {
+    final containerRB = _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    final maxW = containerRB?.size.width ?? _canvasSize;
+    final maxH = containerRB?.size.height ?? _canvasSize;
+
+    setState(() {
+      for (final shelf in shelves) {
+        if (!shelfIds.contains(shelf.id)) continue;
+        final base = _bulkMoveStartShelves[shelf.id] ?? _optimisticShelves[shelf.id] ?? shelf;
+        final updatedX = (base.x + delta.dx).clamp(0.0, maxW - 50.0).toDouble();
+        final updatedY = (base.y + delta.dy).clamp(0.0, maxH - 50.0).toDouble();
+        _optimisticShelves[shelf.id] = base.copyWith(x: updatedX, y: updatedY);
+      }
+    });
+  }
+
+  void _startBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds) {
+    _bulkMoveStartShelves
+      ..clear()
+      ..addEntries(
+        shelves.where((shelf) => shelfIds.contains(shelf.id)).map((shelf) => MapEntry(shelf.id, _optimisticShelves[shelf.id] ?? shelf)),
+      );
+  }
+
+  Future<void> _commitBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds) async {
+    final snapshot = Map<String, Shelf>.from(_bulkMoveStartShelves);
+
+    try {
+      for (final shelfId in shelfIds) {
+        final updatedShelf = _optimisticShelves[shelfId] ?? shelves.firstWhere((s) => s.id == shelfId);
+        if (updatedShelf.id.startsWith('tmp-')) {
+          continue;
+        }
+        await ref.read(mapServiceProvider).updateShelf(shelfId, {
+          'name': updatedShelf.name,
+          'x': updatedShelf.x,
+          'y': updatedShelf.y,
+          'rotation': updatedShelf.rotation,
+        });
+      }
+    } catch (e) {
+      setState(() {
+        for (final entry in snapshot.entries) {
+          _optimisticShelves[entry.key] = entry.value;
+        }
+      });
+      rethrow;
+    } finally {
+      _bulkMoveStartShelves.clear();
+    }
   }
 
   void _showEditShelfDialog(BuildContext context, WidgetRef ref, Shelf shelf, String storeId) {
@@ -499,12 +564,15 @@ class DraggableShelf extends ConsumerStatefulWidget {
   final TransformationController transformationController;
   final GlobalKey containerKey;
   final bool selected;
+  final Set<String> selectedShelfIds;
   final void Function(String) onSelect;
   final VoidCallback? onDoubleTap;
   final bool snapToGrid;
   final double gridSize;
   final void Function(Shelf)? onOptimisticUpdate;
-  final void Function(String)? onConfirmedUpdate;
+  final void Function(Set<String>)? onBulkMoveStart;
+  final void Function(Set<String>, Offset)? onBulkOptimisticUpdate;
+  final Future<void> Function(Set<String>)? onBulkCommit;
 
   const DraggableShelf({
     super.key,
@@ -513,10 +581,13 @@ class DraggableShelf extends ConsumerStatefulWidget {
     required this.transformationController,
     required this.containerKey,
     required this.selected,
+    required this.selectedShelfIds,
     required this.onSelect,
     this.onDoubleTap,
     this.onOptimisticUpdate,
-    this.onConfirmedUpdate,
+    this.onBulkMoveStart,
+    this.onBulkOptimisticUpdate,
+    this.onBulkCommit,
     required this.snapToGrid,
     required this.gridSize,
   });
@@ -529,6 +600,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
   late double x;
   late double y;
   late double rotation;
+  late double _dragStartX;
+  late double _dragStartY;
   Offset? _dragOffset;
   bool _dragging = false;
 
@@ -563,6 +636,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
     return Offset(scene.x, scene.y);
   }
 
+  bool get _isBulkMoveTarget => widget.selectedShelfIds.length > 1 && widget.selectedShelfIds.contains(widget.shelf.id);
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -575,6 +650,11 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
           widget.onSelect(widget.shelf.id);
           final scenePoint = _globalToScene(details.globalPosition);
           _dragOffset = scenePoint - Offset(x, y);
+          _dragStartX = x;
+          _dragStartY = y;
+          if (_isBulkMoveTarget) {
+            widget.onBulkMoveStart?.call(widget.selectedShelfIds);
+          }
           setState(() => _dragging = true);
         },
         onPanUpdate: (details) {
@@ -588,6 +668,9 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             x = newX.clamp(0.0, maxW - 50.0).toDouble();
             y = newY.clamp(0.0, maxH - 50.0).toDouble();
           });
+          if (_isBulkMoveTarget) {
+            widget.onBulkOptimisticUpdate?.call(widget.selectedShelfIds, Offset(x - _dragStartX, y - _dragStartY));
+          }
         },
         onPanEnd: (details) async {
           setState(() => _dragging = false);
@@ -606,6 +689,18 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
 
           final updatedShelf = widget.shelf.copyWith(x: x, y: y, rotation: rotation);
           widget.onOptimisticUpdate?.call(updatedShelf);
+
+          if (_isBulkMoveTarget) {
+            widget.onBulkOptimisticUpdate?.call(widget.selectedShelfIds, Offset(x - _dragStartX, y - _dragStartY));
+            try {
+              await widget.onBulkCommit?.call(widget.selectedShelfIds);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Bulk update failed: $e')));
+              }
+            }
+            return;
+          }
 
           if (widget.shelf.id.startsWith('tmp-')) return;
 
