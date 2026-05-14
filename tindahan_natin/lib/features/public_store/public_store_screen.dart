@@ -58,7 +58,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-              child: TextField(
+            child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search for products (e.g. Tomi)',
@@ -81,9 +81,6 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                           });
                         },
                       ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
               ),
               onChanged: _onSearchChanged,
               onSubmitted: (val) {

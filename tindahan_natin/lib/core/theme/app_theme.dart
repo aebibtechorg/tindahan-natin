@@ -134,17 +134,25 @@ class AppTheme {
           vertical: 16,
           horizontal: 16,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        border: UnderlineInputBorder(
           borderSide: BorderSide(color: outlineColor),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: outlineColor),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+        focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: focusedOutlineColor, width: 1.5),
+        ),
+        errorBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: colorScheme.error, width: 1.5),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: outlineColor.withValues(alpha: 0.7),
+          ),
         ),
         labelStyle: TextStyle(color: secondaryTextColor),
         hintStyle: TextStyle(color: secondaryTextColor),
