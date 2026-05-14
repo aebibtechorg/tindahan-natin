@@ -63,11 +63,13 @@ final publicProductSearchProvider = PublicProductSearchFamily._();
 final class PublicProductSearchProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Product>>,
-          List<Product>,
-          FutureOr<List<Product>>
+          AsyncValue<List<PublicProduct>>,
+          List<PublicProduct>,
+          FutureOr<List<PublicProduct>>
         >
-    with $FutureModifier<List<Product>>, $FutureProvider<List<Product>> {
+    with
+        $FutureModifier<List<PublicProduct>>,
+        $FutureProvider<List<PublicProduct>> {
   PublicProductSearchProvider._({
     required PublicProductSearchFamily super.from,
     required (String, String) super.argument,
@@ -91,12 +93,12 @@ final class PublicProductSearchProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Product>> $createElement(
+  $FutureProviderElement<List<PublicProduct>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Product>> create(Ref ref) {
+  FutureOr<List<PublicProduct>> create(Ref ref) {
     final argument = this.argument as (String, String);
     return publicProductSearch(ref, argument.$1, argument.$2);
   }
@@ -116,7 +118,11 @@ String _$publicProductSearchHash() =>
     r'a5878f9e0f24ce6f7453f5f0d9b3b5b2817dceca';
 
 final class PublicProductSearchFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<Product>>, (String, String)> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<PublicProduct>>,
+          (String, String)
+        > {
   PublicProductSearchFamily._()
     : super(
         retry: null,

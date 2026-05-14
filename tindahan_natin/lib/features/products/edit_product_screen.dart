@@ -27,6 +27,17 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
   String? _selectedShelfId;
   bool _loading = true;
 
+  String? _resolveSelection(
+    String? selectedId,
+    Iterable<String> availableIds,
+  ) {
+    if (selectedId == null || selectedId.isEmpty) {
+      return null;
+    }
+
+    return availableIds.contains(selectedId) ? selectedId : null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,7 +103,18 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
     if (_formKey.currentState!.validate()) {
       final myStore = await ref.read(myStoreProvider.future);
       final storeId = myStore?.id ?? '';
-      if (_selectedCategoryId == null || _selectedCategoryId!.isEmpty) {
+      final categories = await ref.read(categoriesProvider(storeId).future);
+      final shelves = await ref.read(shelvesProvider(storeId).future);
+      final selectedCategoryId = _resolveSelection(
+        _selectedCategoryId,
+        categories.map((category) => category.id),
+      );
+      final selectedShelfId = _resolveSelection(
+        _selectedShelfId,
+        shelves.map((shelf) => shelf.id),
+      );
+
+      if (selectedCategoryId == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please select a category')),
@@ -105,12 +127,12 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
         'name': _nameController.text,
         'price': double.parse(_priceController.text),
         'quantity': int.parse(_quantityController.text),
-        'categoryId': _selectedCategoryId,
+        'categoryId': selectedCategoryId,
         'storeId': storeId,
         'imageUrl': _imageUrl,
       };
-      if (_selectedShelfId != null && _selectedShelfId!.isNotEmpty) {
-        data['shelfId'] = _selectedShelfId;
+      if (selectedShelfId != null) {
+        data['shelfId'] = selectedShelfId;
       }
 
       try {
@@ -253,14 +275,15 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                         const SizedBox(height: 16),
                         categoriesAsync.when(
                           data: (categories) {
-                            if (categories.isNotEmpty) {
-                              _selectedCategoryId ??= categories.first.id;
-                            }
+                            final selectedCategoryId = _resolveSelection(
+                              _selectedCategoryId,
+                              categories.map((category) => category.id),
+                            );
                             return Row(
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
-                                    value: _selectedCategoryId,
+                                    value: selectedCategoryId,
                                     decoration: const InputDecoration(
                                       labelText: 'Category',
                                     ),
@@ -359,8 +382,12 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                             );
                             return shelvesAsync.when(
                               data: (shelves) {
+                                final selectedShelfId = _resolveSelection(
+                                  _selectedShelfId,
+                                  shelves.map((shelf) => shelf.id),
+                                );
                                 return DropdownButtonFormField<String>(
-                                  value: _selectedShelfId ?? '',
+                                  value: selectedShelfId,
                                   decoration: const InputDecoration(
                                     labelText: 'Shelf (optional)',
                                   ),

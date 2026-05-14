@@ -40,6 +40,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
   @override
   Widget build(BuildContext context) {
     final searchAsync = ref.watch(publicProductSearchProvider(widget.slug, _query));
+
     return Column(
       children: [
         Padding(
@@ -85,16 +86,35 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                     itemCount: products.length,
                     itemBuilder: (context, index) {
                       final product = products[index];
+
                       return ListTile(
-                        leading: product.imageUrl != null
-                            ? Image.network('${ref.read(apiBaseUrlProvider)}${product.imageUrl}')
-                            : const Icon(Icons.shopping_bag),
+                        leading: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: product.imageUrl != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : const Icon(Icons.shopping_bag),
+                        ),
                         title: Text(product.name),
-                        subtitle: Text('₱${product.price}'),
+                        subtitle: Text(
+                          product.shelfName == null
+                              ? '₱${product.price} • Shelf unavailable'
+                              : '₱${product.price} • Shelf: ${product.shelfName}',
+                        ),
                         trailing: product.shelfId != null
-                            ? ElevatedButton(
-                                onPressed: () => widget.onOpenMap?.call(product.shelfId),
-                                child: const Text('Find'),
+                            ? SizedBox(
+                                width: 48,
+                                child: IconButton(
+                                  onPressed: () => widget.onOpenMap?.call(product.shelfId),
+                                  tooltip: 'Find on map',
+                                  icon: const Icon(Icons.place_outlined),
+                                ),
                               )
                             : null,
                       );

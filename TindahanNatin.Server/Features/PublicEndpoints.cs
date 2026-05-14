@@ -22,57 +22,114 @@ public static class PublicEndpoints
             // If no query, use LINQ + left join for shelf info.
             if (string.IsNullOrEmpty(q))
             {
-                var productsAll = await (from p in db.Products.Where(p => p.StoreId == store.Id)
-                                      join pl in db.ProductLocations on p.Id equals pl.ProductId into pls
-                                      from subpl in pls.DefaultIfEmpty()
-                                      select new {
-                                          p.Id,
-                                          p.Name,
-                                          p.Price,
-                                          p.Quantity,
-                                          p.CategoryId,
-                                          p.Description,
-                                          p.ImageUrl,
-                                          p.Barcode,
-                                          p.StoreId,
-                                          p.CreatedAt,
-                                          p.UpdatedAt,
-                                          p.IsDeleted,
-                                          p.DeletedAt,
-                                          ShelfId = (Guid?)subpl.ShelfId
-                                      }).ToListAsync();
+                // var productsAll = await (from p in db.Products.Where(p => p.StoreId == store.Id)
+                //                       join pl in db.ProductLocations on p.Id equals pl.ProductId into pls
+                //                       from subpl in pls.DefaultIfEmpty()
+                //                       join s in db.Shelves on subpl.ShelfId equals s.Id into shelfJoin
+                //                       from shelf in shelfJoin.DefaultIfEmpty()
+                //                       select new ProductDto(
+                //                           p.Id,
+                //                           p.Name,
+                //                           p.Price,
+                //                           p.Quantity,
+                //                           p.CategoryId,
+                //                           (Guid?)subpl.ShelfId,
+                //                           p.Description,
+                //                           p.ImageUrl,
+                //                           p.Barcode,
+                //                           p.StoreId,
+                //                           p.CreatedAt,
+                //                           p.UpdatedAt,
+                //                           p.IsDeleted,
+                //                           p.DeletedAt,
+                //                           shelf != null ? shelf.Name : null
+                //                       )).ToListAsync();
+                var productsAll = await (
+                    from p in db.Products
+                    where p.StoreId == store.Id && !p.IsDeleted
+                    join s in db.Shelves on p.ShelfId equals s.Id into shelfJoin
+                    from shelf in shelfJoin.DefaultIfEmpty()
+                    select new ProductDto(
+                        p.Id,
+                        p.Name,
+                        p.Price,
+                        p.Quantity,
+                        p.CategoryId,
+                        p.ShelfId,
+                        p.Description,
+                        p.ImageUrl,
+                        p.Barcode,
+                        p.StoreId,
+                        p.CreatedAt,
+                        p.UpdatedAt,
+                        p.IsDeleted,
+                        p.DeletedAt,
+                        shelf != null ? shelf.Name : null
+                    )).ToListAsync();
 
                 return Results.Ok(productsAll);
             }
 
             var pattern = $"%{q.Trim()}%";
 
-            var matchedProducts = await db.Products
-                .Where(p => p.StoreId == store.Id && ((p.SearchVector != null && p.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q))) || EF.Functions.ILike(p.Name, pattern) || EF.Functions.ILike(p.Description ?? string.Empty, pattern) || EF.Functions.ILike(p.Barcode ?? string.Empty, pattern)))
-                .ToListAsync();
+            var matchedProducts = await (
+                from p in db.Products
+                where p.StoreId == store.Id
+                    && !p.IsDeleted
+                    && ((p.SearchVector != null && p.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q)))
+                        || EF.Functions.ILike(p.Name, pattern)
+                        || EF.Functions.ILike(p.Description ?? string.Empty, pattern)
+                        || EF.Functions.ILike(p.Barcode ?? string.Empty, pattern))
+                join s in db.Shelves on p.ShelfId equals s.Id into shelfJoin
+                from shelf in shelfJoin.DefaultIfEmpty()
+                select new ProductDto(
+                    p.Id,
+                    p.Name,
+                    p.Price,
+                    p.Quantity,
+                    p.CategoryId,
+                    p.ShelfId,
+                    p.Description,
+                    p.ImageUrl,
+                    p.Barcode,
+                    p.StoreId,
+                    p.CreatedAt,
+                    p.UpdatedAt,
+                    p.IsDeleted,
+                    p.DeletedAt,
+                    shelf != null ? shelf.Name : null
+                )).ToListAsync();
 
             // Load locations for matched products to attach shelf info
-            var ids = matchedProducts.Select(p => p.Id).ToList();
-            var locations = await db.ProductLocations.Where(pl => ids.Contains(pl.ProductId)).ToListAsync();
+            // var ids = matchedProducts.Select(p => p.Id).ToList();
+            // var locations = await db.ProductLocations.Where(pl => ids.Contains(pl.ProductId)).ToListAsync();
+            // var shelfIds = locations.Select(l => l.ShelfId).Distinct().ToList();
+            // var shelfNames = await db.Shelves
+            //     .Where(s => shelfIds.Contains(s.Id))
+            //     .ToDictionaryAsync(s => s.Id, s => s.Name);
 
-            var products = matchedProducts.Select(p => new {
-                p.Id,
-                p.Name,
-                p.Price,
-                p.Quantity,
-                p.CategoryId,
-                p.Description,
-                p.ImageUrl,
-                p.Barcode,
-                p.StoreId,
-                p.CreatedAt,
-                p.UpdatedAt,
-                p.IsDeleted,
-                p.DeletedAt,
-                ShelfId = (Guid?)locations.FirstOrDefault(l => l.ProductId == p.Id)?.ShelfId
-            }).ToList();
+            // var products = matchedProducts.Select(p => {
+            //     var shelfId = (Guid?)locations.FirstOrDefault(l => l.ProductId == p.Id)?.ShelfId;
+            //     return new ProductDto(
+            //         p.Id,
+            //         p.Name,
+            //         p.Price,
+            //         p.Quantity,
+            //         p.CategoryId,
+            //         shelfId,
+            //         p.Description,
+            //         p.ImageUrl,
+            //         p.Barcode,
+            //         p.StoreId,
+            //         p.CreatedAt,
+            //         p.UpdatedAt,
+            //         p.IsDeleted,
+            //         p.DeletedAt,
+            //         shelfId != null && shelfNames.TryGetValue(shelfId.Value, out var shelfName) ? shelfName : null
+            //     );
+            // }).ToList();
 
-            return Results.Ok(products);
+            return Results.Ok(matchedProducts);
         }).AllowAnonymous();
 
         // Get store info and map

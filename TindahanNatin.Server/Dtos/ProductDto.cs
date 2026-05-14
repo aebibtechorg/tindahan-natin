@@ -16,7 +16,8 @@ public record ProductDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     bool IsDeleted,
-    DateTimeOffset? DeletedAt
+    DateTimeOffset? DeletedAt,
+    string? ShelfName = null
 );
 
 public record CreateProductDto(

@@ -88,11 +88,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                   )
                 : const Text('Products'),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.category),
-                tooltip: 'Categories',
-                onPressed: () => context.push('/categories'),
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.category),
+              //   tooltip: 'Categories',
+              //   onPressed: () => context.push('/categories'),
+              // ),
               IconButton(
                 icon: Icon(_isSearching ? Icons.close : Icons.search),
                 onPressed: () {
@@ -109,10 +109,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                   });
                 },
               ),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () => ref.read(productsProvider(storeId).notifier).refresh(),
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.refresh),
+              //   onPressed: () => ref.read(productsProvider(storeId).notifier).refresh(),
+              // ),
             ],
           ),
           body: displayAsync.when(

@@ -16,7 +16,7 @@ class AppShell extends ConsumerWidget {
     if (location.startsWith('/inventory')) return 1;
     if (location.startsWith('/categories')) return 2;
     if (location.startsWith('/map')) return 3;
-    if (location.startsWith('/settings')) return 4;
+    // if (location.startsWith('/settings')) return 4;
     return 0;
   }
 
@@ -53,7 +53,7 @@ class AppShell extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.settings),
             onPressed: () async {
               final myStore = await ref.read(myStoreProvider.future);
               if (myStore == null) {
@@ -62,9 +62,9 @@ class AppShell extends ConsumerWidget {
                 );
                 return;
               }
-              context.push('/store/${myStore.slug}');
+              context.push('/settings');
             },
-            tooltip: 'Search',
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -86,7 +86,7 @@ class AppShell extends ConsumerWidget {
           NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Products'),
           NavigationDestination(icon: Icon(Icons.category_outlined), selectedIcon: Icon(Icons.category), label: 'Categories'),
           NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
+          // NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );

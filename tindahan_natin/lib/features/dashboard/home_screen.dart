@@ -12,12 +12,12 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(''),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.settings),
+        //     onPressed: () => context.push('/settings'),
+        //   ),
+        // ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -58,23 +58,23 @@ class HomeScreen extends ConsumerWidget {
               onTap: () => context.push('/map'),
             ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.1),
             const SizedBox(height: 16),
-            _buildMenuCard(
-              context,
-              title: 'Product Search',
-              subtitle: 'Quickly find products in your store',
-              icon: Icons.search_outlined,
-              color: Colors.green,
-              onTap: () async {
-                final myStore = await ref.read(myStoreProvider.future);
-                if (myStore == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No store available')),
-                  );
-                  return;
-                }
-                context.push('/store/${myStore.slug}');
-              },
-            ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.1),
+            // _buildMenuCard(
+            //   context,
+            //   title: 'Product Search',
+            //   subtitle: 'Quickly find products in your store',
+            //   icon: Icons.search_outlined,
+            //   color: Colors.green,
+            //   onTap: () async {
+            //     final myStore = await ref.read(myStoreProvider.future);
+            //     if (myStore == null) {
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         const SnackBar(content: Text('No store available')),
+            //       );
+            //       return;
+            //     }
+            //     context.push('/store/${myStore.slug}');
+            //   },
+            // ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.1),
           ],
         ),
       ),

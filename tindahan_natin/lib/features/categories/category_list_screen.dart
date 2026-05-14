@@ -91,7 +91,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
               return ListView.separated(
                 itemCount: categories.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => const SizedBox.shrink(),
                 itemBuilder: (context, index) {
                   final c = categories[index];
                   return ListTile(

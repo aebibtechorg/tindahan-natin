@@ -216,9 +216,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
         actions: [
           ElevatedButton(
             onPressed: () async {
-                if (controller.text.isNotEmpty) {
-                // Place at center of container (taking current transform into account)
-                double cx = _canvasSize / 2, cy = _canvasSize / 2;
+              if (controller.text.isNotEmpty) {
+                double cx = _canvasSize / 2;
+                double cy = _canvasSize / 2;
                 final containerContext = _containerKey.currentContext;
                 if (containerContext != null) {
                   final rb = containerContext.findRenderObject() as RenderBox;
@@ -241,14 +241,15 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                     'x': snapX,
                     'y': snapY,
                   });
-                  // Replace temporary shelf with server-provided shelf to avoid flicker
                   setState(() {
                     _optimisticShelves.remove(tempId);
                     _optimisticShelves[created.id] = created;
                   });
                 } catch (e) {
                   setState(() => _optimisticShelves.remove(tempId));
-                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Create failed: $e')));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Create failed: $e')));
+                  }
                 }
               }
             },
@@ -278,155 +279,194 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
     showDialog(
       context: context,
-      builder: (context) {
-        final productsAsync = ref.watch(productsProvider(storeId));
-        final productLocationsAsync = ref.watch(productLocationsProvider(storeId));
+      builder: (context) => Consumer(
+        builder: (context, dialogRef, _) {
+          final productsAsync = dialogRef.watch(productsProvider(storeId));
+          final productLocationsAsync = dialogRef.watch(productLocationsProvider(storeId));
 
-        return StatefulBuilder(builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Edit Shelf'),
-            content: SizedBox(
-              width: 480,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: controller,
-                      decoration: const InputDecoration(hintText: 'Shelf Name'),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                title: const Text('Edit Shelf'),
+                content: SizedBox(
+                  width: 480,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Rotation'),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Slider(
-                            value: rotation,
-                            min: 0,
-                            max: 360,
-                            divisions: 36,
-                            label: '${rotation.round()}°',
-                            onChanged: (v) => setDialogState(() => rotation = v),
-                          ),
+                        TextField(
+                          controller: controller,
+                          decoration: const InputDecoration(hintText: 'Shelf Name'),
                         ),
-                        const SizedBox(width: 8),
-                        Text('${rotation.round()}°'),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Product Locations', style: TextStyle(fontWeight: FontWeight.bold)),
-                        TextButton.icon(
-                          onPressed: () async {
-                            // open product picker
-                            final products = productsAsync.maybeWhen(data: (p) => p, orElse: () => null);
-                            if (products == null || products.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No products available')));
-                              return;
-                            }
-
-                            final selected = await showDialog<Map<String, dynamic>?>(
-                              context: context,
-                              builder: (ctx) => SimpleDialog(
-                                title: const Text('Select Product'),
-                                children: products.map((prod) => SimpleDialogOption(
-                                      onPressed: () => Navigator.pop(ctx, {'id': prod.id, 'name': prod.name}),
-                                      child: Text(prod.name),
-                                    )).toList(),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            const Text('Rotation'),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Slider(
+                                value: rotation,
+                                min: 0,
+                                max: 360,
+                                divisions: 36,
+                                label: '${rotation.round()}°',
+                                onChanged: (v) => setDialogState(() => rotation = v),
                               ),
-                            );
+                            ),
+                            const SizedBox(width: 8),
+                            Text('${rotation.round()}°'),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Product Locations', style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextButton.icon(
+                              onPressed: () async {
+                                final products = productsAsync.asData?.value;
+                                if (productsAsync.isLoading) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Products are still loading')),
+                                    );
+                                  }
+                                  return;
+                                }
+                                if (productsAsync.hasError) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Failed to load products: ${productsAsync.error}')),
+                                    );
+                                  }
+                                  return;
+                                }
+                                if (products == null || products.isEmpty) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('No products available')),
+                                    );
+                                  }
+                                  return;
+                                }
 
-                            if (selected != null) {
-                              final tempLocId = 'tmp-loc-${DateTime.now().microsecondsSinceEpoch}';
-                              final tempLoc = ProductLocation(id: tempLocId, productId: selected['id'], shelfId: shelf.id, position: 'default');
-                              setDialogState(() => localProductLocationOverrides[tempLocId] = tempLoc);
-                              try {
-                                final created = await ref.read(mapServiceProvider).createProductLocation({
-                                  'productId': selected['id'],
-                                  'shelfId': shelf.id,
-                                  'position': 'default',
-                                });
-                                // reconcile temp id to server id
-                                setDialogState(() {
-                                  localProductLocationOverrides.remove(tempLocId);
-                                  localProductLocationOverrides[created.id] = created;
-                                });
-                              } catch (e) {
-                                setDialogState(() => localProductLocationOverrides.remove(tempLocId));
-                                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Add location failed: $e')));
+                                final selected = await showDialog<Map<String, dynamic>?>(
+                                  context: context,
+                                  builder: (ctx) => SimpleDialog(
+                                    title: const Text('Select Product'),
+                                    children: products
+                                        .map(
+                                          (prod) => SimpleDialogOption(
+                                            onPressed: () => Navigator.pop(ctx, {'id': prod.id, 'name': prod.name}),
+                                            child: Text(prod.name),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                );
+
+                                if (selected != null) {
+                                  final tempLocId = 'tmp-loc-${DateTime.now().microsecondsSinceEpoch}';
+                                  final tempLoc = ProductLocation(id: tempLocId, productId: selected['id'], shelfId: shelf.id, position: 'default');
+                                  setDialogState(() => localProductLocationOverrides[tempLocId] = tempLoc);
+                                  try {
+                                    final created = await ref.read(mapServiceProvider).createProductLocation({
+                                      'productId': selected['id'],
+                                      'shelfId': shelf.id,
+                                      'position': 'default',
+                                    });
+                                    setDialogState(() {
+                                      localProductLocationOverrides.remove(tempLocId);
+                                      localProductLocationOverrides[created.id] = created;
+                                    });
+                                  } catch (e) {
+                                    setDialogState(() => localProductLocationOverrides.remove(tempLocId));
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Add location failed: $e')));
+                                    }
+                                  }
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add'),
+                            ),
+                          ],
+                        ),
+                        productLocationsAsync.when(
+                          data: (locations) {
+                            final serverById = {for (var l in locations) l.id: l};
+                            final merged = <ProductLocation>[];
+                            for (final l in locations.where((l) => l.shelfId == shelf.id)) {
+                              if (localDeletedProductLocationIds.contains(l.id)) continue;
+                              merged.add(localProductLocationOverrides[l.id] ?? l);
+                            }
+                            for (final l in localProductLocationOverrides.values) {
+                              if (!serverById.containsKey(l.id) && l.shelfId == shelf.id && !localDeletedProductLocationIds.contains(l.id)) {
+                                merged.add(l);
                               }
                             }
+                            if (merged.isEmpty) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text('No product locations.'),
+                              );
+                            }
+                            return Column(
+                              children: merged.map((loc) {
+                                String productName = loc.productId;
+                                final productsList = productsAsync.asData?.value;
+                                if (productsList != null) {
+                                  final matches = productsList.where((p) => p.id == loc.productId);
+                                  if (matches.isNotEmpty) productName = matches.first.name;
+                                }
+                                return ListTile(
+                                  title: Text(productName),
+                                  subtitle: Text('Position: ${loc.position}'),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () async {
+                                      if (loc.id.startsWith('tmp-')) {
+                                        setDialogState(() => localProductLocationOverrides.remove(loc.id));
+                                        return;
+                                      }
+                                      setDialogState(() => localDeletedProductLocationIds.add(loc.id));
+                                      try {
+                                        await ref.read(mapServiceProvider).deleteProductLocation(loc.id);
+                                        setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
+                                        ref.invalidate(productLocationsProvider(storeId));
+                                      } catch (e) {
+                                        setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete location failed: $e')));
+                                        }
+                                      }
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            );
                           },
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add'),
+                          loading: () => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                          error: (e, s) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text('Error loading product locations: $e'),
+                          ),
                         ),
                       ],
                     ),
-                    productLocationsAsync.when(
-                      data: (locations) {
-                        final serverById = {for (var l in locations) l.id: l};
-                        final merged = <ProductLocation>[];
-                        for (final l in locations.where((l) => l.shelfId == shelf.id)) {
-                          if (localDeletedProductLocationIds.contains(l.id)) continue;
-                          merged.add(localProductLocationOverrides[l.id] ?? l);
-                        }
-                        for (final l in localProductLocationOverrides.values) {
-                          if (!serverById.containsKey(l.id) && l.shelfId == shelf.id && !localDeletedProductLocationIds.contains(l.id)) {
-                            merged.add(l);
-                          }
-                        }
-                        if (merged.isEmpty) return const Text('No product locations.');
-                        return Column(
-                          children: merged.map((loc) {
-                            String productName = loc.productId;
-                            final productsList = productsAsync.asData?.value;
-                            if (productsList != null) {
-                              final matches = productsList.where((p) => p.id == loc.productId);
-                              if (matches.isNotEmpty) productName = matches.first.name;
-                            }
-                            return ListTile(
-                              title: Text(productName),
-                              subtitle: Text('Position: ${loc.position}'),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () async {
-                                  if (loc.id.startsWith('tmp-')) {
-                                    setDialogState(() => localProductLocationOverrides.remove(loc.id));
-                                    return;
-                                  }
-                                  setDialogState(() => localDeletedProductLocationIds.add(loc.id));
-                                  try {
-                                    await ref.read(mapServiceProvider).deleteProductLocation(loc.id);
-                                    setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
-                                    ref.invalidate(productLocationsProvider(storeId));
-                                  } catch (e) {
-                                    setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
-                                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete location failed: $e')));
-                                  }
-                                },
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, s) => Text('Error loading product locations: $e'),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () async {
-                  if (controller.text.isNotEmpty) {
-                    final updatedShelf = shelf.copyWith(name: controller.text, rotation: rotation);
-                    setState(() => _optimisticShelves[shelf.id] = updatedShelf);
-                    if (context.mounted) Navigator.pop(context);
+                actions: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (controller.text.isNotEmpty) {
+                        final updatedShelf = shelf.copyWith(name: controller.text, rotation: rotation);
+                        setState(() => _optimisticShelves[shelf.id] = updatedShelf);
+                        if (context.mounted) Navigator.pop(context);
                         try {
                           await ref.read(mapServiceProvider).updateShelf(shelf.id, {
                             'name': controller.text,
@@ -434,24 +474,25 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                             'y': updatedShelf.y,
                             'rotation': rotation,
                           });
-                          // keep optimistic value as UI state; don't refetch immediately
                           setState(() => _optimisticShelves[shelf.id] = updatedShelf);
                         } catch (e) {
-                          // remove optimistic override so UI falls back to server value
                           setState(() => _optimisticShelves.remove(shelf.id));
                           if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $e')));
                         }
-                  }
-                },
-                child: const Text('Save'),
-              ),
-            ],
+                      }
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              );
+            },
           );
-        });
-      },
+        },
+      ),
     );
   }
 }
+
 class DraggableShelf extends ConsumerStatefulWidget {
   final Shelf shelf;
   final String storeId;
@@ -502,7 +543,6 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
   @override
   void didUpdateWidget(covariant DraggableShelf oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Sync if upstream shelf changed
     if (widget.shelf.x != x || widget.shelf.y != y) {
       x = widget.shelf.x;
       y = widget.shelf.y;
@@ -549,7 +589,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             y = newY.clamp(0.0, maxH - 50.0).toDouble();
           });
         },
-                          onPanEnd: (details) async {
+        onPanEnd: (details) async {
           setState(() => _dragging = false);
           final prevX = widget.shelf.x;
           final prevY = widget.shelf.y;
@@ -558,7 +598,6 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             x = (x / widget.gridSize).round() * widget.gridSize;
             y = (y / widget.gridSize).round() * widget.gridSize;
           }
-          // ensure within container bounds
           final containerRB = widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
           final maxW = containerRB?.size.width ?? _kCanvasSize;
           final maxH = containerRB?.size.height ?? _kCanvasSize;
@@ -566,10 +605,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
           y = y.clamp(0.0, maxH - 50.0).toDouble();
 
           final updatedShelf = widget.shelf.copyWith(x: x, y: y, rotation: rotation);
-          // apply optimistic update locally
           widget.onOptimisticUpdate?.call(updatedShelf);
 
-          // if this is a temporary shelf (not yet created on server), skip server update
           if (widget.shelf.id.startsWith('tmp-')) return;
 
           try {
@@ -579,10 +616,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               'y': y,
               'rotation': rotation,
             });
-            // keep optimistic mapping as the authoritative UI state (no immediate refetch)
             widget.onOptimisticUpdate?.call(updatedShelf);
           } catch (e) {
-            // revert to previous server-provided values both locally and upstream
             setState(() {
               x = prevX;
               y = prevY;
@@ -612,7 +647,7 @@ class _ShelfWidget extends StatelessWidget {
       angle: rotation * math.pi / 180.0,
       child: Container(
         padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: isDragging ? Colors.blue.withOpacity(0.6) : Colors.blue,
           borderRadius: BorderRadius.circular(8),
           boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
