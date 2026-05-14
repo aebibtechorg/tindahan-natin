@@ -29,7 +29,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _nameController.text = store['name'] ?? '';
     } catch (e) {
       // ignore - show a snackbar
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load store')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to load store')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -42,9 +45,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final svc = ref.read(storeServiceProvider);
       await svc.updateStoreName(_nameController.text.trim());
       ref.invalidate(myStoreProvider);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Store updated')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Store updated')));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update store')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to update store')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -71,10 +80,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Store name'),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter a store name' : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Store name',
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Enter a store name'
+                          : null,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _loading ? null : _save,
                       child: const Text('Save'),
@@ -86,15 +99,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           : () async {
                               setState(() => _loading = true);
                               try {
-                                await ref.read(authStateProvider.notifier).logout();
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logged out')));
+                                await ref
+                                    .read(authStateProvider.notifier)
+                                    .logout();
+                                if (mounted)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Logged out')),
+                                  );
                               } catch (e) {
-                                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to log out')));
+                                if (mounted)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Failed to log out'),
+                                    ),
+                                  );
                               } finally {
                                 if (mounted) setState(() => _loading = false);
                               }
                             },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                      ),
                       child: const Text('Log out'),
                     ),
                   ],

@@ -50,9 +50,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       } catch (e) {
         setState(() => _isUploading = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Upload failed: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
         }
       }
     }
@@ -65,7 +65,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       debugPrint('Store ID: $storeId');
       if (_selectedCategoryId == null || _selectedCategoryId!.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a category')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select a category')),
+          );
         }
         return;
       }
@@ -89,9 +91,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
         }
       }
     }
@@ -103,7 +105,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
     return myStoreAsync.when(
       data: (store) {
-        if (store == null) return const Scaffold(body: Center(child: Text('No store found')));
+        if (store == null)
+          return const Scaffold(body: Center(child: Text('No store found')));
         final storeId = store.id;
         final categoriesAsync = ref.watch(categoriesProvider(storeId));
 
@@ -133,37 +136,47 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                               ),
                             )
                           : _isUploading
-                              ? const Center(child: CircularProgressIndicator())
-                              : const Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.add_a_photo, size: 50),
-                                      Text('Add Product Image'),
-                                    ],
-                                  ),
-                                ),
+                          ? const Center(child: CircularProgressIndicator())
+                          : const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_a_photo, size: 50),
+                                  Text('Add Product Image'),
+                                ],
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Product Name'),
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter a name' : null,
+                    decoration: const InputDecoration(
+                      labelText: 'Product Name',
+                    ),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter a name'
+                        : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _priceController,
                     decoration: const InputDecoration(labelText: 'Price'),
                     keyboardType: TextInputType.number,
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter a price' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter a price'
+                        : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _quantityController,
                     decoration: const InputDecoration(labelText: 'Quantity'),
                     keyboardType: TextInputType.number,
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter quantity' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter quantity'
+                        : null,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   categoriesAsync.when(
                     data: (categories) {
                       if (categories.isNotEmpty) {
@@ -174,10 +187,22 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               value: _selectedCategoryId,
-                              decoration: const InputDecoration(labelText: 'Category'),
-                              items: categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
-                              onChanged: (v) => setState(() => _selectedCategoryId = v),
-                              validator: (v) => v == null || v.isEmpty ? 'Please select a category' : null,
+                              decoration: const InputDecoration(
+                                labelText: 'Category',
+                              ),
+                              items: categories
+                                  .map(
+                                    (c) => DropdownMenuItem(
+                                      value: c.id,
+                                      child: Text(c.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) =>
+                                  setState(() => _selectedCategoryId = v),
+                              validator: (v) => v == null || v.isEmpty
+                                  ? 'Please select a category'
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -190,23 +215,46 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                                 context: context,
                                 builder: (ctx) => AlertDialog(
                                   title: const Text('Add Category'),
-                                  content: TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
+                                  content: TextField(
+                                    controller: nameController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Name',
+                                    ),
+                                  ),
                                   actions: [
-                                    TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
-                                    ElevatedButton(onPressed: () => Navigator.of(ctx).pop(nameController.text), child: const Text('Save')),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.of(
+                                        ctx,
+                                      ).pop(nameController.text),
+                                      child: const Text('Save'),
+                                    ),
                                   ],
                                 ),
                               );
 
                               if (result != null && result.trim().isNotEmpty) {
                                 try {
-                                  final created = await ref.read(categoryServiceProvider).createCategory(result.trim(), storeId);
+                                  final created = await ref
+                                      .read(categoryServiceProvider)
+                                      .createCategory(result.trim(), storeId);
                                   // refresh the categories provider and select the new one
                                   ref.invalidate(categoriesProvider(storeId));
-                                  setState(() => _selectedCategoryId = created.id);
+                                  setState(
+                                    () => _selectedCategoryId = created.id,
+                                  );
                                 } catch (e) {
                                   if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create category: $e')));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Failed to create category: $e',
+                                        ),
+                                      ),
+                                    );
                                   }
                                 }
                               }
@@ -224,35 +272,52 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                       child: Text('Failed to load categories: $e'),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Builder(builder: (ctx) {
-                    final shelvesAsync = ref.watch(shelvesProvider(storeId));
-                    return shelvesAsync.when(
-                      data: (shelves) {
-                        return DropdownButtonFormField<String>(
-                          value: _selectedShelfId ?? '',
-                          decoration: const InputDecoration(labelText: 'Shelf (optional)'),
-                          items: [
-                            const DropdownMenuItem(value: '', child: Text('Unassigned')),
-                            ...shelves.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name)))
-                          ],
-                          onChanged: (v) => setState(() => _selectedShelfId = (v == '' ? null : v)),
-                        );
-                      },
-                      loading: () => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (e, s) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text('Failed to load shelves: $e'),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
+                  Builder(
+                    builder: (ctx) {
+                      final shelvesAsync = ref.watch(shelvesProvider(storeId));
+                      return shelvesAsync.when(
+                        data: (shelves) {
+                          return DropdownButtonFormField<String>(
+                            value: _selectedShelfId ?? '',
+                            decoration: const InputDecoration(
+                              labelText: 'Shelf (optional)',
+                            ),
+                            items: [
+                              const DropdownMenuItem(
+                                value: '',
+                                child: Text('Unassigned'),
+                              ),
+                              ...shelves.map(
+                                (s) => DropdownMenuItem(
+                                  value: s.id,
+                                  child: Text(s.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (v) => setState(
+                              () => _selectedShelfId = (v == '' ? null : v),
+                            ),
+                          );
+                        },
+                        loading: () => const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (e, s) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text('Failed to load shelves: $e'),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(onPressed: _isUploading ? null : _submit, child: const Text('Save Product')),
+                    child: ElevatedButton(
+                      onPressed: _isUploading ? null : _submit,
+                      child: const Text('Save Product'),
+                    ),
                   ),
                 ],
               ),
@@ -260,8 +325,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           ),
         );
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) => Scaffold(body: Center(child: Text('Error loading store: $e'))),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) =>
+          Scaffold(body: Center(child: Text('Error loading store: $e'))),
     );
   }
 }

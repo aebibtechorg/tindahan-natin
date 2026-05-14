@@ -60,9 +60,9 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildMenuCard(
               context,
-              title: 'View Public Store',
-              subtitle: 'See what customers see',
-              icon: Icons.launch_outlined,
+              title: 'Product Search',
+              subtitle: 'Quickly find products in your store',
+              icon: Icons.search_outlined,
               color: Colors.green,
               onTap: () async {
                 final myStore = await ref.read(myStoreProvider.future);
