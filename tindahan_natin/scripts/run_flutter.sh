@@ -7,7 +7,7 @@ PLATFORM=${1:-web}
 shift || true
 
 # Build dart-define args from environment variables that start with "DART_DEFINE_" or known keys.
-# Known keys: SERVER_HTTP, AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE
+# Known keys: SERVER_HTTP, AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE, PUBLIC_WEB_APP_BASE_URL
 DART_DEFINES=()
 if [ -n "${SERVER_HTTP-}" ]; then
   DART_DEFINES+=("--dart-define=SERVER_HTTP=${SERVER_HTTP}")
@@ -20,6 +20,9 @@ if [ -n "${AUTH0_CLIENT_ID-}" ]; then
 fi
 if [ -n "${AUTH0_AUDIENCE-}" ]; then
   DART_DEFINES+=("--dart-define=AUTH0_AUDIENCE=${AUTH0_AUDIENCE}")
+fi
+if [ -n "${PUBLIC_WEB_APP_BASE_URL-}" ]; then
+  DART_DEFINES+=("--dart-define=PUBLIC_WEB_APP_BASE_URL=${PUBLIC_WEB_APP_BASE_URL}")
 fi
 
 # Allow additional arbitrary env-to-dart-define via DART_DEFINE_<NAME>=value
