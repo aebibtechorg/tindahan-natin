@@ -4,7 +4,7 @@ import 'package:tindahan_natin/features/store_map/map_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
-import 'dart:math' as math;
+import 'package:tindahan_natin/features/store_map/store_shelf_tile.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class StoreMapScreen extends ConsumerStatefulWidget {
@@ -25,6 +25,29 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final Map<String, Shelf> _optimisticShelves = {};
   final Set<String> _optimisticRemovedIds = {};
   final Map<String, Shelf> _bulkMoveStartShelves = {};
+  bool _initialViewConfigured = false;
+
+  double get _canvasOrigin => _canvasSize / 2;
+
+  void _configureInitialView(Size viewportSize) {
+    if (_initialViewConfigured || viewportSize.isEmpty) {
+      return;
+    }
+
+    _initialViewConfigured = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      _transformationController.value = Matrix4.identity()
+        ..setTranslationRaw(
+          viewportSize.width / 2 - _canvasOrigin,
+          viewportSize.height / 2 - _canvasOrigin,
+          0,
+        );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,77 +157,88 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           ),
           body: shelvesAsync.when(
             data: (shelves) {
-              // Merge server shelves with optimistic client updates and removals
-              final serverById = {for (var s in shelves) s.id: s};
-              final List<Shelf> displayedShelves = [];
-              for (final s in shelves) {
-                if (_optimisticRemovedIds.contains(s.id)) continue;
-                displayedShelves.add(_optimisticShelves[s.id] ?? s);
+              final serverById = {for (var shelf in shelves) shelf.id: shelf};
+              final displayedShelves = <Shelf>[];
+
+              for (final shelf in shelves) {
+                if (_optimisticRemovedIds.contains(shelf.id)) {
+                  continue;
+                }
+                displayedShelves.add(_optimisticShelves[shelf.id] ?? shelf);
               }
-              // include optimistic (temporary) shelves not yet on server
-              for (final s in _optimisticShelves.values) {
-                if (!serverById.containsKey(s.id) && !_optimisticRemovedIds.contains(s.id)) {
-                  displayedShelves.add(s);
+
+              for (final shelf in _optimisticShelves.values) {
+                if (!serverById.containsKey(shelf.id) && !_optimisticRemovedIds.contains(shelf.id)) {
+                  displayedShelves.add(shelf);
                 }
               }
 
-                return InteractiveViewer(
-                clipBehavior: Clip.none,
-                constrained: false,
-                transformationController: _transformationController,
-                boundaryMargin: EdgeInsets.all(_canvasSize * 2),
-                minScale: 0.05,
-                maxScale: 4.0,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Tap the empty canvas to clear the current selection.
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        if (_selectedShelfIds.isNotEmpty) {
-                          setState(_selectedShelfIds.clear);
-                        }
-                      },
-                      child: Container(
-                        key: _containerKey,
-                        width: _canvasSize,
-                        height: _canvasSize,
-                        color: Colors.transparent,
-                      ),
-                    ),
-                    ...displayedShelves.map((shelf) => DraggableShelf(
-                          key: ValueKey(shelf.id),
-                          shelf: shelf,
-                          storeId: storeId,
-                          transformationController: _transformationController,
-                          containerKey: _containerKey,
-                          selected: _selectedShelfIds.contains(shelf.id),
-                                selectedShelfIds: _selectedShelfIds,
-                          onSelect: (id) {
-                            setState(() {
-                              if (_multiSelectMode) {
-                                if (_selectedShelfIds.contains(id)) {
-                                  _selectedShelfIds.remove(id);
-                                } else {
-                                  _selectedShelfIds.add(id);
-                                }
-                              } else {
-                                _selectedShelfIds.clear();
-                                _selectedShelfIds.add(id);
-                              }
-                            });
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  _configureInitialView(constraints.biggest);
+
+                  return InteractiveViewer(
+                    clipBehavior: Clip.none,
+                    constrained: false,
+                    transformationController: _transformationController,
+                    boundaryMargin: EdgeInsets.all(_canvasSize * 2),
+                    minScale: 0.05,
+                    maxScale: 4.0,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            if (_selectedShelfIds.isNotEmpty) {
+                              setState(_selectedShelfIds.clear);
+                            }
                           },
-                          onDoubleTap: () => _showEditShelfDialog(context, ref, shelf, storeId),
-                          snapToGrid: _snapToGrid,
-                          gridSize: _gridSize,
-                          onOptimisticUpdate: (updated) => setState(() => _optimisticShelves[updated.id] = updated),
-                          onBulkMoveStart: (ids) => _startBulkShelfMove(displayedShelves, ids),
-                          onBulkOptimisticUpdate: (ids, delta) => _applyBulkShelfMove(displayedShelves, ids, delta),
-                          onBulkCommit: (ids) => _commitBulkShelfMove(displayedShelves, ids),
-                        )),
-                  ],
-                ),
+                          child: Container(
+                            key: _containerKey,
+                            width: _canvasSize,
+                            height: _canvasSize,
+                            color: Colors.transparent,
+                          ),
+                        ),
+                        ...displayedShelves.map(
+                          (shelf) => DraggableShelf(
+                            key: ValueKey(shelf.id),
+                            shelf: shelf,
+                            storeId: storeId,
+                            canvasOrigin: _canvasOrigin,
+                            transformationController: _transformationController,
+                            containerKey: _containerKey,
+                            selected: _selectedShelfIds.contains(shelf.id),
+                            selectedShelfIds: _selectedShelfIds,
+                            onSelect: (id) {
+                              setState(() {
+                                if (_multiSelectMode) {
+                                  if (_selectedShelfIds.contains(id)) {
+                                    _selectedShelfIds.remove(id);
+                                  } else {
+                                    _selectedShelfIds.add(id);
+                                  }
+                                } else {
+                                  _selectedShelfIds
+                                    ..clear()
+                                    ..add(id);
+                                }
+                              });
+                            },
+                            onDoubleTap: () => _showEditShelfDialog(context, ref, shelf, storeId),
+                            snapToGrid: _snapToGrid,
+                            gridSize: _gridSize,
+                            onOptimisticUpdate: (updated) => setState(() => _optimisticShelves[updated.id] = updated),
+                            onBulkMoveStart: (ids) => _startBulkShelfMove(displayedShelves, ids),
+                            onBulkOptimisticUpdate: (ids, delta) => _applyBulkShelfMove(displayedShelves, ids, delta),
+                            onBulkCommit: (ids) => _commitBulkShelfMove(displayedShelves, ids),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -231,8 +265,8 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           ElevatedButton(
             onPressed: () async {
               if (controller.text.isNotEmpty) {
-                double cx = _canvasSize / 2;
-                double cy = _canvasSize / 2;
+                double cx = 0;
+                double cy = 0;
                 final containerContext = _containerKey.currentContext;
                 if (containerContext != null) {
                   final rb = containerContext.findRenderObject() as RenderBox;
@@ -282,7 +316,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     final inverse = vm.Matrix4.fromList(m.storage.toList())..invert();
     final vec = vm.Vector3(local.dx, local.dy, 0);
     final scene = inverse.transform3(vec);
-    return Offset(scene.x, scene.y);
+    return Offset(scene.x - _canvasOrigin, scene.y - _canvasOrigin);
   }
 
   void _applyBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds, Offset delta) {
@@ -558,6 +592,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 class DraggableShelf extends ConsumerStatefulWidget {
   final Shelf shelf;
   final String storeId;
+  final double canvasOrigin;
   final TransformationController transformationController;
   final GlobalKey containerKey;
   final bool selected;
@@ -575,6 +610,7 @@ class DraggableShelf extends ConsumerStatefulWidget {
     super.key,
     required this.shelf,
     required this.storeId,
+    required this.canvasOrigin,
     required this.transformationController,
     required this.containerKey,
     required this.selected,
@@ -630,7 +666,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
     final inverse = vm.Matrix4.fromList(m.storage.toList())..invert();
     final vec = vm.Vector3(local.dx, local.dy, 0);
     final scene = inverse.transform3(vec);
-    return Offset(scene.x, scene.y);
+    return Offset(scene.x - widget.canvasOrigin, scene.y - widget.canvasOrigin);
   }
 
   bool get _isBulkMoveTarget => widget.selectedShelfIds.length > 1 && widget.selectedShelfIds.contains(widget.shelf.id);
@@ -638,8 +674,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: x,
-      top: y,
+      left: x + widget.canvasOrigin,
+      top: y + widget.canvasOrigin,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => widget.onSelect(widget.shelf.id),
@@ -714,47 +750,14 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
         },
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 96, minHeight: 48),
-          child: _ShelfWidget(name: widget.shelf.name, isDragging: _dragging, isSelected: widget.selected, rotation: rotation),
-        ),
-      ),
-    );
-  }
-}
-
-class _ShelfWidget extends StatelessWidget {
-  final String name;
-  final bool isDragging;
-  final bool isSelected;
-  final double rotation;
-
-  const _ShelfWidget({required this.name, this.isDragging = false, this.isSelected = false, this.rotation = 0.0});
-
-  @override
-  Widget build(BuildContext context) {
-    final backgroundColor = isSelected ? Colors.orange : Colors.blue;
-
-    final rotated = Transform.rotate(
-      angle: rotation * math.pi / 180.0,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDragging ? backgroundColor.withOpacity(0.6) : backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-          border: isSelected
-              ? Border.all(color: Colors.white, width: 3)
-              : null,
-          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: Text(
-            name,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          child: StoreShelfTile(
+            name: widget.shelf.name,
+            isDragging: _dragging,
+            isSelected: widget.selected,
+            rotation: rotation,
           ),
         ),
       ),
     );
-
-    return rotated;
   }
 }
