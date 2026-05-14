@@ -56,6 +56,12 @@ class ProductService {
     final response = await _dio.post('/storage/upload', data: formData);
     return response.data['url'];
   }
+
+  Future<List<Product>> searchProducts(String storeId, String query) async {
+    final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
+    final List data = response.data as List;
+    return data.map((e) => Product.fromJson(e)).toList();
+  }
 }
 
 @riverpod
@@ -105,3 +111,10 @@ class Products extends _$Products {
     }
   }
 }
+
+final productSearchProvider = FutureProvider.family<List<Product>, String>((ref, key) {
+  final parts = key.split('::');
+  final storeId = parts[0];
+  final query = parts.length > 1 ? parts.sublist(1).join('::') : '';
+  return ref.watch(productServiceProvider).searchProducts(storeId, query);
+});

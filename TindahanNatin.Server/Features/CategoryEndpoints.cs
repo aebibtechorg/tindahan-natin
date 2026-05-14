@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
 using TindahanNatin.Server.Models;
@@ -12,12 +13,23 @@ public static class CategoryEndpoints
     {
         var group = routes.MapGroup("/api/categories").WithTags("Categories");
 
-        group.MapGet("/", async (TindahanDbContext db, Guid storeId) =>
+        group.MapGet("/", async (TindahanDbContext db, Guid storeId, string? q) =>
         {
-            return await db.Categories
-                .Where(c => c.StoreId == storeId)
-                .Select(c => new CategoryDto(c.Id, c.Name, c.StoreId))
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                return await db.Categories
+                    .Where(c => c.StoreId == storeId)
+                    .Select(c => new CategoryDto(c.Id, c.Name, c.StoreId))
+                    .ToListAsync();
+            }
+
+            var pattern = $"%{q.Trim()}%";
+
+            var categories = await db.Categories
+                .Where(c => c.StoreId == storeId && ((c.SearchVector != null && c.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q))) || EF.Functions.ILike(c.Name, pattern)))
                 .ToListAsync();
+
+            return categories.Select(c => new CategoryDto(c.Id, c.Name, c.StoreId));
         });
 
         group.MapGet("/{id}", async (Guid id, TindahanDbContext db) =>

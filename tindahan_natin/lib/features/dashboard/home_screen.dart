@@ -11,7 +11,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tindahan Natin'),
+        title: const Text(''),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

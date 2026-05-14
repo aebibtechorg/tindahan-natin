@@ -1,4 +1,3 @@
-// material import not needed here
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,6 +13,7 @@ import 'package:tindahan_natin/features/public_store/public_map_screen.dart';
 import 'package:tindahan_natin/features/store_map/store_map_screen.dart';
 import 'package:tindahan_natin/features/settings/settings_screen.dart';
 import 'package:tindahan_natin/features/categories/category_list_screen.dart';
+import 'package:tindahan_natin/core/widgets/app_shell.dart';
 
 part 'app_router.g.dart';
 
@@ -24,39 +24,44 @@ GoRouter appRouter(Ref ref) {
   return GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/inventory',
-        builder: (context, state) => const ProductListScreen(),
+      ShellRoute(
+        builder: (context, state, child) => AppShell(currentLocation: state.uri.path, child: child),
         routes: [
           GoRoute(
-            path: 'add',
-            builder: (context, state) => const AddProductScreen(),
+            path: '/',
+            builder: (context, state) => const HomeScreen(),
           ),
           GoRoute(
-            path: 'edit/:id',
-            builder: (context, state) => EditProductScreen(id: state.pathParameters['id']!),
+            path: '/inventory',
+            builder: (context, state) => const ProductListScreen(),
+            routes: [
+              GoRoute(
+                path: 'add',
+                builder: (context, state) => const AddProductScreen(),
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                builder: (context, state) => EditProductScreen(id: state.pathParameters['id']!),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/categories',
+            builder: (context, state) => const CategoryListScreen(),
+          ),
+          GoRoute(
+            path: '/map',
+            builder: (context, state) => const StoreMapScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),
       GoRoute(
-        path: '/categories',
-        builder: (context, state) => const CategoryListScreen(),
-      ),
-      GoRoute(
-        path: '/map',
-        builder: (context, state) => const StoreMapScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/store/:slug',
@@ -77,7 +82,7 @@ GoRouter appRouter(Ref ref) {
     redirect: (context, state) {
       final loggedIn = authState.value != null;
       final matchedLocation = state.matchedLocation;
-      
+
       // Allow public store access
       if (matchedLocation.startsWith('/store/')) return null;
 

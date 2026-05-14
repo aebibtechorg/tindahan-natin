@@ -33,6 +33,23 @@ public class TindahanDbContext : DbContext
         modelBuilder.Entity<Product>().Property(p => p.ShelfId).HasColumnType("uuid");
         modelBuilder.Entity<Product>().Property(p => p.StoreId).HasColumnType("uuid");
 
+        // Configure generated tsvector columns for PostgreSQL full-text search
+        modelBuilder.Entity<Product>()
+            .HasGeneratedTsVectorColumn(
+                p => p.SearchVector,
+                "simple",
+                p => new { p.Name, p.Description, p.Barcode })
+            .HasIndex(p => p.SearchVector)
+            .HasMethod("GIN");
+
+        modelBuilder.Entity<Category>()
+            .HasGeneratedTsVectorColumn(
+                c => c.SearchVector,
+                "simple",
+                c => new { c.Name })
+            .HasIndex(c => c.SearchVector)
+            .HasMethod("GIN");
+
         modelBuilder.Entity<Shelf>().Property(s => s.Id).HasColumnType("uuid");
         modelBuilder.Entity<Shelf>().Property(s => s.StoreId).HasColumnType("uuid");
 

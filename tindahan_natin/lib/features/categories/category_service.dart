@@ -14,6 +14,12 @@ class CategoryService {
     return data.map((e) => Category.fromJson(Map<String, dynamic>.from(e as Map))).toList();
   }
 
+  Future<List<Category>> searchCategories(String storeId, String query) async {
+    final res = await _dio.get('/categories', queryParameters: {'storeId': storeId, 'q': query});
+    final List data = res.data as List;
+    return data.map((e) => Category.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+  }
+
   Future<Category> createCategory(String name, String storeId) async {
     final res = await _dio.post('/categories', data: {'name': name, 'storeId': storeId});
     return Category.fromJson(Map<String, dynamic>.from(res.data as Map));
@@ -32,4 +38,11 @@ final categoryServiceProvider = Provider((ref) => CategoryService(ref.watch(dioC
 
 final categoriesProvider = FutureProvider.family<List<Category>, String>((ref, storeId) {
   return ref.watch(categoryServiceProvider).getCategories(storeId);
+});
+
+final categorySearchProvider = FutureProvider.family<List<Category>, String>((ref, key) {
+  final parts = key.split('::');
+  final storeId = parts[0];
+  final query = parts.length > 1 ? parts.sublist(1).join('::') : '';
+  return ref.watch(categoryServiceProvider).searchCategories(storeId, query);
 });

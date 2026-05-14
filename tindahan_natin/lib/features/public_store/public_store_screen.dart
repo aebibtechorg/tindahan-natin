@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +17,26 @@ class PublicStoreScreen extends ConsumerStatefulWidget {
 
 class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
   final _searchController = TextEditingController();
+  Timer? _debounce;
   String _query = '';
+
+  void _onSearchChanged(String value) {
+    // update UI immediately for suffix icon visibility
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        _query = value.trim();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,23 +58,36 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: TextField(
+              child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search for products (e.g. Tomi)',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    setState(() {
-                      _query = _searchController.text;
-                    });
-                  },
-                ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                          setState(() {
+                            _query = '';
+                          });
+                        },
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () {
+                          setState(() {
+                            _query = _searchController.text;
+                          });
+                        },
+                      ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
+              onChanged: _onSearchChanged,
               onSubmitted: (val) {
+                _debounce?.cancel();
                 setState(() {
                   _query = val;
                 });

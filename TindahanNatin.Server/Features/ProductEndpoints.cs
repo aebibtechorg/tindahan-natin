@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
 using TindahanNatin.Server.Models;
@@ -12,21 +13,48 @@ public static class ProductEndpoints
     {
         var group = routes.MapGroup("/api/products").WithTags("Products");
 
-        group.MapGet("/", async (TindahanDbContext db, Guid storeId, Guid? categoryId, Guid? shelfId) =>
+        group.MapGet("/", async (TindahanDbContext db, Guid storeId, Guid? categoryId, Guid? shelfId, string? q) =>
         {
-            var query = db.Products.Where(p => p.StoreId == storeId);
+            // If no query provided, use regular LINQ path.
+            if (string.IsNullOrWhiteSpace(q))
+            {
+                var plainQuery = db.Products.Where(p => p.StoreId == storeId);
+                if (categoryId.HasValue)
+                {
+                    plainQuery = plainQuery.Where(p => p.CategoryId == categoryId.Value);
+                }
+                if (shelfId.HasValue)
+                {
+                    plainQuery = plainQuery.Where(p => p.ShelfId == shelfId.Value);
+                }
+
+                var plainProducts = await plainQuery.ToListAsync();
+
+                return plainProducts
+                    .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId));
+            }
+
+            var productsQuery = db.Products.Where(p => p.StoreId == storeId);
             if (categoryId.HasValue)
             {
-                query = query.Where(p => p.CategoryId == categoryId.Value);
+                productsQuery = productsQuery.Where(p => p.CategoryId == categoryId.Value);
             }
             if (shelfId.HasValue)
             {
-                query = query.Where(p => p.ShelfId == shelfId.Value);
+                productsQuery = productsQuery.Where(p => p.ShelfId == shelfId.Value);
             }
 
-            return await query
-                .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId))
-                .ToListAsync();
+            var pattern = $"%{q.Trim()}%";
+
+            productsQuery = productsQuery.Where(p =>
+                (p.SearchVector != null && p.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q))) ||
+                EF.Functions.ILike(p.Name, pattern) ||
+                EF.Functions.ILike(p.Description ?? string.Empty, pattern) ||
+                EF.Functions.ILike(p.Barcode ?? string.Empty, pattern));
+
+            var products = await productsQuery.ToListAsync();
+
+            return products.Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId));
         });
 
         group.MapGet("/{id}", async (Guid id, TindahanDbContext db) =>

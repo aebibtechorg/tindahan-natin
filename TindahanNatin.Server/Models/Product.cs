@@ -1,4 +1,5 @@
 using System;
+using NpgsqlTypes;
 
 namespace TindahanNatin.Server.Models;
 
@@ -14,4 +15,7 @@ public class Product
     public string? ImageUrl { get; set; }
     public string? Barcode { get; set; }
     public Guid StoreId { get; set; }
+
+    // PostgreSQL full-text search vector (generated column)
+    public NpgsqlTsVector? SearchVector { get; set; }
 }

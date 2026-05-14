@@ -49,6 +49,7 @@ class MyApp extends ConsumerWidget {
       title: 'Tindahan Natin',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
