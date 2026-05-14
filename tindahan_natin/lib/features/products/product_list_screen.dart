@@ -116,13 +116,24 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
             ],
           ),
           body: displayAsync.when(
-            data: (products) => RefreshIndicator(
-              onRefresh: () => ref.read(productsProvider(storeId).notifier).refresh(),
-              child: Builder(builder: (ctx) {
-                final categoriesData = categoriesAsync.asData?.value;
-                final shelvesData = shelvesAsync.asData?.value;
+            data: (products) {
+              final categoriesData = categoriesAsync.asData?.value;
+              final shelvesData = shelvesAsync.asData?.value;
 
-                if (categoriesData != null && shelvesData != null) {
+              if (categoriesAsync.isLoading || shelvesAsync.isLoading || categoriesData == null || shelvesData == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final catErr = categoriesAsync.whenOrNull(error: (e, s) => e);
+              final shelfErr = shelvesAsync.whenOrNull(error: (e, s) => e);
+              if (catErr != null || shelfErr != null) {
+                final errorMessage = catErr ?? shelfErr ?? 'Error loading resources';
+                return Center(child: Text(errorMessage.toString()));
+              }
+
+              return RefreshIndicator(
+                onRefresh: () => ref.read(productsProvider(storeId).notifier).refresh(),
+                child: Builder(builder: (ctx) {
                   if (products.isEmpty) return const Center(child: Text('No products yet.'));
                   return ListView.builder(
                     itemCount: products.length,
@@ -180,96 +191,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       );
                     },
                   );
-                }
-
-                if (categoriesAsync.isLoading || shelvesAsync.isLoading) {
-                  if (products.isEmpty) return const Center(child: Text('No products yet.'));
-                  return ListView.builder(
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final product = products[index];
-                      return Dismissible(
-                        key: Key('product_${product.id}'),
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-                        direction: DismissDirection.endToStart,
-                        onDismissed: (direction) {
-                          ref.read(productsProvider(storeId).notifier).deleteProduct(product.id);
-                        },
-                        child: ListTile(
-                          leading: product.imageUrl != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: CachedNetworkImage(
-                                    imageUrl: '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                                  ),
-                                )
-                              : const Icon(Icons.shopping_bag, size: 40),
-                          title: Text(product.name),
-                          subtitle: Text('₱${product.price} • Loading category • Loading shelf • Stock: ${product.quantity}'),
-                          trailing: product.quantity < 5
-                              ? const Chip(label: Text('Low Stock', style: TextStyle(fontSize: 10, color: Colors.white)), backgroundColor: Colors.red)
-                              : const Icon(Icons.chevron_right),
-                          onTap: () {},
-                        ).animate()
-                          .fadeIn(duration: const Duration(milliseconds: 300), delay: Duration(milliseconds: 30 * index))
-                          .slideY(begin: 0.02, duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
-                      );
-                    },
-                  );
-                }
-
-                final catErr = categoriesAsync.whenOrNull(error: (e, s) => e);
-                final shelfErr = shelvesAsync.whenOrNull(error: (e, s) => e);
-                final errorMessage = catErr ?? shelfErr ?? 'Error loading resources';
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(errorMessage.toString()),
-                      const SizedBox(height: 8),
-                      products.isEmpty
-                          ? const Text('No products yet.')
-                          : SizedBox(
-                              height: 300,
-                              child: ListView.builder(
-                                itemCount: products.length,
-                                itemBuilder: (context, index) {
-                                  final product = products[index];
-                                  return ListTile(
-                                    leading: product.imageUrl != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(4),
-                                            child: CachedNetworkImage(
-                                              imageUrl: '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
-                                              width: 50,
-                                              height: 50,
-                                              fit: BoxFit.cover,
-                                              placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                              errorWidget: (context, url, error) => const Icon(Icons.error),
-                                            ),
-                                          )
-                                        : const Icon(Icons.shopping_bag, size: 40),
-                                    title: Text(product.name),
-                                    subtitle: Text('₱${product.price} • Unknown category/shelf • Stock: ${product.quantity}'),
-                                  ).animate().fadeIn(duration: const Duration(milliseconds: 300), delay: Duration(milliseconds: 30 * index)).slideY(begin: 0.02, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-                                },
-                              ),
-                            ),
-                    ],
-                  ),
-                );
-              }),
-            ),
+                }),
+              );
+            },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(
               child: Column(
