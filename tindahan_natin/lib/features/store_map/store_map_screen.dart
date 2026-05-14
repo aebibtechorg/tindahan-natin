@@ -20,14 +20,107 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final Set<String> _selectedShelfIds = {};
   bool _multiSelectMode = false;
   bool _snapToGrid = true;
-  double _gridSize = 50.0;
+  final double _gridSize = 50.0;
   final double _canvasSize = 100000.0;
   final Map<String, Shelf> _optimisticShelves = {};
   final Set<String> _optimisticRemovedIds = {};
   final Map<String, Shelf> _bulkMoveStartShelves = {};
   bool _initialViewConfigured = false;
+  Size _viewportSize = Size.zero;
 
   double get _canvasOrigin => _canvasSize / 2;
+
+  double _snapCoordinate(double value) {
+    if (!_snapToGrid) {
+      return value;
+    }
+
+    return (value / _gridSize).round() * _gridSize;
+  }
+
+  void _removeLocalShelfState(Iterable<String> shelfIds) {
+    for (final shelfId in shelfIds) {
+      _optimisticShelves.remove(shelfId);
+      _optimisticRemovedIds.remove(shelfId);
+      _bulkMoveStartShelves.remove(shelfId);
+      _selectedShelfIds.remove(shelfId);
+    }
+  }
+
+  Offset _viewportCenterScene() {
+    if (_viewportSize.isEmpty) {
+      return Offset.zero;
+    }
+
+    final viewportCenter = _viewportSize.center(Offset.zero);
+    final m = _transformationController.value;
+    final inverse = vm.Matrix4.fromList(m.storage.toList())..invert();
+    final vec = vm.Vector3(viewportCenter.dx, viewportCenter.dy, 0);
+    final scene = inverse.transform3(vec);
+    return Offset(scene.x - _canvasOrigin, scene.y - _canvasOrigin);
+  }
+
+  Future<void> _addShelfAtVisibleCenter(BuildContext context, String storeId) async {
+    if (_viewportSize.isEmpty) {
+      return;
+    }
+
+    const shelfName = 'New Shelf';
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final scenePosition = _viewportCenterScene();
+    final snapX = _snapCoordinate(scenePosition.dx);
+    final snapY = _snapCoordinate(scenePosition.dy);
+    final tempId = 'tmp-${DateTime.now().microsecondsSinceEpoch}';
+    final tempShelf = Shelf(
+      id: tempId,
+      name: shelfName,
+      storeId: storeId,
+      x: snapX,
+      y: snapY,
+      rotation: 0.0,
+    );
+
+    setState(() {
+      _optimisticShelves[tempId] = tempShelf;
+      _selectedShelfIds
+        ..clear()
+        ..add(tempId);
+    });
+
+    try {
+      final created = await ref.read(mapServiceProvider).createShelf({
+        'name': shelfName,
+        'storeId': storeId,
+        'x': snapX,
+        'y': snapY,
+      });
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _optimisticShelves.remove(tempId);
+        _optimisticShelves[created.id] = created;
+        _selectedShelfIds
+          ..clear()
+          ..add(created.id);
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _optimisticShelves.remove(tempId);
+        _selectedShelfIds.remove(tempId);
+      });
+
+      messenger?.showSnackBar(
+        SnackBar(content: Text('Create failed: $e')),
+      );
+    }
+  }
 
   void _configureInitialView(Size viewportSize) {
     if (_initialViewConfigured || viewportSize.isEmpty) {
@@ -65,7 +158,8 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: () => _showAddShelfDialog(context, ref, storeId),
+                tooltip: 'Add shelf',
+                onPressed: () => _addShelfAtVisibleCenter(context, storeId),
               ),
               IconButton(
                 icon: Icon(_snapToGrid ? Icons.grid_on : Icons.grid_off),
@@ -85,6 +179,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                   icon: const Icon(Icons.edit),
                   onPressed: () async {
                     final shelves = await ref.read(shelvesProvider(storeId).future);
+                    if (!context.mounted) {
+                      return;
+                    }
                     final shelf = shelves.firstWhere((s) => s.id == _selectedShelfIds.first);
                     _showEditShelfDialog(context, ref, shelf, storeId);
                   },
@@ -112,7 +209,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         try {
                           await ref.read(mapServiceProvider).deleteShelf(id);
                           ref.invalidate(shelvesProvider(storeId));
-                          setState(() => _optimisticRemovedIds.remove(id));
+                          setState(() => _removeLocalShelfState([id]));
                         } catch (e) {
                           setState(() => _optimisticRemovedIds.remove(id));
                           if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
@@ -149,6 +246,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed for $id: $e')));
                         }
                       }
+                      setState(() => _removeLocalShelfState(idsToDelete));
                       ref.invalidate(shelvesProvider(storeId));
                     }
                   },
@@ -175,6 +273,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
               return LayoutBuilder(
                 builder: (context, constraints) {
+                  _viewportSize = constraints.biggest;
                   _configureInitialView(constraints.biggest);
 
                   return InteractiveViewer(
@@ -249,74 +348,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, s) => Scaffold(body: Center(child: Text('Error loading store: $e'))),
     );
-  }
-
-  void _showAddShelfDialog(BuildContext context, WidgetRef ref, String storeId) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Shelf'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Shelf Name'),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () async {
-              if (controller.text.isNotEmpty) {
-                double cx = 0;
-                double cy = 0;
-                final containerContext = _containerKey.currentContext;
-                if (containerContext != null) {
-                  final rb = containerContext.findRenderObject() as RenderBox;
-                  final centerLocal = rb.size.center(Offset.zero);
-                  final centerGlobal = rb.localToGlobal(centerLocal);
-                  final sceneCenter = _globalToScene(centerGlobal);
-                  cx = sceneCenter.dx;
-                  cy = sceneCenter.dy;
-                }
-                final snapX = _snapToGrid ? (cx / _gridSize).round() * _gridSize : cx;
-                final snapY = _snapToGrid ? (cy / _gridSize).round() * _gridSize : cy;
-                final tempId = 'tmp-${DateTime.now().microsecondsSinceEpoch}';
-                final tempShelf = Shelf(id: tempId, name: controller.text, storeId: storeId, x: snapX, y: snapY, rotation: 0.0);
-                setState(() => _optimisticShelves[tempId] = tempShelf);
-                if (context.mounted) Navigator.pop(context);
-                try {
-                  final created = await ref.read(mapServiceProvider).createShelf({
-                    'name': controller.text,
-                    'storeId': storeId,
-                    'x': snapX,
-                    'y': snapY,
-                  });
-                  setState(() {
-                    _optimisticShelves.remove(tempId);
-                    _optimisticShelves[created.id] = created;
-                  });
-                } catch (e) {
-                  setState(() => _optimisticShelves.remove(tempId));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Create failed: $e')));
-                  }
-                }
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Offset _globalToScene(Offset global) {
-    final renderBox = _containerKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return Offset.zero;
-    final local = renderBox.globalToLocal(global);
-    final m = _transformationController.value;
-    final inverse = vm.Matrix4.fromList(m.storage.toList())..invert();
-    final vec = vm.Vector3(local.dx, local.dy, 0);
-    final scene = inverse.transform3(vec);
-    return Offset(scene.x - _canvasOrigin, scene.y - _canvasOrigin);
   }
 
   void _applyBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds, Offset delta) {
