@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tindahan_natin/features/settings/store_service.dart';
+// import 'package:tindahan_natin/features/settings/store_service.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
