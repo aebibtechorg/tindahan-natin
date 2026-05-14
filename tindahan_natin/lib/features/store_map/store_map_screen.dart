@@ -150,6 +150,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
                 return InteractiveViewer(
                 clipBehavior: Clip.none,
+                constrained: false,
                 transformationController: _transformationController,
                 boundaryMargin: EdgeInsets.all(_canvasSize * 2),
                 minScale: 0.05,
@@ -169,7 +170,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         key: _containerKey,
                         width: _canvasSize,
                         height: _canvasSize,
-                        color: Colors.grey[100],
+                        color: Colors.transparent,
                       ),
                     ),
                     ...displayedShelves.map((shelf) => DraggableShelf(
@@ -640,6 +641,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
       left: x,
       top: y,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => widget.onSelect(widget.shelf.id),
         onDoubleTap: widget.onDoubleTap,
         onPanStart: (details) {
@@ -710,7 +712,10 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
           }
         },
-        child: _ShelfWidget(name: widget.shelf.name, isDragging: _dragging, isSelected: widget.selected, rotation: rotation),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 96, minHeight: 48),
+          child: _ShelfWidget(name: widget.shelf.name, isDragging: _dragging, isSelected: widget.selected, rotation: rotation),
+        ),
       ),
     );
   }
