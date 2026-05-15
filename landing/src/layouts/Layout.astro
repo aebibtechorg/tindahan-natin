@@ -9,8 +9,8 @@ const { title } = Astro.props;
 const session = await getSession(Astro.request);
 
 // Pass Auth0 config to client for federated logout
-const auth0Domain = import.meta.env.AUTH_ISSUER?.replace('https://', '').replace('/', '');
-const auth0ClientId = import.meta.env.AUTH_CLIENT_ID;
+const auth0Domain = (process.env.AUTH_ISSUER || import.meta.env.AUTH_ISSUER)?.replace('https://', '').replace('/', '');
+const auth0ClientId = process.env.AUTH_CLIENT_ID || import.meta.env.AUTH_CLIENT_ID;
 const baseUrl = Astro.url.origin;
 ---
 

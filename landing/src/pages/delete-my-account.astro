@@ -10,7 +10,7 @@ if (Astro.request.method === 'POST' && Astro.url.searchParams.has('confirm')) {
     if (!session) {
         error = "You must be signed in to delete your account.";
     } else {
-        const serverUrl = import.meta.env.services__server__http__0 || import.meta.env.SERVICES__SERVER__HTTP__0;
+        const serverUrl = process.env.services__server__http__0 || process.env.SERVICES__SERVER__HTTP__0 || import.meta.env.services__server__http__0 || import.meta.env.SERVICES__SERVER__HTTP__0;
         
         if (!serverUrl) {
             error = "Server URL not configured. Please contact support.";
