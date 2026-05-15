@@ -77,6 +77,15 @@ jobs:
           -p:ContainerRepository=${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }} \
           -p:ContainerImageTag=${{ github.sha }}
 
+    - name: Install EF Tool
+      run: dotnet tool install --global dotnet-ef
+
+    - name: Update Database
+      run: |
+        dotnet ef database update \
+          --project TindahanNatin.Server/TindahanNatin.Server.csproj \
+          --connection "${{ secrets.POSTGRES_CONNECTION_STRING }}"
+
     - name: Terraform Apply
       run: terraform apply -auto-approve
       working-directory: ./terraform
