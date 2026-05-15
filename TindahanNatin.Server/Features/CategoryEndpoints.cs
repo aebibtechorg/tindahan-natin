@@ -11,11 +11,15 @@ public static class CategoryEndpoints
 {
     public static void MapCategoryEndpoints(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/api/categories").WithTags("Categories");
+        var group = routes.MapGroup("/api/categories").WithTags("Categories").RequireAuthorization();
 
-        group.MapGet("/", async (TindahanDbContext db, Guid storeId, string? q, DateTimeOffset? updatedSince, bool includeDeleted = false) =>
+        group.MapGet("/", async (HttpContext context, TindahanDbContext db, Guid storeId, string? q, DateTimeOffset? updatedSince, bool includeDeleted = false) =>
         {
-            var categoriesBaseQuery = includeDeleted ? db.Categories.IgnoreQueryFilters() : db.Categories;
+            var userId = context.User.GetUserId();
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+            if (!await db.OwnsStoreAsync(userId, storeId)) return Results.Forbid();
+
+            var categoriesBaseQuery = db.OwnedCategories(userId, includeDeleted);
 
             if (string.IsNullOrWhiteSpace(q))
             {
@@ -28,9 +32,9 @@ public static class CategoryEndpoints
                     query = query.Where(c => c.UpdatedAt >= updatedSince.Value || c.CreatedAt >= updatedSince.Value);
                 }
 
-                return await query
+                return Results.Ok(await query
                     .Select(c => new CategoryDto(c.Id, c.Name, c.StoreId, c.CreatedAt, c.UpdatedAt, c.IsDeleted, c.DeletedAt))
-                    .ToListAsync();
+                    .ToListAsync());
             }
 
             var pattern = $"%{q.Trim()}%";
@@ -46,29 +50,39 @@ public static class CategoryEndpoints
 
             var categories = await categoriesQuery.ToListAsync();
 
-            return categories.Select(c => new CategoryDto(c.Id, c.Name, c.StoreId, c.CreatedAt, c.UpdatedAt, c.IsDeleted, c.DeletedAt));
+            return Results.Ok(categories.Select(c => new CategoryDto(c.Id, c.Name, c.StoreId, c.CreatedAt, c.UpdatedAt, c.IsDeleted, c.DeletedAt)));
         });
 
-        group.MapGet("/{id}", async (Guid id, TindahanDbContext db) =>
+        group.MapGet("/{id}", async (Guid id, HttpContext context, TindahanDbContext db) =>
         {
-            return await db.Categories.FindAsync(id) switch
+            var userId = context.User.GetUserId();
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            return await db.OwnedCategories(userId).FirstOrDefaultAsync(c => c.Id == id) switch
             {
                 Category c => Results.Ok(new CategoryDto(c.Id, c.Name, c.StoreId, c.CreatedAt, c.UpdatedAt, c.IsDeleted, c.DeletedAt)),
                 null => Results.NotFound()
             };
         });
 
-        group.MapPost("/", async (CreateCategoryDto dto, TindahanDbContext db) =>
+        group.MapPost("/", async (CreateCategoryDto dto, HttpContext context, TindahanDbContext db) =>
         {
+            var userId = context.User.GetUserId();
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+            if (!await db.OwnsStoreAsync(userId, dto.StoreId)) return Results.Forbid();
+
             var cat = new Category { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
             db.Categories.Add(cat);
             await db.SaveChangesAsync();
             return Results.Created($"/api/categories/{cat.Id}", new CategoryDto(cat.Id, cat.Name, cat.StoreId, cat.CreatedAt, cat.UpdatedAt, cat.IsDeleted, cat.DeletedAt));
         });
 
-        group.MapPut("/{id}", async (Guid id, UpdateCategoryDto dto, TindahanDbContext db) =>
+        group.MapPut("/{id}", async (Guid id, UpdateCategoryDto dto, HttpContext context, TindahanDbContext db) =>
         {
-            var cat = await db.Categories.FindAsync(id);
+            var userId = context.User.GetUserId();
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            var cat = await db.OwnedCategories(userId).FirstOrDefaultAsync(c => c.Id == id);
             if (cat is null) return Results.NotFound();
             cat.Name = dto.Name;
             cat.UpdatedAt = DateTimeOffset.UtcNow;
@@ -76,9 +90,12 @@ public static class CategoryEndpoints
             return Results.NoContent();
         });
 
-        group.MapDelete("/{id}", async (Guid id, TindahanDbContext db) =>
+        group.MapDelete("/{id}", async (Guid id, HttpContext context, TindahanDbContext db) =>
         {
-            var cat = await db.Categories.FindAsync(id);
+            var userId = context.User.GetUserId();
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            var cat = await db.OwnedCategories(userId).FirstOrDefaultAsync(c => c.Id == id);
             if (cat is null) return Results.NotFound();
 
             cat.IsDeleted = true;

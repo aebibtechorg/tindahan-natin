@@ -14,7 +14,7 @@ public static class UserEndpoints
 
         group.MapDelete("/me", async (HttpContext context, TindahanDbContext db, IConfiguration config, IHttpClientFactory httpClientFactory) =>
         {
-            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? context.User.FindFirst("sub")?.Value;
+            var userId = context.User.GetUserId();
             var email = context.User.FindFirst(ClaimTypes.Email)?.Value ?? context.User.FindFirst("email")?.Value;
 
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();

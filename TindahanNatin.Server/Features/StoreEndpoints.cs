@@ -17,7 +17,7 @@ public static class StoreEndpoints
         // Get the authenticated user's store
         group.MapGet("/me", async (HttpContext context, TindahanDbContext db) =>
         {
-            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? context.User.FindFirst("sub")?.Value;
+            var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
             var store = await db.Stores.FirstOrDefaultAsync(s => s.OwnerId == userId);
@@ -29,7 +29,7 @@ public static class StoreEndpoints
         // Update the authenticated user's store (e.g., name)
         group.MapPut("/me", async (UpdateStoreDto dto, HttpContext context, TindahanDbContext db) =>
         {
-            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? context.User.FindFirst("sub")?.Value;
+            var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
             var store = await db.Stores.FirstOrDefaultAsync(s => s.OwnerId == userId);

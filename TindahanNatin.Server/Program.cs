@@ -72,7 +72,7 @@ app.Use(async (context, next) =>
 {
     if (context.User.Identity?.IsAuthenticated == true)
     {
-        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? context.User.FindFirst("sub")?.Value;
+        var userId = context.User.GetUserId();
         var name = context.User.FindFirst("name")?.Value ?? string.Empty;
         var email = context.User.FindFirst("email")?.Value ?? string.Empty;
 
