@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 
@@ -80,47 +81,58 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
         ),
         Expanded(
           child: searchAsync.when(
-            data: (products) => products.isEmpty
-                ? const Center(child: Text('No products found.'))
-                : ListView.builder(
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final product = products[index];
+            data: (products) {
+              if (products.isEmpty) return const Center(child: Text('No products found.'));
 
-                      return ListTile(
-                        leading: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: product.imageUrl != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Icon(Icons.shopping_bag),
-                        ),
-                        title: Text(product.name),
-                        subtitle: Text(
-                          product.shelfName == null
-                              ? '₱${product.price} • Shelf unavailable'
-                              : '₱${product.price} • Shelf: ${product.shelfName}',
-                        ),
-                        trailing: product.shelfId != null
-                            ? SizedBox(
-                                width: 48,
-                                child: IconButton(
-                                  onPressed: () => widget.onOpenMap?.call(product.shelfId),
-                                  tooltip: 'Find on map',
-                                  icon: const Icon(Icons.place_outlined),
-                                ),
-                              )
-                            : null,
-                        onTap: () => widget.onOpenMap?.call(product.shelfId),
-                      );
-                    },
-                  ),
+              const adInterval = 10;
+              final itemCount = products.length + (products.length / adInterval).floor();
+
+              return ListView.builder(
+                itemCount: itemCount,
+                itemBuilder: (context, index) {
+                  final isAd = (index + 1) % (adInterval + 1) == 0;
+                  if (isAd) {
+                    return const InlineAdWidget();
+                  }
+
+                  final productIndex = index - (index / (adInterval + 1)).floor();
+                  final product = products[productIndex];
+
+                  return ListTile(
+                    leading: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: product.imageUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.shopping_bag),
+                    ),
+                    title: Text(product.name),
+                    subtitle: Text(
+                      product.shelfName == null
+                          ? '₱${product.price} • Shelf unavailable'
+                          : '₱${product.price} • Shelf: ${product.shelfName}',
+                    ),
+                    trailing: product.shelfId != null
+                        ? SizedBox(
+                            width: 48,
+                            child: IconButton(
+                              onPressed: () => widget.onOpenMap?.call(product.shelfId),
+                              tooltip: 'Find on map',
+                              icon: const Icon(Icons.place_outlined),
+                            ),
+                          )
+                        : null,
+                    onTap: () => widget.onOpenMap?.call(product.shelfId),
+                  );
+                },
+              );
+            },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(child: Text('Error: $e')),
           ),

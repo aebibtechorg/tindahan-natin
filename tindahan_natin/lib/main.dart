@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:tindahan_natin/core/config/ad_initializer.dart';
 import 'package:tindahan_natin/core/config/app_logger.dart';
 import 'package:tindahan_natin/core/routing/app_router.dart';
 import 'package:tindahan_natin/core/sync/sync_coordinator.dart';
@@ -10,6 +14,9 @@ void main() async {
   try {
     debugPrint('Starting Tindahan Natin...');
     WidgetsFlutterBinding.ensureInitialized();
+
+    debugPrint('Initializing Ads...');
+    unawaited(initializeAds());
     
     debugPrint('Initializing Hive...');
     await Hive.initFlutter();

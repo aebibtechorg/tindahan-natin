@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 
@@ -89,11 +90,20 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           body: displayAsync.when(
             data: (categories) {
               if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
-              return ListView.separated(
-                itemCount: categories.length,
-                separatorBuilder: (_, __) => const SizedBox.shrink(),
+              
+              const adInterval = 10;
+              final itemCount = categories.length + (categories.length / adInterval).floor();
+
+              return ListView.builder(
+                itemCount: itemCount,
                 itemBuilder: (context, index) {
-                  final c = categories[index];
+                  final isAd = (index + 1) % (adInterval + 1) == 0;
+                  if (isAd) {
+                    return const InlineAdWidget();
+                  }
+
+                  final categoryIndex = index - (index / (adInterval + 1)).floor();
+                  final c = categories[categoryIndex];
                   return ListTile(
                     leading: const Icon(Icons.label),
                     title: Text(c.name),

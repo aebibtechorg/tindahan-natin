@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
@@ -135,10 +136,20 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 onRefresh: () => ref.read(productsProvider(storeId).notifier).refresh(),
                 child: Builder(builder: (ctx) {
                   if (products.isEmpty) return const Center(child: Text('No products yet.'));
+                  
+                  const adInterval = 10;
+                  final itemCount = products.length + (products.length / adInterval).floor();
+
                   return ListView.builder(
-                    itemCount: products.length,
+                    itemCount: itemCount,
                     itemBuilder: (context, index) {
-                      final product = products[index];
+                      final isAd = (index + 1) % (adInterval + 1) == 0;
+                      if (isAd) {
+                        return const InlineAdWidget();
+                      }
+
+                      final productIndex = index - (index / (adInterval + 1)).floor();
+                      final product = products[productIndex];
                       final cat = categoriesData.firstWhere(
                         (c) => c.id == product.categoryId,
                         orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
