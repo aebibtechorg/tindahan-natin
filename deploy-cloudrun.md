@@ -49,9 +49,62 @@ Before the pipeline can run successfully, you will need to manually prepare the 
 
 1.  **Google Cloud Platform**:
     *   Create a GCP Project and link a Billing Account.
-    *   Enable APIs: Cloud Run API, Artifact Registry API, Cloud Resource Manager API, IAM API.
-    *   Create a Google Cloud Storage (GCS) bucket to store the Terraform state.
-    *   Configure Workload Identity Federation for GitHub Actions (or generate a Service Account JSON key).
+    *   Enable APIs and setup Workload Identity Federation using the commands below:
+
+    ```bash
+    # 1. Set variables
+    export PROJECT_ID="your-project-id"
+    export REPO="YOUR_GITHUB_ORG/YOUR_REPO_NAME" # e.g. "paul/tindahan-natin"
+
+    # 2. Enable Required APIs
+    gcloud services enable run.googleapis.com \
+        artifactregistry.googleapis.com \
+        cloudresourcemanager.googleapis.com \
+        iam.googleapis.com \
+        iamcredentials.googleapis.com \
+        storage.googleapis.com \
+        --project $PROJECT_ID
+
+    # 3. Create Terraform State Bucket
+    export BUCKET_NAME="${PROJECT_ID}-tfstate"
+    gsutil mb -p $PROJECT_ID -l asia-southeast1 gs://$BUCKET_NAME
+    gsutil versioning set on gs://$BUCKET_NAME
+
+    # 4. Configure Workload Identity Federation
+    # Create Pool
+    gcloud iam workload-identity-pools create "github-pool" \
+        --project="${PROJECT_ID}" --location="global" --display-name="GitHub Pool"
+
+    # Create Provider
+    gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+        --project="${PROJECT_ID}" --location="global" \
+        --workload-identity-pool="github-pool" \
+        --display-name="GitHub Provider" \
+        --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+        --issuer-uri="https://token.actions.githubusercontent.com"
+
+    # Create Service Account
+    gcloud iam service-accounts create github-actions-sa \
+        --project="${PROJECT_ID}" --display-name="GitHub Actions SA"
+
+    # Grant Owner role (Simplest for MVP; refine for production)
+    gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+        --member="serviceAccount:github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+        --role="roles/owner"
+
+    # Allow GitHub to impersonate the SA
+    export PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format='value(projectNumber)')
+    gcloud iam service-accounts add-iam-policy-binding "github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+        --project="${PROJECT_ID}" --role="roles/iam.workloadIdentityUser" \
+        --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/${REPO}"
+
+    # 5. Output Values for GitHub Secrets
+    echo "GCP_PROJECT_ID: ${PROJECT_ID}"
+    echo "TF_STATE_BUCKET: ${BUCKET_NAME}"
+    echo "GCP_WIF_SA: github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+    echo "GCP_WIF_PROVIDER: projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+    ```
+
 2.  **External Services**:
     *   Provision your external PostgreSQL database and obtain the connection string.
     *   Provision your external Redis cache and obtain the connection string.
