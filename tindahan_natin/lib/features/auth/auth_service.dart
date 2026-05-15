@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/config/auth_config.dart';
+import 'package:tindahan_natin/core/storage/local_storage.dart';
 
 part 'auth_service.g.dart';
 
@@ -72,6 +73,7 @@ class AuthState extends _$AuthState {
 
   Future<void> logout() async {
     state = const AsyncValue.loading();
+    await ref.read(localStorageProvider).clearCache();
     await ref.read(authServiceProvider).logout();
     state = const AsyncValue.data(null);
   }
