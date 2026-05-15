@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tindahan_natin/core/config/package_info.dart';
 import 'package:tindahan_natin/core/config/public_web_config.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
@@ -188,6 +189,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const Spacer(),
                     const InlineAdWidget(),
+                    const SizedBox(height: 16),
+                    ref.watch(packageInfoProvider).when(
+                          data: (info) => Text(
+                            'Version ${info.version} (${info.buildNumber})',
+                            style: Theme.of(context).textTheme.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, stack) => const SizedBox.shrink(),
+                        ),
                   ],
                 ),
               ),

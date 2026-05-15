@@ -48,7 +48,7 @@ final class MapServiceProvider
   }
 }
 
-String _$mapServiceHash() => r'142cfd7e8ac0d9b848254651ef9027c0e66288eb';
+String _$mapServiceHash() => r'77982120d0a75e9116127bca398e05f6cace83ee';
 
 @ProviderFor(shelves)
 final shelvesProvider = ShelvesFamily._();

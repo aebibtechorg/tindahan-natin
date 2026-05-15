@@ -115,7 +115,7 @@ final class PublicProductSearchProvider
 }
 
 String _$publicProductSearchHash() =>
-    r'a5878f9e0f24ce6f7453f5f0d9b3b5b2817dceca';
+    r'73b1fabf483ece5a489db84fc4bcdaab98a61b83';
 
 final class PublicProductSearchFamily extends $Family
     with
