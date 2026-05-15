@@ -92,7 +92,10 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                 itemBuilder: (context, index) {
                   final isAd = (index + 1) % (adInterval + 1) == 0;
                   if (isAd) {
-                    return const InlineAdWidget();
+                    return const SizedBox(
+                      width: double.infinity,
+                      child: InlineAdWidget(),
+                    );
                   }
 
                   final productIndex = index - (index / (adInterval + 1)).floor();

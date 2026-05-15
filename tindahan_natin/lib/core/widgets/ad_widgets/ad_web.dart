@@ -21,20 +21,47 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
       ui.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
         final element = web.document.createElement('div') as web.HTMLDivElement;
         element.style.width = '100%';
-        element.style.height = '100%';
+        element.style.height = '100px';
+        element.style.minWidth = '320px';
+        element.style.minHeight = '100px';
         element.style.textAlign = 'center';
         element.style.padding = '8px';
+        element.style.boxSizing = 'border-box';
+        element.id = 'adsense-unit-$viewId';
 
         final ins = web.document.createElement('ins') as web.HTMLModElement;
         ins.className = 'adsbygoogle';
         ins.style.display = 'block';
+        ins.style.width = '100%';
+        ins.style.height = '100%';
         ins.setAttribute('data-ad-client', AdHelper.bannerAdUnitId.split('/')[0]);
         ins.setAttribute('data-ad-slot', AdHelper.bannerAdUnitId.split('/')[1]);
         ins.setAttribute('data-ad-format', 'auto');
         ins.setAttribute('data-full-width-responsive', 'true');
 
         final script = web.document.createElement('script') as web.HTMLScriptElement;
-        script.text = '(adsbygoogle = window.adsbygoogle || []).push({});';
+        script.text = '''
+          (function initAd() {
+            var container = document.getElementById("adsense-unit-$viewId");
+            if (!container) {
+              window.setTimeout(initAd, 50);
+              return;
+            }
+
+            var width = container.getBoundingClientRect().width;
+            if (!width || width <= 0) {
+              window.setTimeout(initAd, 50);
+              return;
+            }
+
+            if (container.dataset.adInitialized === 'true') {
+              return;
+            }
+
+            container.dataset.adInitialized = 'true';
+            (adsbygoogle = window.adsbygoogle || []).push({});
+          })();
+        ''';
 
         element.appendChild(ins);
         element.appendChild(script);
@@ -46,10 +73,21 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: const HtmlElementView(viewType: _viewType),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite && constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+
+        return SizedBox(
+          width: width,
+          height: 100,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: HtmlElementView(viewType: _viewType),
+          ),
+        );
+      },
     );
   }
 }
