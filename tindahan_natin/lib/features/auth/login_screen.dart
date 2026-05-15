@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
+import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -24,8 +25,7 @@ class LoginScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.store, size: 120, color: Colors.white)
-                  .animate()
+              const AppLogo(size: 120).animate()
                   .scale(duration: 800.ms, curve: Curves.elasticOut)
                   .fadeIn(),
               const SizedBox(height: 24),
@@ -40,7 +40,7 @@ class LoginScreen extends ConsumerWidget {
               ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
               const SizedBox(height: 8),
               const Text(
-                'Your sari-sari store, digitized.',
+                'Your sari-sari store companion.',
                 style: TextStyle(fontSize: 18, color: Colors.white70),
               ).animate().fadeIn(delay: 500.ms),
               const SizedBox(height: 60),

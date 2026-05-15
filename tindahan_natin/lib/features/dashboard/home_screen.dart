@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
+import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 // import 'package:tindahan_natin/features/settings/store_service.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -26,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 40),
-            const Icon(Icons.store, size: 100, color: Colors.blue)
+            const AppLogo(size: 100)
                 .animate()
                 .scale(duration: 600.ms, curve: Curves.easeOutBack)
                 .fadeIn(),

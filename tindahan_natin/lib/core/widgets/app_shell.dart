@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
+import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
 /// AppShell provides a consistent scaffold with a modern AppBar
 /// and a Material 3 `NavigationBar` for the main sections.
@@ -29,28 +30,7 @@ class AppShell extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: const Icon(Icons.storefront, color: Colors.white, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Text('Tindahan Natin', style: Theme.of(context).textTheme.titleLarge),
-          ],
-        ),
+        title: const AppLogo(size: 36, showText: true),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

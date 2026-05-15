@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
 class StoreLookupScreen extends StatefulWidget {
   const StoreLookupScreen({super.key});
@@ -43,7 +44,7 @@ class _StoreLookupScreenState extends State<StoreLookupScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.storefront, size: 48),
+                    const Center(child: AppLogo(size: 64)),
                     const SizedBox(height: 16),
                     Text(
                       'Enter a store ID to open its public page.',
