@@ -61,19 +61,6 @@ variable "auth0_management_client_secret" {
   default     = ""
 }
 
-variable "auth0_landing_client_id" {
-  description = "Auth0 Landing Client ID"
-  type        = string
-  default     = ""
-}
-
-variable "auth0_landing_client_secret" {
-  description = "Auth0 Landing Client Secret"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 variable "auth0_client_id" {
   description = "Auth0 Client ID (optional for server, but good to have)"
   type        = string

@@ -73,7 +73,7 @@ jobs:
         TF_VAR_auth0_audience: ${{ secrets.AUTH0_AUDIENCE }}
         TF_VAR_auth0_management_client_id: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
         TF_VAR_auth0_management_client_secret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
-        TF_VAR_auth0_landing_client_id: ${{ secrets.AUTH0_LANDING_CLIENT_ID }}
-        TF_VAR_auth0_landing_client_secret: ${{ secrets.AUTH0_LANDING_CLIENT_SECRET }}
+        TF_VAR_auth0_client_id: ${{ secrets.AUTH0_CLIENT_ID }}
+        TF_VAR_r2_bucket_name: ${{ secrets.R2_BUCKET_NAME }}
         TF_VAR_cors_allowed_origins: ${{ secrets.CORS_ALLOWED_ORIGINS }}
 

@@ -89,16 +89,6 @@ resource "google_cloud_run_v2_service" "server" {
         value = var.auth0_management_client_secret
       }
 
-      env {
-        name  = "Auth0__LandingClientId"
-        value = var.auth0_landing_client_id
-      }
-
-      env {
-        name  = "Auth0__LandingClientSecret"
-        value = var.auth0_landing_client_secret
-      }
-
       # CORS Allowed Origins
       # We map the first 3 origins if provided.
       dynamic "env" {
