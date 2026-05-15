@@ -41,6 +41,10 @@ The Flutter app reads its runtime configuration from `--dart-define` values. The
 | `AUTH0_AUDIENCE` | Yes | Flutter | Auth0 API audience. Example: `https://tindahannatin.com`. |
 | `PUBLIC_WEB_APP_BASE_URL` | Recommended | Flutter | Public base URL used when building shareable store links, for example `https://example.com`. |
 
+| `BANNER_AD_UNIT_ID` | No | Flutter | AdMob banner ad unit ID. |
+| `INTERSTITIAL_AD_UNIT_ID` | No | Flutter | AdMob interstitial ad unit ID. |
+| `NATIVE_AD_UNIT_ID` | No | Flutter | AdMob native ad unit ID. |
+
 ### Android-Specific Variable
 
 | Variable | Required | Used By | Purpose |

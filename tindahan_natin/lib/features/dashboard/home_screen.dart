@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 // import 'package:tindahan_natin/features/settings/store_service.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -48,6 +49,8 @@ class HomeScreen extends ConsumerWidget {
               color: Colors.blue,
               onTap: () => context.push('/inventory'),
             ).animate().fadeIn(delay: 600.ms).slideX(begin: -0.1),
+            const SizedBox(height: 16),
+            const InlineAdWidget(),
             const SizedBox(height: 16),
             _buildMenuCard(
               context,

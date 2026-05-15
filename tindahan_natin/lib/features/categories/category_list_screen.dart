@@ -87,86 +87,84 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               ),
             ],
           ),
-          body: displayAsync.when(
-            data: (categories) {
-              if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
-              
-              const adInterval = 10;
-              final itemCount = categories.length + (categories.length / adInterval).floor();
-
-              return ListView.builder(
-                itemCount: itemCount,
-                itemBuilder: (context, index) {
-                  final isAd = (index + 1) % (adInterval + 1) == 0;
-                  if (isAd) {
-                    return const InlineAdWidget();
-                  }
-
-                  final categoryIndex = index - (index / (adInterval + 1)).floor();
-                  final c = categories[categoryIndex];
-                  return ListTile(
-                    leading: const Icon(Icons.label),
-                    title: Text(c.name),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            final controller = TextEditingController(text: c.name);
-                            final result = await showDialog<String?>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Edit Category'),
-                                content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name')),
-                                actions: [
-                                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
-                                ],
+          body: Column(
+            children: [
+              Expanded(
+                child: displayAsync.when(
+                  data: (categories) {
+                    if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
+                    
+                    return ListView.builder(
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final c = categories[index];
+                        return ListTile(
+                          leading: const Icon(Icons.label),
+                          title: Text(c.name),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () async {
+                                  final controller = TextEditingController(text: c.name);
+                                  final result = await showDialog<String?>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Edit Category'),
+                                      content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name')),
+                                      actions: [
+                                        ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
+                                      ],
+                                    ),
+                                  );
+                                  if (result != null && result.trim().isNotEmpty) {
+                                    try {
+                                      await ref.read(categoryServiceProvider).updateCategory(c.id, result.trim());
+                                      ref.invalidate(categoriesProvider(storeId));
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category updated')));
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+                                    }
+                                  }
+                                },
                               ),
-                            );
-                            if (result != null && result.trim().isNotEmpty) {
-                              try {
-                                await ref.read(categoryServiceProvider).updateCategory(c.id, result.trim());
-                                ref.invalidate(categoriesProvider(storeId));
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category updated')));
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
-                              }
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool?>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Delete Category'),
-                                content: Text('Delete category "${c.name}"? This cannot be undone.'),
-                                actions: [
-                                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
-                                ],
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool?>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Delete Category'),
+                                      content: Text('Delete category "${c.name}"? This cannot be undone.'),
+                                      actions: [
+                                        ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    try {
+                                      await ref.read(categoryServiceProvider).deleteCategory(c.id);
+                                      ref.invalidate(categoriesProvider(storeId));
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category deleted')));
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+                                    }
+                                  }
+                                },
                               ),
-                            );
-                            if (confirmed == true) {
-                              try {
-                                await ref.read(categoryServiceProvider).deleteCategory(c.id);
-                                ref.invalidate(categoriesProvider(storeId));
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category deleted')));
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error loading categories: $e')),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, s) => Center(child: Text('Error loading categories: $e')),
+                ),
+              ),
+              const InlineAdWidget(),
+            ],
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {

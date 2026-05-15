@@ -1,5 +1,6 @@
 import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
+import 'package:tindahan_natin/core/config/ad_config/ad_helper.dart';
 import 'package:web/web.dart' as web;
 
 class InlineAdWidget extends StatefulWidget {
@@ -27,8 +28,8 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
         final ins = web.document.createElement('ins') as web.HTMLModElement;
         ins.className = 'adsbygoogle';
         ins.style.display = 'block';
-        ins.setAttribute('data-ad-client', 'ca-pub-0000000000000000');
-        ins.setAttribute('data-ad-slot', '0000000000');
+        ins.setAttribute('data-ad-client', AdHelper.bannerAdUnitId.split('/')[0]);
+        ins.setAttribute('data-ad-slot', AdHelper.bannerAdUnitId.split('/')[1]);
         ins.setAttribute('data-ad-format', 'auto');
         ins.setAttribute('data-full-width-responsive', 'true');
 

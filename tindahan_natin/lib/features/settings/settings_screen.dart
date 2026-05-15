@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tindahan_natin/core/config/public_web_config.dart';
+import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
@@ -185,6 +186,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       child: const Text('Log out'),
                     ),
+                    const Spacer(),
+                    const InlineAdWidget(),
                   ],
                 ),
               ),

@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:tindahan_natin/core/config/ad_config/ad_helper.dart';
 
 class InlineAdWidget extends StatefulWidget {
   const InlineAdWidget({super.key});
@@ -10,7 +10,7 @@ class InlineAdWidget extends StatefulWidget {
 }
 
 class _InlineAdWidgetState extends State<InlineAdWidget> {
-  BannerAd? _bannerAd;
+  NativeAd? _nativeAd;
   bool _isLoaded = false;
 
   @override
@@ -20,43 +20,61 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
   }
 
   void _loadAd() {
-    _bannerAd = BannerAd(
-      adUnitId: kDebugMode
-          ? 'ca-app-pub-3940256099942544/6300978111' // Android test unit
-          : 'ca-app-pub-3940256099942544/6300978111', // Replace with real ID
+    _nativeAd = NativeAd(
+      adUnitId: AdHelper.nativeAdUnitId,
       request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
+      listener: NativeAdListener(
         onAdLoaded: (ad) {
           setState(() {
             _isLoaded = true;
           });
         },
         onAdFailedToLoad: (ad, err) {
-          debugPrint('BannerAd failed to load: $err');
+          debugPrint('NativeAd failed to load: $err');
           ad.dispose();
         },
+      ),
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.medium,
+        mainBackgroundColor: Colors.white,
+        callToActionTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          backgroundColor: Colors.blue,
+          style: NativeTemplateFontStyle.bold,
+          size: 16.0,
+        ),
+        primaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.black,
+          backgroundColor: Colors.transparent,
+          style: NativeTemplateFontStyle.bold,
+          size: 18.0,
+        ),
+        secondaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.grey,
+          backgroundColor: Colors.transparent,
+          style: NativeTemplateFontStyle.normal,
+          size: 14.0,
+        ),
       ),
     )..load();
   }
 
   @override
   void dispose() {
-    _bannerAd?.dispose();
+    _nativeAd?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isLoaded || _bannerAd == null) {
-      return const SizedBox(height: 50);
+    if (!_isLoaded || _nativeAd == null) {
+      return const SizedBox.shrink();
     }
 
     return Container(
+      height: 320,
       alignment: Alignment.center,
-      width: _bannerAd!.size.width.toDouble(),
-      height: _bannerAd!.size.height.toDouble(),
-      child: AdWidget(ad: _bannerAd!),
+      child: AdWidget(ad: _nativeAd!),
     );
   }
 }

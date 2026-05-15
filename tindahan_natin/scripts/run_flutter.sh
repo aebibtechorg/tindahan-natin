@@ -24,6 +24,15 @@ fi
 if [ -n "${PUBLIC_WEB_APP_BASE_URL-}" ]; then
   DART_DEFINES+=("--dart-define=PUBLIC_WEB_APP_BASE_URL=${PUBLIC_WEB_APP_BASE_URL}")
 fi
+if [ -n "${BANNER_AD_UNIT_ID-}" ]; then
+    DART_DEFINES+=("--dart-define=BANNER_AD_UNIT_ID=${BANNER_AD_UNIT_ID}")
+fi
+if [ -n "${INTERSTITIAL_AD_UNIT_ID-}" ]; then
+    DART_DEFINES+=("--dart-define=INTERSTITIAL_AD_UNIT_ID=${INTERSTITIAL_AD_UNIT_ID}")
+fi
+if [ -n "${NATIVE_AD_UNIT_ID-}" ]; then
+    DART_DEFINES+=("--dart-define=NATIVE_AD_UNIT_ID=${NATIVE_AD_UNIT_ID}")
+fi
 
 # Allow additional arbitrary env-to-dart-define via DART_DEFINE_<NAME>=value
 for kv in $(env | grep -E '^DART_DEFINE_' || true); do

@@ -137,19 +137,20 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 child: Builder(builder: (ctx) {
                   if (products.isEmpty) return const Center(child: Text('No products yet.'));
                   
-                  const adInterval = 10;
-                  final itemCount = products.length + (products.length / adInterval).floor();
+                  final itemCount = products.length;
 
                   return ListView.builder(
                     itemCount: itemCount,
                     itemBuilder: (context, index) {
-                      final isAd = (index + 1) % (adInterval + 1) == 0;
-                      if (isAd) {
-                        return const InlineAdWidget();
+                      if (index % 10 == 9) {
+                        return const Column(
+                          children: [
+                            InlineAdWidget(),
+                            Divider(),
+                          ],
+                        );
                       }
-
-                      final productIndex = index - (index / (adInterval + 1)).floor();
-                      final product = products[productIndex];
+                      final product = products[index];
                       final cat = categoriesData.firstWhere(
                         (c) => c.id == product.categoryId,
                         orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),

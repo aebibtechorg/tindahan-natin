@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_manager.dart';
 import 'package:tindahan_natin/features/store_map/map_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
@@ -27,6 +28,19 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final Map<String, Shelf> _bulkMoveStartShelves = {};
   bool _initialViewConfigured = false;
   Size _viewportSize = Size.zero;
+  final InterstitialAdManager _interstitialAdManager = InterstitialAdManager();
+
+  @override
+  void initState() {
+    super.initState();
+    _interstitialAdManager.showAd();
+  }
+
+  @override
+  void dispose() {
+    _interstitialAdManager.dispose();
+    super.dispose();
+  }
 
   double get _canvasOrigin => _canvasSize / 2;
 
@@ -37,6 +51,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
 
     return (value / _gridSize).round() * _gridSize;
   }
+
 
   void _removeLocalShelfState(Iterable<String> shelfIds) {
     for (final shelfId in shelfIds) {
