@@ -29,7 +29,7 @@ const Hero = () => {
           
           <p className="hero-subtitle">
             Tindahan Natin helps you manage inventory, organize shelves visually, 
-            and reach more customers with digital storefronts.
+            and empower family members, tinderos, and tinderas that run your store.
           </p>
           
           <div className="hero-actions">
