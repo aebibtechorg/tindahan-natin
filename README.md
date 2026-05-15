@@ -38,6 +38,11 @@ The Flutter app reads its runtime configuration from `--dart-define` values. The
 | `SERVER_HTTP` | Yes for most local runs | Flutter | Base URL for the backend API. The app falls back to `http://localhost:5000`, but you should set this explicitly whenever the server is not reachable there. |
 | `AUTH0_DOMAIN` | Yes | Flutter | Auth0 tenant domain used by login. Example: `tindahannatin.jp.auth0.com`. |
 | `AUTH0_CLIENT_ID` | Yes | Flutter | Auth0 application client ID for the mobile/web app. |
+| `AUTH0_CLIENT_ID_WEB` | Yes | Landing | Auth0 client ID for the Landing Page (Regular Web App). |
+| `AUTH0_CLIENT_SECRET_WEB` | Yes | Landing | Auth0 client secret for the Landing Page. |
+| `AUTH0_SECRET` | Yes | Landing | A random 32+ character string for Auth.js session encryption. |
+| `AUTH0_MANAGEMENT_CLIENT_ID` | Yes | Server | Auth0 Management API client ID for account deletion. |
+| `AUTH0_MANAGEMENT_CLIENT_SECRET` | Yes | Server | Auth0 Management API client secret. |
 | `AUTH0_AUDIENCE` | Yes | Flutter | Auth0 API audience. Example: `https://tindahannatin.com`. |
 | `PUBLIC_WEB_APP_BASE_URL` | Recommended | Flutter | Public base URL used when building shareable store links, for example `https://example.com`. |
 

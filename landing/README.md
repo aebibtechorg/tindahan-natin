@@ -1,43 +1,37 @@
-# Astro Starter Kit: Minimal
+# Tindahan Natin Landing Page
 
-```sh
-npm create astro@latest -- --template minimal
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+This is the official landing page for Tindahan Natin, built with Astro and React. It provides product information, legal documents, and an authenticated account deletion flow.
 
 ## 🚀 Project Structure
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
+- `src/pages/`: Contains the routes (Index, Privacy, Terms, Delete My Account).
+- `src/components/`: Reusable UI components (Hero, Features, etc.).
+- `src/layouts/`: Shared page layouts.
+- `auth.config.mjs`: Auth0 authentication configuration.
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+| Command | Action |
+| :--- | :--- |
+| `npm install` | Installs dependencies |
+| `npm run dev` | Starts local dev server at `localhost:4321` |
+| `npm run build` | Build your production site to `./dist/` |
+| `npm run preview` | Preview your build locally |
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## 🔐 Environment Variables
 
-## 👀 Want to learn more?
+The landing page expects the following variables (automatically injected by the Aspire AppHost during local development):
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- `AUTH_CLIENT_ID`: Auth0 Regular Web App Client ID.
+- `AUTH_CLIENT_SECRET`: Auth0 Regular Web App Client Secret.
+- `AUTH_ISSUER`: Auth0 Domain URL (with trailing slash).
+- `AUTH_AUDIENCE`: Auth0 API Audience.
+- `AUTH_SECRET`: A secret key for session encryption.
+- `AUTH_TRUST_HOST`: Set to `true` for distributed environments.
+
+## 🛠 Features
+
+- **Responsive Design**: Modern, glassmorphism-inspired UI.
+- **Authentication**: Integrated with Auth0 for secure user actions.
+- **Account Deletion**: Self-service permanent account and data removal via authenticated API calls to the backend.
+- **Legal Compliance**: Technical Privacy Policy and Terms of Service.

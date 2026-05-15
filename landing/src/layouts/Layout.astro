@@ -1,9 +1,17 @@
 ---
+import { getSession } from 'auth-astro/server';
+
 interface Props {
 	title: string;
 }
 
 const { title } = Astro.props;
+const session = await getSession(Astro.request);
+
+// Pass Auth0 config to client for federated logout
+const auth0Domain = import.meta.env.AUTH_ISSUER?.replace('https://', '').replace('/', '');
+const auth0ClientId = import.meta.env.AUTH_CLIENT_ID;
+const baseUrl = Astro.url.origin;
 ---
 
 <!doctype html>
@@ -23,7 +31,7 @@ const { title } = Astro.props;
 		<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
 		<title>{title} | Tindahan Natin</title>
 	</head>
-	<body>
+	<body data-auth0-domain={auth0Domain} data-auth0-client-id={auth0ClientId} data-base-url={baseUrl}>
 		<header>
 			<nav class="container">
 				<a href="/" class="logo">
@@ -46,6 +54,11 @@ const { title } = Astro.props;
 					<a href="/">Home</a>
 					<a href="/privacy">Privacy</a>
 					<a href="/terms">Terms</a>
+					{session ? (
+						<button id="logout-btn" class="nav-link-btn">Sign Out</button>
+					) : (
+						<button id="login-btn" class="nav-link-btn">Sign In</button>
+					)}
 					<a href="#" class="nav-cta">Download</a>
 				</div>
 			</nav>
@@ -62,6 +75,15 @@ const { title } = Astro.props;
 					</a>
 					<p>Empowering local sari-sari stores with modern tools.</p>
 					<p class="footer-contact">Support: <a href="mailto:support@aebibtech.com">support@aebibtech.com</a></p>
+				</div>
+				<div class="footer-nav">
+					<h4>Account</h4>
+					{session ? (
+						<button id="footer-logout-btn" class="footer-link-btn">Sign Out</button>
+					) : (
+						<button id="footer-login-btn" class="footer-link-btn">Sign In</button>
+					)}
+					<a href="/delete-my-account">Delete Account</a>
 				</div>
 				<div class="footer-nav">
 					<h4>Legal</h4>
@@ -82,6 +104,42 @@ const { title } = Astro.props;
 		<script>
 			const menuToggle = document.querySelector('.menu-toggle');
 			const links = document.querySelector('#site-nav-links');
+
+			// Auth buttons
+			const loginBtn = document.getElementById('login-btn');
+			const logoutBtn = document.getElementById('logout-btn');
+			const footerLoginBtn = document.getElementById('footer-login-btn');
+			const footerLogoutBtn = document.getElementById('footer-logout-btn');
+
+			const handleLogin = async () => {
+				const { signIn } = await import('auth-astro/client');
+				signIn('auth0');
+			};
+
+			const handleLogout = async () => {
+				const { signOut } = await import('auth-astro/client');
+				
+				// Clear local session
+				await signOut();
+				
+				// Get Auth0 config from body data attributes
+				const domain = document.body.dataset.auth0Domain;
+				const clientId = document.body.dataset.auth0ClientId;
+				const returnTo = document.body.dataset.baseUrl;
+				
+				if (domain && clientId && returnTo) {
+					// Federated logout from Auth0
+					window.location.href = `https://${domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(returnTo)}`;
+				} else {
+					// Fallback to home page if config is missing
+					window.location.href = '/';
+				}
+			};
+
+			if (loginBtn) loginBtn.onclick = handleLogin;
+			if (footerLoginBtn) footerLoginBtn.onclick = handleLogin;
+			if (logoutBtn) logoutBtn.onclick = handleLogout;
+			if (footerLogoutBtn) footerLogoutBtn.onclick = handleLogout;
 
 			if (menuToggle instanceof HTMLButtonElement && links instanceof HTMLElement) {
 				const closeMenu = () => {
@@ -199,6 +257,21 @@ const { title } = Astro.props;
 	.links a:hover {
 		color: var(--primary);
 	}
+	.nav-link-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		text-decoration: none;
+		color: var(--text-light);
+		font-weight: 600;
+		font-size: 0.95rem;
+		transition: color 0.2s;
+		font-family: inherit;
+	}
+	.nav-link-btn:hover {
+		color: var(--primary);
+	}
 	.nav-cta {
 		background: var(--text);
 		color: white !important;
@@ -267,6 +340,12 @@ const { title } = Astro.props;
 			border-radius: 12px;
 			background: transparent;
 		}
+		.nav-link-btn {
+			font-size: 1rem;
+			padding: 0.85rem 1rem;
+			border-radius: 12px;
+			text-align: left;
+		}
 		.links .nav-cta {
 			margin-top: 0.25rem;
 			text-align: center;
@@ -296,8 +375,8 @@ const { title } = Astro.props;
 	}
 	.footer-grid {
 		display: grid;
-		grid-template-columns: 2fr 1fr 1fr;
-		gap: 4rem;
+		grid-template-columns: 2fr 1fr 1fr 1fr;
+		gap: 3rem;
 		margin-bottom: 4rem;
 	}
 	@media (max-width: 768px) {
@@ -339,6 +418,23 @@ const { title } = Astro.props;
 		transition: color 0.2s;
 	}
 	.footer-nav a:hover {
+		color: white;
+	}
+	.footer-link-btn {
+		display: block;
+		background: none;
+		border: none;
+		padding: 0;
+		color: #9ca3af;
+		text-decoration: none;
+		margin-bottom: 0.75rem;
+		transition: color 0.2s;
+		cursor: pointer;
+		font-family: inherit;
+		font-size: 1rem;
+		text-align: left;
+	}
+	.footer-link-btn:hover {
 		color: white;
 	}
 	.copyright {

@@ -10,7 +10,11 @@ var postgres = builder.AddPostgres("postgres").WithDataVolume().WithPgAdmin();
 var db = postgres.AddDatabase("tindahandb");
 var minio = builder.AddMinioContainer("minio").WithDataVolume();
 
-var server = builder.AddProject<Projects.TindahanNatin_Server>("server");
+var server = builder.AddProject<Projects.TindahanNatin_Server>("server")
+    .WithEnvironment("Auth0__Domain", builder.Configuration["Auth0:Domain"])
+    .WithEnvironment("Auth0__Audience", builder.Configuration["Auth0:Audience"])
+    .WithEnvironment("Auth0__ManagementClientId", builder.Configuration["Auth0:ManagementClientId"])
+    .WithEnvironment("Auth0__ManagementClientSecret", builder.Configuration["Auth0:ManagementClientSecret"]);
 server.WithReference(cache);
 server.WithReference(db);
 server.WithReference(minio);
@@ -18,8 +22,15 @@ server.WithHttpHealthCheck("/health");
 server.WithExternalHttpEndpoints();
 
 var landing = builder.AddJavaScriptApp("landing", "../landing")
-    .WithHttpEndpoint(env: "PORT")
-    .WithExternalHttpEndpoints();
+    .WithHttpEndpoint(env: "PORT", targetPort: 8001, isProxied: false)
+    .WithExternalHttpEndpoints()
+    .WithReference(server)
+    .WithEnvironment("AUTH_CLIENT_ID", builder.Configuration["Auth0:ClientId"])
+    .WithEnvironment("AUTH_CLIENT_SECRET", builder.Configuration["Auth0:ClientSecret"])
+    .WithEnvironment("AUTH_ISSUER", $"https://{builder.Configuration["Auth0:Domain"]}/")
+    .WithEnvironment("AUTH_AUDIENCE", builder.Configuration["Auth0:Audience"])
+    .WithEnvironment("AUTH_SECRET", builder.Configuration["Auth0:Secret"] ?? "a-very-secret-key-at-least-32-chars-long")
+    .WithEnvironment("AUTH_TRUST_HOST", "true");
 
 server.WithEnvironment(e =>
 {

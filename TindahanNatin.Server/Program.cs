@@ -31,6 +31,7 @@ builder.AddMinioClient("minio");
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
+builder.Services.AddHttpClient();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -63,6 +64,7 @@ app.MapProductEndpoints();
 app.MapStorageEndpoints();
 app.MapMapEndpoints();
 app.MapStoreEndpoints();
+app.MapUserEndpoints();
 app.MapPublicEndpoints();
 app.MapCategoryEndpoints();
 
