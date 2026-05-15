@@ -14,11 +14,23 @@ var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<st
 
 builder.Services.AddCors(o =>
 {
-    o.AddPolicy(corsPolicy, builder =>
+    if (builder.Environment.IsDevelopment())
     {
-        builder.WithOrigins(corsOrigins)
-            .WithMethods("GET");
-    });
+        o.AddPolicy(corsPolicy, builder =>
+        {
+            builder.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    }
+    else
+    {
+        o.AddPolicy(corsPolicy, builder =>
+        {
+            builder.WithOrigins(corsOrigins)
+                .WithMethods("GET");
+        });
+    }
 });
 
 // Add service defaults & Aspire client integrations.

@@ -48,6 +48,32 @@ variable "auth0_audience" {
   type        = string
 }
 
+variable "auth0_management_client_id" {
+  description = "Auth0 Management Client ID"
+  type        = string
+  default     = ""
+}
+
+variable "auth0_management_client_secret" {
+  description = "Auth0 Management Client Secret"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "auth0_landing_client_id" {
+  description = "Auth0 Landing Client ID"
+  type        = string
+  default     = ""
+}
+
+variable "auth0_landing_client_secret" {
+  description = "Auth0 Landing Client Secret"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "auth0_client_id" {
   description = "Auth0 Client ID (optional for server, but good to have)"
   type        = string
@@ -70,4 +96,10 @@ variable "r2_secret_key" {
   description = "Cloudflare R2 Secret Key"
   type        = string
   sensitive   = true
+}
+
+variable "cors_allowed_origins" {
+  description = "Allowed origins for CORS"
+  type        = list(string)
+  default     = []
 }
