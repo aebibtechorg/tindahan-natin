@@ -16,9 +16,15 @@ server.WithReference(db);
 server.WithReference(minio);
 server.WithHttpHealthCheck("/health");
 server.WithExternalHttpEndpoints();
+
+var landing = builder.AddJavaScriptApp("landing", "../landing")
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints();
+
 server.WithEnvironment(e =>
 {
     e.EnvironmentVariables.Add("Cors__AllowedOrigins__0", $"http://localhost:{frontendPort}");
+    e.EnvironmentVariables.Add("Cors__AllowedOrigins__1", landing.GetEndpoint("http"));
 });
 
 var apiTunnel = builder.AddDevTunnel("api-tunnel", "tindahannatin-api-tunnel")

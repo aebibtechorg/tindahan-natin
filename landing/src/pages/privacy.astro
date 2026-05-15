@@ -1,0 +1,105 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Privacy Policy">
+	<div class="container policy-container">
+		<div class="policy-header">
+			<h1>Privacy Policy</h1>
+			<p class="last-updated">Last updated: May 15, 2026</p>
+		</div>
+		
+		<div class="policy-content">
+			<section>
+				<h2>1. Information We Collect</h2>
+				<p>Tindahan Natin collects information to provide store management services. This includes:</p>
+				<ul>
+					<li><strong>Account Information:</strong> We use <strong>Auth0</strong> to manage authentication. This includes your name, email, and profile picture provided by your chosen login provider.</li>
+					<li><strong>Store Data:</strong> Details about your sari-sari store, including store name, product names, pricing, inventory levels, and categories.</li>
+					<li><strong>Organizational Data:</strong> Visual layouts of your shelves and the specific placement of products within your store.</li>
+					<li><strong>Media:</strong> Images of products you choose to upload to our storage service.</li>
+					<li><strong>Local Data:</strong> We use <strong>Hive</strong> to store a copy of your data on your device for offline use and faster performance.</li>
+				</ul>
+				<p><em>Note: We do NOT collect GPS coordinates or precise location data from your device.</em></p>
+			</section>
+
+			<section>
+				<h2>2. How We Use Information</h2>
+				<p>We use the information we collect to:</p>
+				<ul>
+					<li>Authenticate your identity and secure your account.</li>
+					<li>Provide and maintain our inventory and shelf-mapping features.</li>
+					<li>Synchronize your data between your device and our servers when you are online.</li>
+					<li>Generate internal storefronts for coordination with your family and staff.</li>
+					<li>Display relevant advertisements via Google Mobile Ads.</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>3. Third-Party Services</h2>
+				<p>We integrate with the following third-party services which may collect data according to their own privacy policies:</p>
+				<ul>
+					<li><strong>Auth0:</strong> Used for secure authentication and account management.</li>
+					<li><strong>Google Mobile Ads (AdMob):</strong> Used to display advertisements within the application. AdMob may use device identifiers to personalize ads.</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>4. Data Synchronization</h2>
+				<p>The app is designed to work offline. Any changes you make while offline are stored locally on your device and will be automatically synchronized with our servers once an active internet connection is detected.</p>
+			</section>
+
+			<section>
+				<h2>5. Data Security</h2>
+				<p>We implement industry-standard security measures to protect your data. Communication between the app and our servers is encrypted using HTTPS. Account security is managed through Auth0's robust identity platform.</p>
+			</section>
+
+			<section>
+				<h2>6. Contact Us</h2>
+				<p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:support@aebibtech.com">support@aebibtech.com</a>.</p>
+			</section>
+		</div>
+	</div>
+</Layout>
+
+<style>
+	.policy-container {
+		padding: 6rem 1.5rem;
+		max-width: 800px;
+	}
+	.policy-header {
+		margin-bottom: 4rem;
+		border-bottom: 1px solid #eee;
+		padding-bottom: 2rem;
+	}
+	.policy-header h1 {
+		font-size: 3rem;
+		font-weight: 800;
+		margin-bottom: 1rem;
+		color: #1a1a1a;
+	}
+	.last-updated {
+		color: #6b7280;
+		font-size: 1.1rem;
+	}
+	.policy-content {
+		line-height: 1.8;
+		color: #374151;
+	}
+	.policy-content section {
+		margin-bottom: 3rem;
+	}
+	.policy-content h2 {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 1.5rem;
+		color: #111;
+	}
+	.policy-content ul {
+		padding-left: 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+	.policy-content li {
+		margin-bottom: 0.5rem;
+	}
+</style>

@@ -1,0 +1,102 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Terms and Conditions">
+	<div class="container policy-container">
+		<div class="policy-header">
+			<h1>Terms and Conditions</h1>
+			<p class="last-updated">Last updated: May 15, 2026</p>
+		</div>
+		
+		<div class="policy-content">
+			<section>
+				<h2>1. Agreement to Terms</h2>
+				<p>By accessing or using Tindahan Natin, you agree to be bound by these Terms and Conditions. Our service is designed to help sari-sari store owners manage their inventory and store layout.</p>
+			</section>
+
+			<section>
+				<h2>2. Description of Service</h2>
+				<p>Tindahan Natin provides a digital companion for sari-sari store management. Key features include:</p>
+				<ul>
+					<li><strong>Inventory Management:</strong> Tracking products, prices, and stock levels.</li>
+					<li><strong>Visual Store Map:</strong> Designing and organizing shelf layouts.</li>
+					<li><strong>Offline Support:</strong> Local data persistence and automatic background synchronization.</li>
+					<li><strong>Internal Coordination:</strong> Generation of storefront links for family members, tinderos, and tinderas to view store data.</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>3. User Accounts</h2>
+				<p>Registration is required to use most features. We use <strong>Auth0</strong> for secure account management. You are responsible for all activity that occurs under your account and for maintaining the confidentiality of your credentials.</p>
+			</section>
+
+			<section>
+				<h2>4. Advertisements</h2>
+				<p>Tindahan Natin includes advertisements provided by <strong>Google Mobile Ads (AdMob)</strong>. By using the service, you agree to the display of these advertisements within the app interface.</p>
+			</section>
+
+			<section>
+				<h2>5. Data and Content</h2>
+				<p>You retain ownership of the store data and images you upload. However, you grant Tindahan Natin a license to store, synchronize, and display this content to you and your authorized coordination partners (family/staff) as part of the service.</p>
+			</section>
+
+			<section>
+				<h2>6. Offline Use and Sync</h2>
+				<p>The app provides offline functionality. While we strive to ensure data integrity during synchronization, we are not responsible for data loss or conflicts arising from simultaneous updates across multiple devices while offline.</p>
+			</section>
+
+			<section>
+				<h2>7. Limitation of Liability</h2>
+				<p>Tindahan Natin is provided "as is". In no event shall we be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use the service, including inventory inaccuracies or data synchronization errors.</p>
+			</section>
+
+			<section>
+				<h2>8. Contact Us</h2>
+				<p>If you have any questions about these Terms and Conditions, please contact us at <a href="mailto:support@aebibtech.com">support@aebibtech.com</a>.</p>
+			</section>
+		</div>
+	</div>
+</Layout>
+
+<style>
+	.policy-container {
+		padding: 6rem 1.5rem;
+		max-width: 800px;
+	}
+	.policy-header {
+		margin-bottom: 4rem;
+		border-bottom: 1px solid #eee;
+		padding-bottom: 2rem;
+	}
+	.policy-header h1 {
+		font-size: 3rem;
+		font-weight: 800;
+		margin-bottom: 1rem;
+		color: #1a1a1a;
+	}
+	.last-updated {
+		color: #6b7280;
+		font-size: 1.1rem;
+	}
+	.policy-content {
+		line-height: 1.8;
+		color: #374151;
+	}
+	.policy-content section {
+		margin-bottom: 3rem;
+	}
+	.policy-content h2 {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 1.5rem;
+		color: #111;
+	}
+	.policy-content ul {
+		padding-left: 1.5rem;
+		margin-bottom: 1.5rem;
+	}
+	.policy-content li {
+		margin-bottom: 0.5rem;
+	}
+</style>

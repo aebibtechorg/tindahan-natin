@@ -1,0 +1,351 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Tindahan Natin - Your sari-sari store companion." />
+		<meta name="viewport" content="width=device-width" />
+		<!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<link rel="manifest" href="/site.webmanifest">
+		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+		<title>{title} | Tindahan Natin</title>
+	</head>
+	<body>
+		<header>
+			<nav class="container">
+				<a href="/" class="logo">
+					<!-- <span class="logo-dot"></span> -->
+					<img src="/android-chrome-192x192.png" alt="Tindahan Natin Logo" style="width: 3rem; height: 3rem;">
+					Tindahan Natin
+				</a>
+				<button
+					class="menu-toggle"
+					type="button"
+					aria-label="Toggle navigation menu"
+					aria-expanded="false"
+					aria-controls="site-nav-links"
+				>
+					<span></span>
+					<span></span>
+					<span></span>
+				</button>
+				<div class="links" id="site-nav-links">
+					<a href="/">Home</a>
+					<a href="/privacy">Privacy</a>
+					<a href="/terms">Terms</a>
+					<a href="#" class="nav-cta">Download</a>
+				</div>
+			</nav>
+		</header>
+		<main>
+			<slot />
+		</main>
+		<footer>
+			<div class="container footer-grid">
+				<div class="footer-brand">
+					<a href="/" class="logo">
+						<img src="/android-chrome-192x192.png" alt="Tindahan Natin Logo" style="width: 2.5rem; height: 2.5rem;">
+						Tindahan Natin
+					</a>
+					<p>Empowering local sari-sari stores with modern tools.</p>
+					<p class="footer-contact">Support: <a href="mailto:support@aebibtech.com">support@aebibtech.com</a></p>
+				</div>
+				<div class="footer-nav">
+					<h4>Legal</h4>
+					<a href="/privacy">Privacy Policy</a>
+					<a href="/terms">Terms & Conditions</a>
+				</div>
+				<div class="footer-nav">
+					<h4>Product</h4>
+					<a href="/">Features</a>
+					<a href="/">Demo</a>
+				</div>
+			</div>
+			<div class="container copyright">
+				<p>&copy; {new Date().getFullYear()} Tindahan Natin. All rights reserved.</p>
+			</div>
+		</footer>
+
+		<script>
+			const menuToggle = document.querySelector('.menu-toggle');
+			const links = document.querySelector('#site-nav-links');
+
+			if (menuToggle instanceof HTMLButtonElement && links instanceof HTMLElement) {
+				const closeMenu = () => {
+					menuToggle.classList.remove('active');
+					menuToggle.setAttribute('aria-expanded', 'false');
+					links.classList.remove('active');
+					document.body.style.overflow = '';
+				};
+
+				const openMenu = () => {
+					menuToggle.classList.add('active');
+					menuToggle.setAttribute('aria-expanded', 'true');
+					links.classList.add('active');
+					document.body.style.overflow = 'hidden';
+				};
+
+				menuToggle.addEventListener('click', () => {
+					if (links.classList.contains('active')) {
+						closeMenu();
+						return;
+					}
+
+					openMenu();
+				});
+
+				links.querySelectorAll('a').forEach((link) => {
+					link.addEventListener('click', closeMenu);
+				});
+
+				document.addEventListener('keydown', (event) => {
+					if (event.key === 'Escape') {
+						closeMenu();
+					}
+				});
+
+				window.addEventListener('resize', () => {
+					if (window.innerWidth > 768) {
+						closeMenu();
+					}
+				});
+			}
+		</script>
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		--primary: #1E88E5;
+		--primary-dark: #1565C0;
+		--accent: #FFB300;
+		--text: #1a1a1a;
+		--text-light: #4b5563;
+		--background: #ffffff;
+		--surface: #F7F9FC;
+		--white: #ffffff;
+	}
+	* {
+		box-sizing: border-box;
+	}
+	html {
+		font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+		background: var(--background);
+		color: var(--text);
+		scroll-behavior: smooth;
+	}
+	body {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		overflow-x: hidden;
+	}
+	.container {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 0 1.5rem;
+	}
+	header {
+		background: rgba(255, 255, 255, 0.8);
+		backdrop-filter: blur(10px);
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		padding: 0.75rem 0;
+		position: sticky;
+		top: 0;
+		z-index: 1000;
+	}
+	header nav {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.logo {
+		font-size: 1.25rem;
+		font-weight: 800;
+		color: var(--text);
+		text-decoration: none;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		letter-spacing: -0.01em;
+		z-index: 1001;
+	}
+	.links {
+		display: flex;
+		align-items: center;
+		gap: 2rem;
+	}
+	.links a {
+		text-decoration: none;
+		color: var(--text-light);
+		font-weight: 600;
+		font-size: 0.95rem;
+		transition: color 0.2s;
+	}
+	.links a:hover {
+		color: var(--primary);
+	}
+	.nav-cta {
+		background: var(--text);
+		color: white !important;
+		padding: 0.6rem 1.25rem;
+		border-radius: 10px;
+		font-size: 0.9rem !important;
+	}
+
+	.menu-toggle {
+		display: none;
+		flex-direction: column;
+		gap: 6px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0.5rem;
+		z-index: 1001;
+	}
+	.menu-toggle span {
+		display: block;
+		width: 24px;
+		height: 2px;
+		background: var(--text);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		border-radius: 2px;
+	}
+
+	@media (max-width: 768px) {
+		.menu-toggle {
+			display: flex;
+		}
+		.links {
+			position: fixed;
+			top: 4.75rem;
+			right: 1rem;
+			width: min(18rem, calc(100vw - 2rem));
+			height: auto;
+			max-height: calc(100vh - 6rem);
+			background: rgba(255, 255, 255, 0.98);
+			backdrop-filter: blur(20px);
+			flex-direction: column;
+			justify-content: flex-start;
+			align-items: stretch;
+			gap: 0.5rem;
+			padding: 1rem;
+			border-radius: 20px;
+			border: 1px solid rgba(15, 23, 42, 0.08);
+			box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+			overflow-y: auto;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			transform: translateY(-0.75rem) scale(0.98);
+			transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+			z-index: 1000;
+		}
+		.links.active {
+			opacity: 1;
+			visibility: visible;
+			pointer-events: auto;
+			transform: translateY(0) scale(1);
+		}
+		.links a {
+			font-size: 1rem;
+			padding: 0.85rem 1rem;
+			border-radius: 12px;
+			background: transparent;
+		}
+		.links .nav-cta {
+			margin-top: 0.25rem;
+			text-align: center;
+			background: var(--text);
+			color: white !important;
+		}
+		.menu-toggle.active span:nth-child(1) {
+			transform: translateY(8px) rotate(45deg);
+		}
+		.menu-toggle.active span:nth-child(2) {
+			opacity: 0;
+			transform: translateX(10px);
+		}
+		.menu-toggle.active span:nth-child(3) {
+			transform: translateY(-8px) rotate(-45deg);
+		}
+	}
+
+	main {
+		flex: 1;
+	}
+	footer {
+		background: #000;
+		color: white;
+		padding: 5rem 0 2rem;
+		margin-top: 4rem;
+	}
+	.footer-grid {
+		display: grid;
+		grid-template-columns: 2fr 1fr 1fr;
+		gap: 4rem;
+		margin-bottom: 4rem;
+	}
+	@media (max-width: 768px) {
+		.footer-grid {
+			grid-template-columns: 1fr;
+			gap: 2.5rem;
+		}
+	}
+	.footer-brand .logo {
+		color: white;
+		margin-bottom: 1.5rem;
+	}
+	.footer-brand p {
+		color: #9ca3af;
+		max-width: 300px;
+		line-height: 1.6;
+		margin-bottom: 0.5rem;
+	}
+	.footer-contact {
+		font-size: 0.9rem;
+		font-weight: 500;
+	}
+	.footer-contact a {
+		color: var(--primary);
+		text-decoration: none;
+	}
+	.footer-contact a:hover {
+		text-decoration: underline;
+	}
+	.footer-nav h4 {
+		font-size: 1rem;
+		margin-bottom: 1.5rem;
+	}
+	.footer-nav a {
+		display: block;
+		color: #9ca3af;
+		text-decoration: none;
+		margin-bottom: 0.75rem;
+		transition: color 0.2s;
+	}
+	.footer-nav a:hover {
+		color: white;
+	}
+	.copyright {
+		border-top: 1px solid #1f2937;
+		padding-top: 2rem;
+		text-align: center;
+		color: #6b7280;
+		font-size: 0.9rem;
+	}
+</style>
