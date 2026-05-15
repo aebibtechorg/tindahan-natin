@@ -84,7 +84,7 @@ if (Astro.request.method === 'POST' && Astro.url.searchParams.has('confirm')) {
 						) : (
 							<div class="unauthenticated-action">
 								<p>To delete your account, you must first verify your identity by signing in.</p>
-								<button id="login-btn" class="btn btn-primary">
+								<button id="verify-login-btn" class="btn btn-primary">
 									Sign In to Verify Identity
 								</button>
 							</div>
@@ -118,9 +118,9 @@ if (Astro.request.method === 'POST' && Astro.url.searchParams.has('confirm')) {
 </Layout>
 
 <script>
-	const loginBtn = document.getElementById('login-btn');
-	if (loginBtn) {
-		loginBtn.onclick = async () => {
+	const verifyLoginBtn = document.getElementById('verify-login-btn');
+	if (verifyLoginBtn) {
+		verifyLoginBtn.onclick = async () => {
 			const { signIn } = await import('auth-astro/client');
 			signIn('auth0');
 		};
