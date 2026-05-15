@@ -205,5 +205,21 @@ The deployment is automated via the `.github/workflows/deploy.yml` workflow, whi
 2.  Pushes the image to Google Artifact Registry.
 3.  Runs `terraform apply` to provision/update the infrastructure and deploy the new image.
 
+### GitHub Secrets Required
+
+To enable the deployment pipeline, configure the following secrets in GitHub (**Settings > Secrets and variables > Actions**):
+
+| Secret Name | Purpose |
+| :--- | :--- |
+| **Google Cloud** | `GCP_PROJECT_ID`, `GCP_WIF_PROVIDER`, `GCP_WIF_SA` |
+| **Terraform** | `TF_STATE_BUCKET` |
+| **Databases** | `POSTGRES_CONNECTION_STRING`, `REDIS_CONNECTION_STRING` |
+| **Cloudflare** | `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` |
+| **Cloudflare R2** | `R2_ACCESS_KEY`, `R2_SECRET_KEY` |
+| **Auth0 (General)** | `AUTH0_DOMAIN`, `AUTH0_AUDIENCE` |
+| **Auth0 (Management)** | `AUTH0_MANAGEMENT_CLIENT_ID`, `AUTH0_MANAGEMENT_CLIENT_SECRET` |
+| **Auth0 (Landing)** | `AUTH0_LANDING_CLIENT_ID`, `AUTH0_LANDING_CLIENT_SECRET` |
+| **CORS** | `CORS_ALLOWED_ORIGINS` (e.g. `["https://tindahan-natin.vercel.app"]`) |
+
 ### Manual Setup Required
 See the `Manual Preparations Required` section in the [Deployment Plan](deploy-cloudrun.md) for details on GCP Project setup, Cloudflare configuration, and GitHub Secrets.

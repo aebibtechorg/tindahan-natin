@@ -10,6 +10,7 @@ Currently, the application relies on .NET Aspire to orchestrate local developmen
 *   **Infrastructure as Code**: Add Terraform configurations (`terraform/` folder) to manage GCP Artifact Registry, Google Cloud Run, and the Cloudflare R2 bucket.
 *   **CI/CD**: Add a GitHub Actions workflow (`.github/workflows/deploy.yml`) to build the .NET application container, push it to Artifact Registry, and trigger `terraform apply` to deploy the new revision.
 *   **Application Config**: Rely on Aspire's built-in support for connection strings provided via environment variables in production.
+*   **Client Deployment**: The Flutter app (`tindahan_natin`) is excluded from this pipeline and is intended for manual deployment to **Vercel**.
 
 ## Proposed Solution
 1.  **Terraform Configuration**:
@@ -69,4 +70,8 @@ Before the pipeline can run successfully, you will need to manually prepare the 
     *   `R2_SECRET_KEY`
     *   `AUTH0_DOMAIN`
     *   `AUTH0_AUDIENCE`
-    *   `AUTH0_CLIENT_ID` (If required by the server)
+    *   `AUTH0_MANAGEMENT_CLIENT_ID`
+    *   `AUTH0_MANAGEMENT_CLIENT_SECRET`
+    *   `AUTH0_LANDING_CLIENT_ID`
+    *   `AUTH0_LANDING_CLIENT_SECRET`
+    *   `CORS_ALLOWED_ORIGINS` (e.g. `["https://tindahan-natin.vercel.app"]`)
