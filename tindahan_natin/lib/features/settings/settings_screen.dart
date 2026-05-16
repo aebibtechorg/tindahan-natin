@@ -36,7 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final shareText = store.name.trim().isEmpty
         ? shareUrl
-        : 'Check out ${store.name} on Tindahan Natin\n$shareUrl';
+        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
 
     await SharePlus.instance.share(ShareParams(text: shareText));
   }

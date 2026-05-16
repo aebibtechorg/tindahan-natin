@@ -126,4 +126,4 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
           packageName: com.aebibtech.tindahan_natin
           releaseFiles: tindahan_natin/build/app/outputs/bundle/release/app-release.aab
-          track: closed
+          track: alpha

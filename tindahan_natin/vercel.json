@@ -1,5 +1,5 @@
 {
-  "buildCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter config --enable-web && ./flutter/bin/flutter build web --release",
+  "buildCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter config --enable-web && ./flutter/bin/flutter build web --release ${SERVER_HTTP:+--dart-define=SERVER_HTTP=\"$SERVER_HTTP\"} ${AUTH0_DOMAIN:+--dart-define=AUTH0_DOMAIN=\"$AUTH0_DOMAIN\"} ${AUTH0_CLIENT_ID:+--dart-define=AUTH0_CLIENT_ID=\"$AUTH0_CLIENT_ID\"} ${AUTH0_AUDIENCE:+--dart-define=AUTH0_AUDIENCE=\"$AUTH0_AUDIENCE\"} ${PUBLIC_WEB_APP_BASE_URL:+--dart-define=PUBLIC_WEB_APP_BASE_URL=\"$PUBLIC_WEB_APP_BASE_URL\"} ${BANNER_AD_UNIT_ID_WEB:+--dart-define=BANNER_AD_UNIT_ID_WEB=\"$BANNER_AD_UNIT_ID_WEB\"} ${INTERSTITIAL_AD_UNIT_ID_WEB:+--dart-define=INTERSTITIAL_AD_UNIT_ID_WEB=\"$INTERSTITIAL_AD_UNIT_ID_WEB\"} ${NATIVE_AD_UNIT_ID_WEB:+--dart-define=NATIVE_AD_UNIT_ID_WEB=\"$NATIVE_AD_UNIT_ID_WEB\"}",
   "outputDirectory": "build/web",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
