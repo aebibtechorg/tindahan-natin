@@ -1,0 +1,117 @@
+name: Flutter Android CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tindahan_natin/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'tindahan_natin/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: tindahan_natin
+
+      - name: Generate Code
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+        working-directory: tindahan_natin
+      
+      - name: Generate Icons
+        run: flutter pub run flutter_launcher_icons
+        working-directory: tindahan_natin
+
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(grep 'version: ' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        working-directory: tindahan_natin
+
+      - name: Lint
+        run: flutter analyze
+        working-directory: tindahan_natin
+
+      - name: Test
+        run: flutter test
+        working-directory: tindahan_natin
+
+      - name: Build APK
+        run: |
+          flutter build apk --release \
+            --dart-define=SERVER_HTTP=${{ secrets.SERVER_HTTP }} \
+            --dart-define=AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
+            --dart-define=AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
+            --dart-define=AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
+            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }}
+        working-directory: tindahan_natin
+        env:
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_SCHEME: ${{ secrets.AUTH0_SCHEME }}
+
+      - name: Build App Bundle
+        run: |
+          flutter build appbundle --release \
+            --dart-define=SERVER_HTTP=${{ secrets.SERVER_HTTP }} \
+            --dart-define=AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
+            --dart-define=AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
+            --dart-define=AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
+            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }}
+        working-directory: tindahan_natin
+        env:
+          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          AUTH0_SCHEME: ${{ secrets.AUTH0_SCHEME }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: tindahan_natin/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: tindahan_natin/build/app/outputs/bundle/release/app-release.aab
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.extract_version.outputs.VERSION }}
+          files: |
+            tindahan_natin/build/app/outputs/flutter-apk/app-release.apk
+            tindahan_natin/build/app/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Google Play
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.aebibtech.tindahan_natin
+          releaseFiles: tindahan_natin/build/app/outputs/bundle/release/app-release.aab
+          track: internal
