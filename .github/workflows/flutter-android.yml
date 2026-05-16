@@ -76,11 +76,15 @@ jobs:
             --dart-define=AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
             --dart-define=AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
             --dart-define=AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
-            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }}
+            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }} \
+            --dart-define=BANNER_AD_UNIT_ID_ANDROID=${{ secrets.BANNER_AD_UNIT_ID_ANDROID }} \
+            --dart-define=INTERSTITIAL_AD_UNIT_ID_ANDROID=${{ secrets.INTERSTITIAL_AD_UNIT_ID_ANDROID }} \
+            --dart-define=NATIVE_AD_UNIT_ID_ANDROID=${{ secrets.NATIVE_AD_UNIT_ID_ANDROID }}
         working-directory: tindahan_natin
         env:
           AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           AUTH0_SCHEME: ${{ secrets.AUTH0_SCHEME }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
 
       - name: Build App Bundle
         run: |
@@ -90,11 +94,15 @@ jobs:
             --dart-define=AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
             --dart-define=AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
             --dart-define=AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
-            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }}
+            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }} \
+            --dart-define=BANNER_AD_UNIT_ID_ANDROID=${{ secrets.BANNER_AD_UNIT_ID_ANDROID }} \
+            --dart-define=INTERSTITIAL_AD_UNIT_ID_ANDROID=${{ secrets.INTERSTITIAL_AD_UNIT_ID_ANDROID }} \
+            --dart-define=NATIVE_AD_UNIT_ID_ANDROID=${{ secrets.NATIVE_AD_UNIT_ID_ANDROID }}
         working-directory: tindahan_natin
         env:
           AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           AUTH0_SCHEME: ${{ secrets.AUTH0_SCHEME }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
