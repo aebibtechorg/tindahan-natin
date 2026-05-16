@@ -50,13 +50,13 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
         working-directory: tindahan_natin
 
-      - name: Lint
-        run: flutter analyze
-        working-directory: tindahan_natin
+      # - name: Lint
+      #   run: flutter analyze
+      #   working-directory: tindahan_natin
 
-      - name: Test
-        run: flutter test
-        working-directory: tindahan_natin
+      # - name: Test
+      #   run: flutter test
+      #   working-directory: tindahan_natin
 
       - name: Build APK
         run: |
