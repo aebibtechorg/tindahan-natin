@@ -23,7 +23,7 @@ class AuthService {
 
   Future<Credentials?> login() async {
     try {
-      final credentials = await _auth0.webAuthentication(scheme: "demo").login(
+      final credentials = await _auth0.webAuthentication(scheme: "https").login(
             audience: AuthConfig.audience,
           );
       // Ensure credentials are stored in the native CredentialsManager
@@ -39,7 +39,7 @@ class AuthService {
 
   Future<void> logout() async {
     try {
-      await _auth0.webAuthentication(scheme: "demo").logout();
+      await _auth0.webAuthentication(scheme: "https").logout();
     } catch (_) {}
     try {
       await _auth0.credentialsManager.clearCredentials();
