@@ -86,10 +86,22 @@ class ProductService {
   }
 
   Future<Product> getProduct(String id) async {
-    final response = await _dio.get('/products/$id');
-    final product = Product.fromJson(response.data);
-    await _local.upsertCachedRecord(_cacheKey(product.storeId), product.toJson());
-    return product;
+    final cached = _local.findCachedRecordByIdWithPrefix('products_', id);
+    
+    try {
+      final response = await _dio.get('/products/$id');
+      final product = Product.fromJson(response.data);
+      if (product.id.isNotEmpty) {
+        await _local.upsertCachedRecord(_cacheKey(product.storeId), product.toJson());
+        await _local.upsertCachedProduct(product.storeId, product.toJson());
+      }
+      return product;
+    } catch (e) {
+      if (cached != null) {
+        return Product.fromJson(cached);
+      }
+      rethrow;
+    }
   }
 
   Future<void> updateProduct(String id, Map<String, dynamic> data) async {
@@ -102,17 +114,14 @@ class ProductService {
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     };
 
+    if (storeId != null) {
+      await _local.upsertCachedProduct(storeId, optimisticMap);
+      await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
+    }
+
     try {
       await _dio.put('/products/$id', data: data);
-      if (storeId != null) {
-        await _local.upsertCachedProduct(storeId, optimisticMap);
-        await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
-      }
     } catch (error) {
-      if (storeId != null) {
-        await _local.upsertCachedProduct(storeId, optimisticMap);
-        await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
-      }
       await _local.queueMutation({
         'resource': 'products',
         'method': 'PUT',
@@ -127,17 +136,15 @@ class ProductService {
   Future<void> deleteProduct(String id) async {
     final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
     final storeId = existing?['storeId']?.toString();
+
+    if (storeId != null) {
+      await _local.removeCachedProduct(storeId, id);
+      await _local.removeCachedRecord(_cacheKey(storeId), id);
+    }
+
     try {
       await _dio.delete('/products/$id');
-      if (storeId != null) {
-        await _local.removeCachedProduct(storeId, id);
-        await _local.removeCachedRecord(_cacheKey(storeId), id);
-      }
     } catch (error) {
-      if (storeId != null) {
-        await _local.removeCachedProduct(storeId, id);
-        await _local.removeCachedRecord(_cacheKey(storeId), id);
-      }
       await _local.queueMutation({
         'resource': 'products',
         'method': 'DELETE',
@@ -158,9 +165,6 @@ class ProductService {
 
   Future<List<Product>> searchProducts(String storeId, String query) async {
     final cached = _filterCachedProducts(storeId, query);
-    if (cached.isNotEmpty) {
-      return _filterCachedProducts(storeId, query);
-    }
 
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
@@ -168,7 +172,7 @@ class ProductService {
       await _local.cacheProducts(storeId, data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
       return data.map((e) => Product.fromJson(e)).toList();
     } catch (error) {
-      return _filterCachedProducts(storeId, query);
+      return cached;
     }
   }
 }
@@ -191,8 +195,27 @@ class Products extends _$Products {
   }
 
   Future<void> addProduct(Map<String, dynamic> data) async {
-    final newProduct = await ref.read(productServiceProvider).createProduct(data);
-    state = AsyncData([...state.value ?? [], newProduct]);
+    final previousState = state.value ?? [];
+    
+    // We don't have the ID yet if it's new, so we might need a temporary ID for optimistic UI
+    // but the service handles ID generation if not provided.
+    // For simplicity, let's let the service create it and then we update state.
+    // If we want true optimistic, we should generate ID here.
+    final id = data['id'] ?? const Uuid().v4();
+    final optimisticData = {...data, 'id': id};
+    final newProduct = Product.fromJson(optimisticData);
+    
+    state = AsyncData([...previousState, newProduct]);
+    
+    try {
+      final created = await ref.read(productServiceProvider).createProduct(optimisticData);
+      // Update with the server version (which might have more fields)
+      state = AsyncData(
+        (state.value ?? []).map((p) => p.id == id ? created : p).toList()
+      );
+    } catch (e) {
+      // Keep the optimistic one since it's queued
+    }
   }
 
   Future<void> updateProduct(String id, Map<String, dynamic> data) async {
@@ -207,14 +230,25 @@ class Products extends _$Products {
           });
         })
         .toList();
-    await ref.read(productServiceProvider).updateProduct(id, data);
+    
     state = AsyncData(updated);
+    
+    try {
+      await ref.read(productServiceProvider).updateProduct(id, data);
+    } catch (e) {
+      // Keep optimistic since it's queued
+    }
   }
 
   Future<void> deleteProduct(String id) async {
     final previousState = state.value ?? [];
     state = AsyncData(previousState.where((p) => p.id != id).toList());
-    await ref.read(productServiceProvider).deleteProduct(id);
+    
+    try {
+      await ref.read(productServiceProvider).deleteProduct(id);
+    } catch (e) {
+      // Keep it deleted since it's queued
+    }
   }
 }
 

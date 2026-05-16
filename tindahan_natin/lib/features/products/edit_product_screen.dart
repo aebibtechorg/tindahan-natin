@@ -334,14 +334,10 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                                         result.trim().isNotEmpty) {
                                       try {
                                         final created = await ref
-                                            .read(categoryServiceProvider)
-                                            .createCategory(
+                                            .read(categoriesProvider(storeId).notifier)
+                                            .addCategory(
                                               result.trim(),
-                                              storeId,
                                             );
-                                        ref.invalidate(
-                                          categoriesProvider(storeId),
-                                        );
                                         setState(
                                           () =>
                                               _selectedCategoryId = created.id,

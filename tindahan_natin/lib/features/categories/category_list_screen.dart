@@ -120,8 +120,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                                   );
                                   if (result != null && result.trim().isNotEmpty) {
                                     try {
-                                      await ref.read(categoryServiceProvider).updateCategory(c.id, result.trim());
-                                      ref.invalidate(categoriesProvider(storeId));
+                                      await ref.read(categoriesProvider(storeId).notifier).updateCategory(c.id, result.trim());
                                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category updated')));
                                     } catch (e) {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
@@ -144,8 +143,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                                   );
                                   if (confirmed == true) {
                                     try {
-                                      await ref.read(categoryServiceProvider).deleteCategory(c.id);
-                                      ref.invalidate(categoriesProvider(storeId));
+                                      await ref.read(categoriesProvider(storeId).notifier).deleteCategory(c.id);
                                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category deleted')));
                                     } catch (e) {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
@@ -181,8 +179,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               );
               if (result != null && result.trim().isNotEmpty) {
                 try {
-                  await ref.read(categoryServiceProvider).createCategory(result.trim(), storeId);
-                  ref.invalidate(categoriesProvider(storeId));
+                  await ref.read(categoriesProvider(storeId).notifier).addCategory(result.trim());
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category created')));
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create: $e')));
