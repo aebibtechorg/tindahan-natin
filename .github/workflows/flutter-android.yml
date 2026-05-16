@@ -50,6 +50,16 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
         working-directory: tindahan_natin
 
+      - name: Decode Android Keystore
+        if: secrets.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
+        working-directory: tindahan_natin
+
       # - name: Lint
       #   run: flutter analyze
       #   working-directory: tindahan_natin
