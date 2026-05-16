@@ -192,13 +192,24 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
               if (!_multiSelectMode && _selectedShelfIds.length == 1)
                 IconButton(
                   icon: const Icon(Icons.edit),
-                  onPressed: () async {
-                    final shelves = await ref.read(shelvesProvider(storeId).future);
-                    if (!context.mounted) {
-                      return;
+                  onPressed: () {
+                    final shelfId = _selectedShelfIds.first;
+                    final shelves = ref.read(shelvesProvider(storeId)).value ?? [];
+                    
+                    Shelf? targetShelf = _optimisticShelves[shelfId];
+                    if (targetShelf == null) {
+                      try {
+                        targetShelf = shelves.firstWhere((s) => s.id == shelfId);
+                      } catch (_) {}
                     }
-                    final shelf = shelves.firstWhere((s) => s.id == _selectedShelfIds.first);
-                    _showEditShelfDialog(context, ref, shelf, storeId);
+
+                    if (targetShelf != null) {
+                      _showEditShelfDialog(context, ref, targetShelf, storeId);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Shelf not found. Please try again.')),
+                      );
+                    }
                   },
                 ),
               if (!_multiSelectMode && _selectedShelfIds.length == 1)
