@@ -3,6 +3,9 @@ name: Build and Deploy
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'TindahanNatin.Server/**'
+      - 'terraform/**'
   workflow_dispatch:
 
 env:

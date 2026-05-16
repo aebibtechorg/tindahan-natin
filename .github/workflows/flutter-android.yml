@@ -5,10 +5,10 @@ on:
     branches: [ main ]
     paths:
       - 'tindahan_natin/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'tindahan_natin/**'
+  # pull_request:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'tindahan_natin/**'
   workflow_dispatch:
 
 jobs:
