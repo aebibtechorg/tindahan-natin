@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:flutter": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter doctor && ./flutter/bin/flutter config --enable-web",
+    "install:flutter": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable; else (cd flutter && git fetch origin && git checkout stable && git pull origin stable); fi && ./flutter/bin/flutter doctor && ./flutter/bin/flutter config --enable-web",
     "build:web": "npm run install:flutter && cd tindahan_natin && ../flutter/bin/flutter build web --release",
     "vercel-build": "npm run build:web"
   }

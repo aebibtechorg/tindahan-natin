@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 
 class AppTheme {
   static const Color primaryBlue = Color(0xFF1E88E5);
