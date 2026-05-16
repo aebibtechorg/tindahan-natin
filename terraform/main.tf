@@ -70,6 +70,11 @@ resource "google_cloud_run_v2_service" "server" {
       }
 
       env {
+        name  = "Storage__BucketName"
+        value = var.r2_bucket_name
+      }
+
+      env {
         name  = "Auth0__Domain"
         value = var.auth0_domain
       }
