@@ -1,4 +1,4 @@
-# tindahan_natin
+# Tindahan Natin
 
 A new Flutter project.
 
