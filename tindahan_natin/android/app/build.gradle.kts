@@ -36,6 +36,7 @@ android {
         // Scheme should be a short identifier (no dots). Allow override via AUTH0_SCHEME,
         // otherwise use a simple sensible default for local development.
         manifestPlaceholders["auth0Scheme"] = System.getenv("AUTH0_SCHEME") ?: "demo"
+        manifestPlaceholders["admobAppId"] = System.getenv("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"
     }
 
     buildTypes {

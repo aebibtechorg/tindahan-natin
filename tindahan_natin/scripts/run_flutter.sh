@@ -24,14 +24,32 @@ fi
 if [ -n "${PUBLIC_WEB_APP_BASE_URL-}" ]; then
   DART_DEFINES+=("--dart-define=PUBLIC_WEB_APP_BASE_URL=${PUBLIC_WEB_APP_BASE_URL}")
 fi
-if [ -n "${BANNER_AD_UNIT_ID-}" ]; then
-    DART_DEFINES+=("--dart-define=BANNER_AD_UNIT_ID=${BANNER_AD_UNIT_ID}")
+if [ -n "${BANNER_AD_UNIT_ID_WEB-}" ]; then
+    DART_DEFINES+=("--dart-define=BANNER_AD_UNIT_ID_WEB=${BANNER_AD_UNIT_ID_WEB}")
 fi
-if [ -n "${INTERSTITIAL_AD_UNIT_ID-}" ]; then
-    DART_DEFINES+=("--dart-define=INTERSTITIAL_AD_UNIT_ID=${INTERSTITIAL_AD_UNIT_ID}")
+if [ -n "${BANNER_AD_UNIT_ID_ANDROID-}" ]; then
+    DART_DEFINES+=("--dart-define=BANNER_AD_UNIT_ID_ANDROID=${BANNER_AD_UNIT_ID_ANDROID}")
 fi
-if [ -n "${NATIVE_AD_UNIT_ID-}" ]; then
-    DART_DEFINES+=("--dart-define=NATIVE_AD_UNIT_ID=${NATIVE_AD_UNIT_ID}")
+if [ -n "${BANNER_AD_UNIT_ID_IOS-}" ]; then
+    DART_DEFINES+=("--dart-define=BANNER_AD_UNIT_ID_IOS=${BANNER_AD_UNIT_ID_IOS}")
+fi
+if [ -n "${INTERSTITIAL_AD_UNIT_ID_WEB-}" ]; then
+    DART_DEFINES+=("--dart-define=INTERSTITIAL_AD_UNIT_ID_WEB=${INTERSTITIAL_AD_UNIT_ID_WEB}")
+fi
+if [ -n "${INTERSTITIAL_AD_UNIT_ID_ANDROID-}" ]; then
+    DART_DEFINES+=("--dart-define=INTERSTITIAL_AD_UNIT_ID_ANDROID=${INTERSTITIAL_AD_UNIT_ID_ANDROID}")
+fi
+if [ -n "${INTERSTITIAL_AD_UNIT_ID_IOS-}" ]; then
+    DART_DEFINES+=("--dart-define=INTERSTITIAL_AD_UNIT_ID_IOS=${INTERSTITIAL_AD_UNIT_ID_IOS}")
+fi
+if [ -n "${NATIVE_AD_UNIT_ID_WEB-}" ]; then
+    DART_DEFINES+=("--dart-define=NATIVE_AD_UNIT_ID_WEB=${NATIVE_AD_UNIT_ID_WEB}")
+fi
+if [ -n "${NATIVE_AD_UNIT_ID_ANDROID-}" ]; then
+    DART_DEFINES+=("--dart-define=NATIVE_AD_UNIT_ID_ANDROID=${NATIVE_AD_UNIT_ID_ANDROID}")
+fi
+if [ -n "${NATIVE_AD_UNIT_ID_IOS-}" ]; then
+    DART_DEFINES+=("--dart-define=NATIVE_AD_UNIT_ID_IOS=${NATIVE_AD_UNIT_ID_IOS}")
 fi
 
 # Allow additional arbitrary env-to-dart-define via DART_DEFINE_<NAME>=value
