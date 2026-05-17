@@ -84,6 +84,16 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
           loading: () => const Text('Loading...'),
           error: (_, _) => const Text('Tindahan Natin'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              ref.invalidate(publicStoreInfoProvider);
+              ref.invalidate(publicProductSearchProvider);
+            },
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
