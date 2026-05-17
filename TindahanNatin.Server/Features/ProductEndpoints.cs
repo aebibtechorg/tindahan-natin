@@ -100,6 +100,7 @@ public static class ProductEndpoints
                 CategoryId = dto.CategoryId,
                 ShelfId = dto.ShelfId,
                 Description = dto.Description,
+                ImageUrl = dto.ImageUrl,
                 Barcode = dto.Barcode,
                 StoreId = dto.StoreId,
                 CreatedAt = DateTimeOffset.UtcNow,
@@ -128,6 +129,7 @@ public static class ProductEndpoints
             product.CategoryId = dto.CategoryId;
             product.ShelfId = dto.ShelfId;
             product.Description = dto.Description;
+            product.ImageUrl = dto.ImageUrl;
             product.Barcode = dto.Barcode;
             product.UpdatedAt = DateTimeOffset.UtcNow;
 

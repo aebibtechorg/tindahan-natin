@@ -28,6 +28,7 @@ public record CreateProductDto(
     Guid CategoryId,
     Guid? ShelfId,
     string? Description,
+    string? ImageUrl,
     string? Barcode,
     Guid StoreId
 );
@@ -39,5 +40,6 @@ public record UpdateProductDto(
     Guid CategoryId,
     Guid? ShelfId,
     string? Description,
+    string? ImageUrl,
     string? Barcode
 );
