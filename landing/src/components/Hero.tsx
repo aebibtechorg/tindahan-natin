@@ -1,8 +1,25 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
 
+const screenshots = [
+  '/screenshots/1.png',
+  '/screenshots/2.png',
+  '/screenshots/3.png',
+  '/screenshots/4.png',
+  '/screenshots/5.png',
+];
+
 const Hero = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % screenshots.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <section className="hero-overflow">
       <div className="shimmer-overlay"></div>
@@ -58,15 +75,20 @@ const Hero = () => {
           className="hero-visual"
         >
           <div className="phone-mockup">
+            <div className="phone-notch"></div>
             <div className="phone-screen">
-               <div className="app-header">
-                 <div className="app-logo-mini"></div>
-               </div>
-               <div className="app-content-mock">
-                 <div className="mock-card"></div>
-                 <div className="mock-card"></div>
-                 <div className="mock-card"></div>
-               </div>
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentIndex}
+                  src={screenshots[currentIndex]}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.4 }}
+                  className="screenshot-img"
+                  alt={`Screenshot ${currentIndex + 1}`}
+                />
+              </AnimatePresence>
             </div>
             <motion.div 
                animate={{ 
@@ -189,38 +211,46 @@ const Hero = () => {
 
         .phone-mockup {
           position: relative;
-          width: 300px;
-          height: 600px;
-          background: #111;
-          border-radius: 40px;
-          border: 8px solid #222;
-          box-shadow: 0 50px 100px -20px rgba(0,0,0,0.25);
+          width: 280px;
+          height: 580px;
+          background: #000;
+          border-radius: 48px;
+          border: 10px solid #1a1a1a;
+          box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3);
           margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .phone-notch {
+          position: absolute;
+          top: 15px;
+          width: 15px;
+          height: 15px;
+          background: #1a1a1a;
+          border-radius: 20px;
+          z-index: 10;
         }
 
         .phone-screen {
           width: 100%;
           height: 100%;
-          background: #F7F9FC;
-          border-radius: 32px;
+          background: #fff;
+          border-radius: 38px;
           overflow: hidden;
-          padding: 1.5rem;
+          position: relative;
+          border: 2px solid #000;
         }
 
-        .app-header {
-           height: 40px;
-           background: white;
-           border-radius: 8px;
-           margin-bottom: 1.5rem;
-           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .mock-card {
-          height: 80px;
-          background: white;
-          border-radius: 12px;
-          margin-bottom: 1rem;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        .screenshot-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: top;
+          position: absolute;
+          top: 0;
+          left: 0;
         }
 
         .floating-icon {
