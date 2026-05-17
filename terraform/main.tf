@@ -62,11 +62,11 @@ resource "google_cloud_run_v2_service" "server" {
       }
 
       # For Cloudflare R2, we use the S3-compatible connection string format
-      # Format: Endpoint=https://<account_id>.r2.cloudflarestorage.com;AccessKey=...;SecretKey=...
+      # Format: Endpoint=https://<account_id>.r2.cloudflarestorage.com;AccessKey=...;SecretKey=...;Region=auto;UseSsl=true
       # We assume these keys are passed in via variables for now as R2 keys are often account-level.
       env {
         name  = "ConnectionStrings__minio"
-        value = "Endpoint=https://${var.cloudflare_account_id}.r2.cloudflarestorage.com;AccessKey=${var.r2_access_key};SecretKey=${var.r2_secret_key}"
+        value = "Endpoint=https://${var.cloudflare_account_id}.r2.cloudflarestorage.com;AccessKey=${var.r2_access_key};SecretKey=${var.r2_secret_key};Region=auto;UseSsl=true"
       }
 
       env {
