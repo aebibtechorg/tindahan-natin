@@ -5,10 +5,12 @@ on:
     branches: [ main ]
     paths:
       - 'tindahan_natin/**'
+      - '!tindahan_natin/lib/features/public_store/**'
   # pull_request:
   #   branches: [ main ]
   #   paths:
   #     - 'tindahan_natin/**'
+  #     - '!tindahan_natin/lib/features/public_store/**'
   workflow_dispatch:
 
 jobs:
