@@ -21,22 +21,30 @@ public static class StorageEndpoints
             var bucketName = GetBucketName(configuration);
             var objectName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
 
-            if (environment.IsDevelopment())
-            {
-                await EnsureBucketExistsAsync(minio, bucketName);
-            }
-
-            using var stream = file.OpenReadStream();
-            var putObjectArgs = new PutObjectArgs()
-                .WithBucket(bucketName)
-                .WithObject(objectName)
-                .WithStreamData(stream)
-                .WithObjectSize(file.Length)
-                .WithContentType(file.ContentType);
-
             try
             {
-                await minio.PutObjectAsync(putObjectArgs);
+                if (environment.IsDevelopment())
+                {
+                    await EnsureBucketExistsAsync(minio, bucketName);
+                }
+
+                using var stream = file.OpenReadStream();
+                var putObjectArgs = new PutObjectArgs()
+                    .WithBucket(bucketName)
+                    .WithObject(objectName)
+                    .WithStreamData(stream)
+                    .WithObjectSize(file.Length)
+                    .WithContentType(file.ContentType);
+                var result = await minio.PutObjectAsync(putObjectArgs);
+                if (result.ResponseStatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    logger.LogError("Upload failed for object {ObjectName} in bucket {BucketName}. Minio response: {Response}", objectName, bucketName, result);
+                    return Results.Problem(
+                        title: "Storage upload failed",
+                        detail: "Object storage rejected the upload. Check the storage endpoint, credentials, and bucket configuration.",
+                        statusCode: StatusCodes.Status503ServiceUnavailable);
+                }
+                return Results.Ok(new { Url = $"/api/storage/files/{bucketName}/{objectName}" });
             }
             catch (BucketNotFoundException ex)
             {
@@ -54,10 +62,6 @@ public static class StorageEndpoints
                     detail: "Object storage rejected the upload. Check the storage endpoint, credentials, and bucket configuration.",
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
-
-            // In a real app, you'd return a URL that goes through a CDN or a signed URL
-            // For now, return the object name or a local dev URL
-            return Results.Ok(new { Url = $"/api/storage/files/{bucketName}/{objectName}" });
         }).DisableAntiforgery();
 
         group.MapGet("/files/{bucket}/{file}", async (string bucket, string file, IMinioClient minio) =>
