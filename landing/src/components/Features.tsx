@@ -74,7 +74,7 @@ const Features = () => {
       <style>{`
         .features-section {
           padding: 8rem 0;
-          background: #F7F9FC;
+          background: var(--surface);
         }
         .section-header {
           text-align: center;
@@ -83,12 +83,12 @@ const Features = () => {
         .section-title {
           font-size: 2.5rem;
           font-weight: 800;
-          color: #1a1a1a;
+          color: var(--text);
           margin-bottom: 1rem;
         }
         .section-subtitle {
           font-size: 1.125rem;
-          color: #4b5563;
+          color: var(--text-light);
           max-width: 600px;
           margin: 0 auto;
         }
@@ -98,10 +98,10 @@ const Features = () => {
           gap: 2rem;
         }
         .feature-card {
-          background: white;
+          background: var(--card-bg);
           padding: 2.5rem;
           border-radius: 24px;
-          border: 1px solid rgba(0,0,0,0.03);
+          border: 1px solid var(--border);
           transition: all 0.3s ease;
         }
         .icon-wrapper {
@@ -118,10 +118,10 @@ const Features = () => {
           font-size: 1.25rem;
           font-weight: 700;
           margin-bottom: 1rem;
-          color: #1a1a1a;
+          color: var(--text);
         }
         .feature-card p {
-          color: #4b5563;
+          color: var(--text-light);
           line-height: 1.6;
           margin: 0;
         }

@@ -192,9 +192,45 @@ const baseUrl = Astro.url.origin;
 		--accent: #FFB300;
 		--text: #1a1a1a;
 		--text-light: #4b5563;
-		--background: #ffffff;
-		--surface: #F7F9FC;
-		--white: #ffffff;
+		--background: #e0f2fe;
+		--surface: #bae6fd;
+		--card-bg: #ffffff;
+		--border: rgba(0,0,0,0.08);
+		--header-bg: rgba(224, 242, 254, 0.8);
+		--menu-bg: rgba(255, 255, 255, 0.98);
+		--danger-bg: #FEF2F2;
+		--danger-border: #FEE2E2;
+		--danger-text: #DC2626;
+		--danger-text-dark: #991B1B;
+		--success-bg: #ECFDF5;
+		--success-border: #D1FAE5;
+		--success-text: #065F46;
+		--phone-shadow: 0 50px 100px -20px rgba(0,0,0,0.3);
+		--card-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+		--phone-frame: #1a1a1a;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--text: #f3f4f6;
+			--text-light: #9ca3af;
+			--background: #0f172a;
+			--surface: #1e293b;
+			--card-bg: #1e293b;
+			--border: rgba(255,255,255,0.1);
+			--header-bg: rgba(15, 23, 42, 0.8);
+			--menu-bg: rgba(30, 41, 59, 0.98);
+			--danger-bg: #450a0a;
+			--danger-border: #7f1d1d;
+			--danger-text: #fca5a5;
+			--danger-text-dark: #fca5a5;
+			--success-bg: #064e3b;
+			--success-border: #065f46;
+			--success-text: #6ee7b7;
+			--phone-shadow: 0 50px 100px -20px rgba(0,0,0,0.8), 0 0 2px 1px rgba(255,255,255,0.1);
+			--card-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+			--phone-frame: #2d3748;
+		}
 	}
 	* {
 		box-sizing: border-box;
@@ -218,9 +254,9 @@ const baseUrl = Astro.url.origin;
 		padding: 0 1.5rem;
 	}
 	header {
-		background: rgba(255, 255, 255, 0.8);
+		background: var(--header-bg);
 		backdrop-filter: blur(10px);
-		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		border-bottom: 1px solid rgba(30, 136, 229, 0.1);
 		padding: 0.75rem 0;
 		position: sticky;
 		top: 0;
@@ -274,7 +310,7 @@ const baseUrl = Astro.url.origin;
 	}
 	.nav-cta {
 		background: var(--text);
-		color: white !important;
+		color: var(--background) !important;
 		padding: 0.6rem 1.25rem;
 		border-radius: 10px;
 		font-size: 0.9rem !important;
@@ -310,7 +346,7 @@ const baseUrl = Astro.url.origin;
 			width: min(18rem, calc(100vw - 2rem));
 			height: auto;
 			max-height: calc(100vh - 6rem);
-			background: rgba(255, 255, 255, 0.98);
+			background: var(--menu-bg);
 			backdrop-filter: blur(20px);
 			flex-direction: column;
 			justify-content: flex-start;
@@ -318,7 +354,7 @@ const baseUrl = Astro.url.origin;
 			gap: 0.5rem;
 			padding: 1rem;
 			border-radius: 20px;
-			border: 1px solid rgba(15, 23, 42, 0.08);
+			border: 1px solid var(--border);
 			box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
 			overflow-y: auto;
 			opacity: 0;
@@ -350,7 +386,7 @@ const baseUrl = Astro.url.origin;
 			margin-top: 0.25rem;
 			text-align: center;
 			background: var(--text);
-			color: white !important;
+			color: var(--background) !important;
 		}
 		.menu-toggle.active span:nth-child(1) {
 			transform: translateY(8px) rotate(45deg);

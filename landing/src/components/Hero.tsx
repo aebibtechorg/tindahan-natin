@@ -108,7 +108,7 @@ const Hero = () => {
         .hero-overflow {
           position: relative;
           padding: 8rem 0;
-          background: #ffffff;
+          background: var(--background);
           overflow: hidden;
         }
 
@@ -155,7 +155,7 @@ const Hero = () => {
           font-weight: 900;
           line-height: 1.05;
           margin: 0 0 1.5rem;
-          color: #1a1a1a;
+          color: var(--text);
           letter-spacing: -0.02em;
         }
 
@@ -174,7 +174,7 @@ const Hero = () => {
         .hero-subtitle {
           font-size: 1.25rem;
           line-height: 1.6;
-          color: #4b5563;
+          color: var(--text-light);
           margin-bottom: 2.5rem;
           max-width: 540px;
         }
@@ -199,9 +199,9 @@ const Hero = () => {
         }
 
         .btn-secondary {
-          background: white;
-          color: #1E88E5;
-          border: 2px solid #e5e7eb;
+          background: var(--card-bg);
+          color: var(--primary);
+          border: 2px solid var(--border);
           padding: 1rem 2rem;
           border-radius: 12px;
           font-weight: 700;
@@ -215,8 +215,8 @@ const Hero = () => {
           height: 580px;
           background: #000;
           border-radius: 48px;
-          border: 10px solid #1a1a1a;
-          box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3);
+          border: 10px solid var(--phone-frame);
+          box-shadow: var(--phone-shadow);
           margin: 0 auto;
           display: flex;
           align-items: center;
@@ -228,7 +228,7 @@ const Hero = () => {
           top: 15px;
           width: 15px;
           height: 15px;
-          background: #1a1a1a;
+          background: var(--phone-frame);
           border-radius: 20px;
           z-index: 10;
         }
@@ -236,7 +236,7 @@ const Hero = () => {
         .phone-screen {
           width: 100%;
           height: 100%;
-          background: #fff;
+          background: var(--card-bg);
           border-radius: 38px;
           overflow: hidden;
           position: relative;
@@ -255,10 +255,10 @@ const Hero = () => {
 
         .floating-icon {
           position: absolute;
-          background: white;
+          background: var(--card-bg);
           padding: 1rem;
           border-radius: 20px;
-          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+          box-shadow: var(--card-shadow);
         }
 
         .icon-1 {
