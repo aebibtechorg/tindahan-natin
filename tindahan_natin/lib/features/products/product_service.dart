@@ -163,6 +163,26 @@ class ProductService {
     return response.data['url'];
   }
 
+  Future<Map<String, dynamic>?> lookupProductByBarcode(String barcode) async {
+    try {
+      // Use a fresh Dio instance to avoid the base URL and auth headers of the main client
+      final response = await Dio().get(
+        'https://world.openfoodfacts.org/api/v2/product/$barcode.json',
+      );
+      if (response.statusCode == 200 && response.data['status'] == 1) {
+        final product = response.data['product'];
+        return {
+          'name': product['product_name'] ?? product['generic_name'],
+          'description': product['generic_name'] ?? product['product_name'],
+          'imageUrl': product['image_url'] ?? product['image_front_url'],
+        };
+      }
+    } catch (e) {
+      debugPrint('Error looking up product: $e');
+    }
+    return null;
+  }
+
   Future<List<Product>> searchProducts(String storeId, String query) async {
     final cached = _filterCachedProducts(storeId, query);
 
