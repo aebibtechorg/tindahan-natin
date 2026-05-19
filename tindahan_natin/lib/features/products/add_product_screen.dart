@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -105,8 +107,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
     return myStoreAsync.when(
       data: (store) {
-        if (store == null)
+        if (store == null) {
           return const Scaffold(body: Center(child: Text('No store found')));
+        }
         final storeId = store.id;
         final categoriesAsync = ref.watch(categoriesProvider(storeId));
 
@@ -131,7 +134,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
-                                '${ref.read(apiBaseUrlProvider)}${_imageUrl}',
+                                '${ref.read(apiBaseUrlProvider)}$_imageUrl',
                                 fit: BoxFit.cover,
                               ),
                             )
@@ -186,7 +189,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedCategoryId,
+                              initialValue: _selectedCategoryId,
                               decoration: const InputDecoration(
                                 labelText: 'Category',
                               ),
@@ -275,7 +278,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                       return shelvesAsync.when(
                         data: (shelves) {
                           return DropdownButtonFormField<String>(
-                            value: _selectedShelfId ?? '',
+                            initialValue: _selectedShelfId ?? '',
                             decoration: const InputDecoration(
                               labelText: 'Shelf (optional)',
                             ),

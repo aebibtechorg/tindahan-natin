@@ -1,10 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
-// import 'package:tindahan_natin/features/settings/store_service.dart';
+import 'package:tindahan_natin/features/settings/store_service.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -33,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
                 .fadeIn(),
             const SizedBox(height: 20),
             const Text(
-              'Welcome, Store Owner!',
+              'Welcome, Owner!',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.3),
             const SizedBox(height: 10),
@@ -62,23 +64,23 @@ class HomeScreen extends ConsumerWidget {
               onTap: () => context.push('/map'),
             ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.1),
             const SizedBox(height: 16),
-            // _buildMenuCard(
-            //   context,
-            //   title: 'Product Search',
-            //   subtitle: 'Quickly find products in your store',
-            //   icon: Icons.search_outlined,
-            //   color: Colors.green,
-            //   onTap: () async {
-            //     final myStore = await ref.read(myStoreProvider.future);
-            //     if (myStore == null) {
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         const SnackBar(content: Text('No store available')),
-            //       );
-            //       return;
-            //     }
-            //     context.push('/store/${myStore.slug}');
-            //   },
-            // ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.1),
+            _buildMenuCard(
+              context,
+              title: 'Product Search',
+              subtitle: 'Quickly find products in your store',
+              icon: Icons.search_outlined,
+              color: Colors.green,
+              onTap: () async {
+                final myStore = await ref.read(myStoreProvider.future);
+                if (myStore == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No store available')),
+                  );
+                  return;
+                }
+                context.push('/store/${myStore.slug}');
+              },
+            ).animate().fadeIn(delay: 1000.ms).slideY(begin: 0.1),
           ],
         ),
       ),
@@ -101,7 +103,7 @@ class HomeScreen extends ConsumerWidget {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 30),

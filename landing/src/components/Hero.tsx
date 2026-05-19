@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 
 const screenshots = [
   '/screenshots/1.png',
@@ -9,6 +9,15 @@ const screenshots = [
   '/screenshots/4.png',
   '/screenshots/5.png',
 ];
+
+const GooglePlayLogo = () => (
+  <svg viewBox="0 0 512 512" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+    <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z" fill="#FF3A44"/>
+    <path d="M25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0C34 6.8 25.3 19.2 25.3 35.3z" fill="#00A0FF"/>
+    <path d="M325.3 277.7l-60.1-60.1L104.6 499l280.8-161.2-60.1-60.1z" fill="#00E061"/>
+    <path d="M460.1 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-10.3 18-28.5-1.2-40.8z" fill="#FFC107"/>
+  </svg>
+);
 
 const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -54,9 +63,9 @@ const Hero = () => {
               whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(30, 136, 229, 0.4)" }}
               whileTap={{ scale: 0.95 }}
               className="btn-primary"
-              onClick={() => alert('Download coming soon!')}
+              onClick={() => window.open('https://play.google.com/store/apps/details?id=com.aebibtech.tindahan_natin', '_blank')}
             >
-              Get Started Free <ArrowRight size={18} />
+              <GooglePlayLogo /> Get it on Google Play
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.05 }}
