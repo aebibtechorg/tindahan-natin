@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tindahan_natin/shared/widgets/custom_image_picker.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
@@ -120,15 +121,21 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    final XFile? result = await Navigator.push<XFile>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CustomImagePicker(),
+        fullscreenDialog: true,
+      ),
+    );
+
+    if (result != null) {
       setState(() {
         _isUploading = true;
       });
 
       try {
-        final url = await ref.read(productServiceProvider).uploadImage(image);
+        final url = await ref.read(productServiceProvider).uploadImage(result);
         setState(() {
           _imageUrl = url;
           _isUploading = false;

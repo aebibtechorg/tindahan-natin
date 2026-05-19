@@ -44,6 +44,8 @@ dependencies:
   hive_flutter: ^1.1.0
   flutter_secure_storage: ^10.2.0
   image_picker: ^1.2.2
+  photo_manager: ^3.9.0
+  camera: ^0.12.0+1
   flutter_image_compress: ^2.4.0
   cached_network_image: ^3.4.1
   mobile_scanner: ^6.0.4
