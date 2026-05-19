@@ -26,17 +26,6 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-
-            <!-- Auth0 App Links Redirect -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="tindahannatin.jp.auth0.com"
-                    android:pathPrefix="/android/com.aebibtech.tindahan_natin/callback" />
-            </intent-filter>
         </activity>
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
