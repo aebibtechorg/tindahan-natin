@@ -3,6 +3,7 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/config/auth_config.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
+import 'package:tindahan_natin/features/auth/web_auth.dart';
 
 part 'auth_service.g.dart';
 
@@ -13,6 +14,9 @@ class AuthService {
   final Auth0 _auth0 = Auth0(AuthConfig.domain, AuthConfig.clientId);
 
   Future<Credentials?> getStoredCredentials({int minTtl = 0}) async {
+    if (kIsWeb) {
+      return await webOnLoad(AuthConfig.domain, AuthConfig.clientId, audience: AuthConfig.audience);
+    }
     try {
       final creds = await _auth0.credentialsManager.credentials(minTtl: minTtl);
       return creds;
@@ -23,6 +27,10 @@ class AuthService {
 
   Future<Credentials?> login() async {
     try {
+      if (kIsWeb) {
+        await webLogin(AuthConfig.domain, AuthConfig.clientId, audience: AuthConfig.audience);
+        return null;
+      }
       final credentials = await _auth0.webAuthentication(scheme: "https").login(
             audience: AuthConfig.audience,
           );
@@ -39,10 +47,16 @@ class AuthService {
 
   Future<void> logout() async {
     try {
+      if (kIsWeb) {
+        await webLogout(AuthConfig.domain, AuthConfig.clientId);
+        return;
+      }
       await _auth0.webAuthentication(scheme: "https").logout();
     } catch (_) {}
     try {
-      await _auth0.credentialsManager.clearCredentials();
+      if (!kIsWeb) {
+        await _auth0.credentialsManager.clearCredentials();
+      }
     } catch (_) {}
   }
 }
@@ -60,7 +74,8 @@ class AuthState extends _$AuthState {
     try {
       final creds = await ref.read(authServiceProvider).getStoredCredentials();
       return creds;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('AuthState: Initialization failed: $e');
       return null;
     }
   }

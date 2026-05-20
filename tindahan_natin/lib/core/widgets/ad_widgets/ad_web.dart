@@ -11,64 +11,70 @@ class InlineAdWidget extends StatefulWidget {
 }
 
 class _InlineAdWidgetState extends State<InlineAdWidget> {
-  static const String _viewType = 'adsense-unit';
-  static bool _registered = false;
+  late String _viewType;
+  static int _instanceCount = 0;
 
   @override
   void initState() {
     super.initState();
-    if (!_registered) {
-      ui.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
-        final element = web.document.createElement('div') as web.HTMLDivElement;
-        element.style.width = '100%';
-        element.style.height = '100px';
-        element.style.minWidth = '320px';
-        element.style.minHeight = '100px';
-        element.style.textAlign = 'center';
-        element.style.padding = '8px';
-        element.style.boxSizing = 'border-box';
-        element.id = 'adsense-unit-$viewId';
+    final instanceId = ++_instanceCount;
+    _viewType = 'adsense-unit-$instanceId';
 
-        final ins = web.document.createElement('ins') as web.HTMLModElement;
-        ins.className = 'adsbygoogle';
-        ins.style.display = 'block';
-        ins.style.width = '100%';
-        ins.style.height = '100%';
-        ins.setAttribute('data-ad-client', AdHelper.bannerAdUnitId.split('/')[0]);
-        ins.setAttribute('data-ad-slot', AdHelper.bannerAdUnitId.split('/')[1]);
-        ins.setAttribute('data-ad-format', 'auto');
-        ins.setAttribute('data-full-width-responsive', 'true');
+    ui.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
+      final adUnitId = AdHelper.bannerAdUnitId;
+      final parts = adUnitId.split('/');
+      
+      // Sanitize client ID: AdSense expects ca-pub-, but AdMob uses ca-app-pub-
+      var client = parts[0];
+      if (client.startsWith('ca-app-pub-')) {
+        client = client.replaceFirst('ca-app-pub-', 'ca-pub-');
+      }
+      
+      final slot = parts.length > 1 ? parts[1] : '';
 
-        final script = web.document.createElement('script') as web.HTMLScriptElement;
-        script.text = '''
-          (function initAd() {
-            var container = document.getElementById("adsense-unit-$viewId");
-            if (!container) {
-              window.setTimeout(initAd, 50);
-              return;
-            }
+      final container = web.document.createElement('div') as web.HTMLDivElement;
+      container.style.width = '100%';
+      container.style.height = '100%';
+      container.style.display = 'flex';
+      container.style.justifyContent = 'center';
+      container.style.alignItems = 'center';
 
-            var width = container.getBoundingClientRect().width;
-            if (!width || width <= 0) {
-              window.setTimeout(initAd, 50);
-              return;
-            }
+      final shadowRoot = container.attachShadow(web.ShadowRootInit(mode: 'open'));
 
-            if (container.dataset.adInitialized === 'true') {
-              return;
-            }
+      final iframe = web.document.createElement('iframe') as web.HTMLIFrameElement;
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.style.overflow = 'hidden';
+      
+      // We use srcdoc to host the AdSense code in a same-origin-like but isolated context.
+      // This allows the AdSense script to find the 'ins' tag without Shadow DOM interference.
+      iframe.setAttribute('srcdoc', '''
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; padding: 0; overflow: hidden; background: transparent; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  </style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=$client" crossorigin="anonymous"></script>
+</head>
+<body>
+  <ins class="adsbygoogle"
+       style="display:block;width:100%;height:100px;"
+       data-ad-client="$client"
+       data-ad-slot="$slot"
+       data-ad-format="horizontal"
+       data-full-width-responsive="true"></ins>
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+</body>
+</html>
+''');
 
-            container.dataset.adInitialized = 'true';
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          })();
-        ''';
-
-        element.appendChild(ins);
-        element.appendChild(script);
-        return element;
-      });
-      _registered = true;
-    }
+      shadowRoot.append(iframe);
+      return container;
+    });
   }
 
   @override
@@ -81,9 +87,9 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
 
         return SizedBox(
           width: width,
-          height: 100,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+          height: 116, // 100px for ad + 16px padding
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: HtmlElementView(viewType: _viewType),
           ),
         );

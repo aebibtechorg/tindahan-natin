@@ -26,6 +26,9 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = currentLocation;
+    if (location.startsWith('/store')) {
+      return child;
+    }
     final selectedIndex = _locationToIndex(location);
 
     return Scaffold(

@@ -180,7 +180,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(4),
                                   child: CachedNetworkImage(
-                                    imageUrl: '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
+                                    imageUrl: product.imageUrl!.startsWith('http')
+                                        ? product.imageUrl!
+                                        : '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
                                     width: 50,
                                     height: 50,
                                     fit: BoxFit.cover,
