@@ -29,6 +29,8 @@ const Hero = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth <= 768 : false;
+
   return (
     <section className="hero-overflow">
       <div className="shimmer-overlay"></div>
@@ -78,8 +80,8 @@ const Hero = () => {
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, x: isMobile ? 0 : 50, y: isMobile ? 20 : 0 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
           className="hero-visual"
         >
@@ -139,12 +141,60 @@ const Hero = () => {
         }
 
         @media (max-width: 768px) {
+          .hero-overflow {
+            padding: 4rem 0;
+          }
           .hero-container {
             grid-template-columns: 1fr;
             text-align: center;
+            gap: 3rem;
+          }
+          .hero-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .hero-title {
+            font-size: 2.75rem;
+            text-align: center;
+          }
+          .hero-subtitle {
+            font-size: 1.125rem;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
           }
           .hero-actions {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+          }
+          .btn-primary, .btn-secondary {
+            width: 100%;
+            max-width: 320px;
             justify-content: center;
+          }
+          .phone-mockup {
+            width: 240px;
+            height: 500px;
+            border-radius: 40px;
+          }
+          .phone-screen {
+            border-radius: 32px;
+          }
+          .icon-1 {
+            right: -20px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .hero-title {
+            font-size: 10vw!important;
+          }
+
+          .hero-container {
+            padding: 0 1rem;
           }
         }
 
