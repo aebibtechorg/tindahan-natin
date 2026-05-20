@@ -109,7 +109,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.network(
-                                '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
+                                product.imageUrl!.contains('api') ? '${ref.read(apiBaseUrlProvider)}${product.imageUrl}' : product.imageUrl!,
                                 fit: BoxFit.cover,
                               ),
                             )
