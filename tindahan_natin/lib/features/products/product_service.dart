@@ -70,6 +70,7 @@ class ProductService {
       }
       return created;
     } catch (error) {
+      debugPrint('Create product failed: $error');
       if (storeId != null) {
         await _local.upsertCachedProduct(storeId, draft.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), draft.toJson());
@@ -122,6 +123,7 @@ class ProductService {
     try {
       await _dio.put('/products/$id', data: data);
     } catch (error) {
+      debugPrint('Update product failed: $error');
       await _local.queueMutation({
         'resource': 'products',
         'method': 'PUT',
@@ -145,6 +147,7 @@ class ProductService {
     try {
       await _dio.delete('/products/$id');
     } catch (error) {
+      debugPrint('Delete product failed: $error');
       await _local.queueMutation({
         'resource': 'products',
         'method': 'DELETE',
@@ -166,22 +169,69 @@ class ProductService {
     return response.data['url'];
   }
 
-  Future<Map<String, dynamic>?> lookupProductByBarcode(String barcode) async {
+  Future<Map<String, dynamic>?> lookupProductByBarcode(String barcode, {Dio? dio}) async {
+    final lookupDio = dio ?? Dio(BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+    ));
+
     try {
-      // Use a fresh Dio instance to avoid the base URL and auth headers of the main client
-      final response = await Dio().get(
-        'https://world.openfoodfacts.org/api/v2/product/$barcode.json',
-      );
+      // 1. Try Open Food Facts (Food & Drinks)
+      var result = await _lookupOFFSchema(lookupDio, barcode, 'world.openfoodfacts.org');
+      if (result != null) return result;
+
+      // 2. Try Open Beauty Facts (Cosmetics, Personal Care)
+      result = await _lookupOFFSchema(lookupDio, barcode, 'world.openbeautyfacts.org');
+      if (result != null) return result;
+
+      // 3. Try Open Products Facts (General products)
+      result = await _lookupOFFSchema(lookupDio, barcode, 'world.openproductsfacts.org');
+      if (result != null) return result;
+
+      // 5. Try Google Books (ISBN)
+      if (barcode.startsWith('978') || barcode.startsWith('979') || barcode.length == 10) {
+        result = await _lookupGoogleBooks(lookupDio, barcode);
+        if (result != null) return result;
+      }
+    } catch (e) {
+      debugPrint('Multi-source lookup failed: $e');
+    } finally {
+      lookupDio.close();
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _lookupOFFSchema(Dio dio, String barcode, String domain) async {
+    try {
+      final response = await dio.get('https://$domain/api/v2/product/$barcode.json');
       if (response.statusCode == 200 && response.data['status'] == 1) {
         final product = response.data['product'];
+        debugPrint('OFF lookup success from $domain: ${product['product_name']}');
         return {
-          'name': product['product_name'] ?? product['generic_name'],
-          'description': product['generic_name'] ?? product['product_name'],
+          'name': product['product_name'] ?? product['generic_name'] ?? product['product_name_en'],
+          'description': product['generic_name'] ?? product['product_name'] ?? product['product_name_en'],
           'imageUrl': product['image_url'] ?? product['image_front_url'],
         };
       }
     } catch (e) {
-      debugPrint('Error looking up product: $e');
+      debugPrint('OFF lookup failed from $domain: $e');
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _lookupGoogleBooks(Dio dio, String barcode) async {
+    try {
+      final response = await dio.get('https://www.googleapis.com/books/v1/volumes?q=isbn:$barcode');
+      if (response.statusCode == 200 && response.data['totalItems'] > 0) {
+        final book = response.data['items'][0]['volumeInfo'];
+        return {
+          'name': book['title'],
+          'description': book['description'] ?? (book['authors'] as List?)?.join(', '),
+          'imageUrl': book['imageLinks']?['thumbnail'],
+        };
+      }
+    } catch (e) {
+      debugPrint('Google Books lookup failed: $e');
     }
     return null;
   }
