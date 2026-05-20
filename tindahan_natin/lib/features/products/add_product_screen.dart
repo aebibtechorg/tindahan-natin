@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,13 +79,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? result = await Navigator.push<XFile>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const CustomImagePicker(),
-        fullscreenDialog: true,
-      ),
-    );
+    final XFile? result;
+    if (kIsWeb) {
+      result = await ImagePicker().pickImage(source: ImageSource.gallery);
+    } else {
+      result = await Navigator.push<XFile>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CustomImagePicker(),
+          fullscreenDialog: true,
+        ),
+      );
+    }
 
     if (result != null) {
       setState(() {

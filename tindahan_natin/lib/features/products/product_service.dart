@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -157,7 +157,10 @@ class ProductService {
 
   Future<String> uploadImage(XFile file) async {
     final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(file.path, filename: file.name),
+      'file': kIsWeb
+          ? MultipartFile.fromBytes(await file.readAsBytes(),
+              filename: file.name)
+          : await MultipartFile.fromFile(file.path, filename: file.name),
     });
     final response = await _dio.post('/storage/upload', data: formData);
     return response.data['url'];
