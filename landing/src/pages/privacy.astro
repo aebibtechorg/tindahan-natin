@@ -6,7 +6,7 @@ import Layout from '../layouts/Layout.astro';
 	<div class="container policy-container">
 		<div class="policy-header">
 			<h1>Privacy Policy</h1>
-			<p class="last-updated">Last updated: May 19, 2026</p>
+			<p class="last-updated">Last updated: May 20, 2026</p>
 		</div>
 		
 		<div class="policy-content">
@@ -30,7 +30,7 @@ import Layout from '../layouts/Layout.astro';
 				<ul>
 					<li>Authenticate your identity and secure your account.</li>
 					<li>Provide and maintain our inventory, barcode scanning, and shelf-mapping features.</li>
-					<li>Automatically populate product details by querying third-party APIs (like Open Food Facts) when you scan a barcode.</li>
+					<li>Automatically populate product details by querying third-party APIs (such as Open Food Facts, Open Beauty Facts, and others) when you scan a barcode.</li>
 					<li>Synchronize your data between your device and our servers when you are online.</li>
 					<li>Generate internal storefronts for coordination with your family and staff.</li>
 					<li>Display relevant advertisements via Google Mobile Ads.</li>
@@ -42,7 +42,8 @@ import Layout from '../layouts/Layout.astro';
 				<p>We integrate with the following third-party services which may collect data according to their own privacy policies:</p>
 				<ul>
 					<li><strong>Auth0:</strong> Used for secure authentication and account management.</li>
-					<li><strong>Open Food Facts:</strong> Used to retrieve product information based on scanned barcodes.</li>
+					<li><strong>Product Databases:</strong> We query open databases including <strong>Open Food Facts</strong>, <strong>Open Beauty Facts</strong>, and <strong>Open Products Facts</strong> to retrieve product information based on scanned barcodes.</li>
+					<li><strong>Google APIs:</strong> We use the <strong>Google Books API</strong> to retrieve book information for ISBN barcodes.</li>
 					<li><strong>Google Mobile Ads (AdMob):</strong> Used to display advertisements within the application. AdMob may use device identifiers to personalize ads.</li>
 				</ul>
 			</section>
