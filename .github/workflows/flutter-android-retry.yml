@@ -138,4 +138,3 @@ jobs:
           releaseFiles: tindahan_natin/build/app/outputs/bundle/release/app-release.aab
           tracks: alpha
           status: completed
-          changesNotSentForReview: true
