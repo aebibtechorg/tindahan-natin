@@ -148,6 +148,15 @@ app.Use(async (context, next) =>
                     };
                     db.Stores.Add(store);
                     await db.SaveChangesAsync();
+
+                    var membership = new StoreMembership
+                    {
+                        StoreId = store.Id,
+                        UserId = userId,
+                        Role = "Owner"
+                    };
+                    db.StoreMemberships.Add(membership);
+                    await db.SaveChangesAsync();
                 }
             }
             catch

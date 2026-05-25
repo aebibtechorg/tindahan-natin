@@ -69,12 +69,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     final messenger = ScaffoldMessenger.of(context);
+    final myStore = ref.read(myStoreProvider).value;
+    if (myStore == null) return;
 
     setState(() => _loading = true);
     try {
       final svc = ref.read(storeServiceProvider);
-      await svc.updateStoreName(_nameController.text.trim());
+      await svc.updateStoreName(myStore.id, _nameController.text.trim());
       ref.invalidate(myStoreProvider);
+      ref.invalidate(membershipsProvider);
       if (mounted) {
         messenger.showSnackBar(
           const SnackBar(content: Text('Store updated')),
@@ -187,6 +190,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       child: const Text('Log out'),
                     ),
+                    const Divider(height: 32),
+                    Text('Switch Store', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    ref.watch(membershipsProvider).when(
+                          data: (memberships) {
+                            if (memberships.isEmpty) return const Text('No stores found');
+                            return Column(
+                              children: memberships
+                                  .map((m) => RadioListTile<String>(
+                                        title: Text(m.storeName),
+                                        subtitle: Text('Role: ${m.role}'),
+                                        value: m.storeId,
+                                        groupValue: ref.watch(activeStoreIdProvider) ?? memberships.first.storeId,
+                                        onChanged: (id) {
+                                          ref.read(activeStoreIdProvider.notifier).set(id);
+                                          ref.invalidate(myStoreProvider);
+                                        },
+                                      ))
+                                  .toList(),
+                            );
+                          },
+                          loading: () => const Center(child: CircularProgressIndicator()),
+                          error: (e, s) => Text('Error loading stores: $e'),
+                        ),
                     const Spacer(),
                     const InlineAdWidget(),
                     const SizedBox(height: 16),

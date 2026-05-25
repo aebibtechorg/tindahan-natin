@@ -143,6 +143,10 @@ class LocalStorage {
     );
   }
 
+  Future<void> deleteCacheEntry(String cacheKey) async {
+    await _entityBox.delete(cacheKey);
+  }
+
   Future<void> queueMutation(Map<String, dynamic> mutation) async {
     final mutationId = mutation['mutationId']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString();
     await _pendingMutationsBox.put(mutationId, {...mutation, 'mutationId': mutationId});

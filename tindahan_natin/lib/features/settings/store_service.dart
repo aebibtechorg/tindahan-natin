@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
+import 'package:tindahan_natin/features/settings/store_membership.dart';
+
+part 'store_service.g.dart';
 
 class StoreService {
   final Dio _dio;
@@ -11,47 +15,54 @@ class StoreService {
 
   StoreService(this._dio, this._local);
 
-  Future<Map<String, dynamic>> getMyStore() async {
-    final cached = _local.getCachedRecords('store_me');
+  Future<List<StoreMembership>> getMemberships() async {
+    // Cleanup obsolete single-store cache key if it exists
+    await _local.deleteCacheEntry('store_me');
+
+    final cached = _local.getCachedRecords('store_memberships');
     if (cached != null && cached.isNotEmpty) {
-      return cached.first;
+      return cached.map((e) => StoreMembership.fromJson(Map<String, dynamic>.from(e))).toList();
     }
 
     try {
-      final response = await _dio.get('/stores/me');
-      final data = Map<String, dynamic>.from(response.data as Map);
-      await _local.cacheRecords('store_me', [data]);
-      return data;
+      final response = await _dio.get('/stores/memberships');
+      final data = (response.data as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      await _local.cacheRecords('store_memberships', data);
+      return data.map((e) => StoreMembership.fromJson(e)).toList();
     } catch (error) {
-      final cached = _local.getCachedRecords('store_me');
+      final cached = _local.getCachedRecords('store_memberships');
       if (cached != null && cached.isNotEmpty) {
-        return cached.first;
+        return cached.map((e) => StoreMembership.fromJson(Map<String, dynamic>.from(e))).toList();
       }
       rethrow;
     }
   }
 
-  Future<void> updateStoreName(String name) async {
-    final cachedRecords = _local.getCachedRecords('store_me');
-    final cached = cachedRecords != null && cachedRecords.isNotEmpty ? cachedRecords.first : null;
-    final optimistic = {
-      ...?cached,
-      'name': name,
-      'updatedAt': DateTime.now().toUtc().toIso8601String(),
-    };
+  Future<void> updateStoreName(String storeId, String name) async {
+    final cachedRecords = _local.getCachedRecords('store_memberships') ?? [];
+    final updatedRecords = cachedRecords.map((e) {
+      final record = Map<String, dynamic>.from(e as Map);
+      if (record['storeId'] == storeId) {
+        return {
+          ...record,
+          'storeName': name,
+        };
+      }
+      return record;
+    }).toList();
 
     try {
-      await _dio.put('/stores/me', data: {'name': name});
+      await _dio.put('/stores/$storeId', data: {'name': name});
     } catch (error) {
       await _local.queueMutation({
         'resource': 'store',
         'method': 'PUT',
-        'path': '/stores/me',
+        'path': '/stores/$storeId',
         'body': {'name': name},
       });
     }
 
-    await _local.cacheRecords('store_me', [optimistic]);
+    await _local.cacheRecords('store_memberships', updatedRecords);
   }
 }
 
@@ -59,9 +70,35 @@ final storeServiceProvider = Provider<StoreService>((ref) {
   return StoreService(ref.watch(dioClientProvider), ref.watch(localStorageProvider));
 });
 
-final myStoreProvider = FutureProvider<Store?>((ref) async {
+final membershipsProvider = FutureProvider<List<StoreMembership>>((ref) async {
   await ref.watch(authStateProvider.future);
-  final svc = ref.watch(storeServiceProvider);
-  final data = await svc.getMyStore();
-  return Store.fromJson(Map<String, dynamic>.from(data));
+  return ref.watch(storeServiceProvider).getMemberships();
+});
+
+@riverpod
+class ActiveStoreId extends _$ActiveStoreId {
+  @override
+  String? build() => null;
+
+  void set(String? id) => state = id;
+}
+
+final selectedStoreMembershipProvider = Provider<StoreMembership?>((ref) {
+  final memberships = ref.watch(membershipsProvider).value ?? [];
+  final activeId = ref.watch(activeStoreIdProvider);
+  if (activeId == null && memberships.isNotEmpty) return memberships.first;
+  if (memberships.isEmpty) return null;
+  return memberships.firstWhere((m) => m.storeId == activeId, orElse: () => memberships.first);
+});
+
+final myStoreProvider = FutureProvider<Store?>((ref) async {
+  final membership = ref.watch(selectedStoreMembershipProvider);
+  if (membership == null) return null;
+
+  return Store(
+    id: membership.storeId,
+    name: membership.storeName,
+    slug: membership.storeSlug,
+    ownerId: '',
+  );
 });
