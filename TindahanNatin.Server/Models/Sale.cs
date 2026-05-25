@@ -13,5 +13,7 @@ public class Sale
     public decimal TotalPrice { get; set; }
     public bool IsCredit { get; set; }
     public string? CustomerName { get; set; }
+    public string SoldById { get; set; } = string.Empty;
+    public string? SoldByName { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

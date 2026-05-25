@@ -25,7 +25,7 @@ public static class SaleEndpoints
 
             var sales = await query
                 .OrderByDescending(s => s.CreatedAt)
-                .Select(s => new SaleDto(s.Id, s.StoreId, s.ProductId, s.ProductName, s.PriceAtSale, s.Quantity, s.TotalPrice, s.IsCredit, s.CustomerName, s.CreatedAt))
+                .Select(s => new SaleDto(s.Id, s.StoreId, s.ProductId, s.ProductName, s.PriceAtSale, s.Quantity, s.TotalPrice, s.IsCredit, s.CustomerName, s.SoldById, s.SoldByName, s.CreatedAt))
                 .ToListAsync();
 
             return Results.Ok(sales);
@@ -36,6 +36,12 @@ public static class SaleEndpoints
             var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
             if (!await db.OwnsStoreAsync(userId, dto.StoreId)) return Results.Forbid();
+
+            var userName = context.User.FindFirst("name")?.Value;
+            var userEmail = context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value 
+                          ?? context.User.FindFirst("email")?.Value;
+
+            var soldByName = !string.IsNullOrWhiteSpace(userName) ? userName : userEmail;
 
             var sale = new Sale
             {
@@ -48,6 +54,8 @@ public static class SaleEndpoints
                 TotalPrice = dto.TotalPrice,
                 IsCredit = dto.IsCredit,
                 CustomerName = dto.CustomerName,
+                SoldById = userId,
+                SoldByName = soldByName,
                 CreatedAt = DateTimeOffset.UtcNow
             };
 
@@ -66,7 +74,7 @@ public static class SaleEndpoints
 
             await db.SaveChangesAsync();
 
-            return Results.Created($"/api/sales/{sale.Id}", new SaleDto(sale.Id, sale.StoreId, sale.ProductId, sale.ProductName, sale.PriceAtSale, sale.Quantity, sale.TotalPrice, sale.IsCredit, sale.CustomerName, sale.CreatedAt));
+            return Results.Created($"/api/sales/{sale.Id}", new SaleDto(sale.Id, sale.StoreId, sale.ProductId, sale.ProductName, sale.PriceAtSale, sale.Quantity, sale.TotalPrice, sale.IsCredit, sale.CustomerName, sale.SoldById, sale.SoldByName, sale.CreatedAt));
         });
     }
 }

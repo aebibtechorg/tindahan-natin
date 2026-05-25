@@ -15,6 +15,8 @@ abstract class Sale with _$Sale {
     required double totalPrice,
     required bool isCredit,
     String? customerName,
+    required String soldById,
+    String? soldByName,
     required DateTime createdAt,
   }) = _Sale;
 

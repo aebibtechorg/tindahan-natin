@@ -12,6 +12,8 @@ public record SaleDto(
     decimal TotalPrice,
     bool IsCredit,
     string? CustomerName,
+    string SoldById,
+    string? SoldByName,
     DateTimeOffset CreatedAt
 );
 

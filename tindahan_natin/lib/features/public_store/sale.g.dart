@@ -16,6 +16,8 @@ _Sale _$SaleFromJson(Map<String, dynamic> json) => _Sale(
   totalPrice: (json['totalPrice'] as num).toDouble(),
   isCredit: json['isCredit'] as bool,
   customerName: json['customerName'] as String?,
+  soldById: json['soldById'] as String,
+  soldByName: json['soldByName'] as String?,
   createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
@@ -29,5 +31,7 @@ Map<String, dynamic> _$SaleToJson(_Sale instance) => <String, dynamic>{
   'totalPrice': instance.totalPrice,
   'isCredit': instance.isCredit,
   'customerName': instance.customerName,
+  'soldById': instance.soldById,
+  'soldByName': instance.soldByName,
   'createdAt': instance.createdAt.toIso8601String(),
 };

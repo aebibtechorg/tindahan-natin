@@ -66,11 +66,13 @@ class ListaScreen extends ConsumerWidget {
                   }
 
                   final sale = item as Sale;
+                  final soldByLabel = sale.soldByName ?? 'Unknown Staff';
+                  
                   return ListTile(
                     title: Text(sale.productName),
                     subtitle: Text(
                       '${sale.quantity} x ${currencyFormat.format(sale.priceAtSale)} = ${currencyFormat.format(sale.totalPrice)}\n'
-                      '${sale.isCredit ? "Credit: ${sale.customerName ?? 'Unknown'}" : "Paid"}',
+                      '${sale.isCredit ? "Credit: ${sale.customerName ?? 'Unknown'}" : "Paid"} • Sold by: $soldByLabel',
                     ),
                     trailing: Text(timeFormat.format(sale.createdAt)),
                     isThreeLine: true,
