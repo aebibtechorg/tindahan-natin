@@ -16,6 +16,7 @@ public class TindahanDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Shelf> Shelves => Set<Shelf>();
     public DbSet<ProductLocation> ProductLocations => Set<ProductLocation>();
+    public DbSet<Sale> Sales => Set<Sale>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,5 +75,10 @@ public class TindahanDbContext : DbContext
         modelBuilder.Entity<ProductLocation>().Property(pl => pl.UpdatedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<ProductLocation>().Property(pl => pl.DeletedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<ProductLocation>().HasQueryFilter(pl => !pl.IsDeleted);
+
+        modelBuilder.Entity<Sale>().Property(s => s.Id).HasColumnType("uuid");
+        modelBuilder.Entity<Sale>().Property(s => s.StoreId).HasColumnType("uuid");
+        modelBuilder.Entity<Sale>().Property(s => s.ProductId).HasColumnType("uuid");
+        modelBuilder.Entity<Sale>().Property(s => s.CreatedAt).HasColumnType("timestamp with time zone");
     }
 }

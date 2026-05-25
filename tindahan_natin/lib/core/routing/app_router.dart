@@ -10,6 +10,7 @@ import 'package:tindahan_natin/features/products/edit_product_screen.dart';
 import 'package:tindahan_natin/features/public_store/store_lookup_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_store_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_map_screen.dart';
+import 'package:tindahan_natin/features/public_store/lista_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_store_shell.dart';
 import 'package:tindahan_natin/features/store_map/store_map_screen.dart';
 import 'package:tindahan_natin/features/settings/settings_screen.dart';
@@ -74,6 +75,16 @@ GoRouter appRouter(Ref ref) {
                             builder: (context, state) => PublicMapScreen(
                               slug: state.pathParameters['slug']!,
                               highlightShelfId: state.uri.queryParameters['shelfId'],
+                            ),
+                          ),
+                        ],
+                      ),
+                      StatefulShellBranch(
+                        routes: [
+                          GoRoute(
+                            path: 'lista',
+                            builder: (context, state) => ListaScreen(
+                              slug: state.pathParameters['slug']!,
                             ),
                           ),
                         ],

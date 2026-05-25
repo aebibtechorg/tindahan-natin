@@ -80,6 +80,7 @@ app.MapStoreEndpoints();
 app.MapUserEndpoints();
 app.MapPublicEndpoints();
 app.MapCategoryEndpoints();
+app.MapSaleEndpoints();
 
 app.Use(async (context, next) =>
 {
