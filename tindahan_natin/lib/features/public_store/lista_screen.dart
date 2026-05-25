@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
+import 'package:tindahan_natin/features/public_store/sale.dart';
 import 'package:tindahan_natin/features/public_store/sale_service.dart';
 
 class ListaScreen extends ConsumerWidget {
@@ -27,18 +28,51 @@ class ListaScreen extends ConsumerWidget {
               }
 
               final currencyFormat = NumberFormat.currency(symbol: '₱');
+              final dateFormat = DateFormat.yMMMMd();
+              final timeFormat = DateFormat.Hm();
+
+              final groupedItems = <dynamic>[];
+              DateTime? lastDate;
+
+              for (final sale in sales) {
+                final date = DateTime(
+                  sale.createdAt.year,
+                  sale.createdAt.month,
+                  sale.createdAt.day,
+                );
+                if (lastDate == null || date != lastDate) {
+                  groupedItems.add(date);
+                  lastDate = date;
+                }
+                groupedItems.add(sale);
+              }
 
               return ListView.builder(
-                itemCount: sales.length,
+                itemCount: groupedItems.length,
                 itemBuilder: (context, index) {
-                  final sale = sales[index];
+                  final item = groupedItems[index];
+
+                  if (item is DateTime) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Text(
+                        dateFormat.format(item),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    );
+                  }
+
+                  final sale = item as Sale;
                   return ListTile(
                     title: Text(sale.productName),
                     subtitle: Text(
                       '${sale.quantity} x ${currencyFormat.format(sale.priceAtSale)} = ${currencyFormat.format(sale.totalPrice)}\n'
                       '${sale.isCredit ? "Credit: ${sale.customerName ?? 'Unknown'}" : "Paid"}',
                     ),
-                    trailing: Text(DateFormat.Hm().format(sale.createdAt)),
+                    trailing: Text(timeFormat.format(sale.createdAt)),
                     isThreeLine: true,
                   );
                 },
@@ -47,10 +81,10 @@ class ListaScreen extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(child: Text('Error: $e')),
           ),
-          // floatingActionButton: FloatingActionButton(
-          //   onPressed: () => _showRecordSaleDialog(context, ref, store.id),
-          //   child: const Icon(Icons.add_shopping_cart),
-          // ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showRecordSaleDialog(context, ref, store.id),
+            child: const Icon(Icons.add_shopping_cart),
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -58,12 +92,12 @@ class ListaScreen extends ConsumerWidget {
     );
   }
 
-  // void _showRecordSaleDialog(BuildContext context, WidgetRef ref, String storeId) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => _RecordSaleDialog(storeId: storeId),
-  //   );
-  // }
+  void _showRecordSaleDialog(BuildContext context, WidgetRef ref, String storeId) {
+    showDialog(
+      context: context,
+      builder: (context) => _RecordSaleDialog(storeId: storeId),
+    );
+  }
 }
 
 class _RecordSaleDialog extends ConsumerStatefulWidget {
