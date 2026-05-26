@@ -2,15 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
+import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Show interstitial ad on home screen access with frequency capping
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(interstitialAdProvider).showAdIfReady();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final myStoreAsync = ref.watch(myStoreProvider);
 
     return Scaffold(
@@ -67,8 +83,8 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 4,
+                    crossAxisSpacing: 0,
                     childAspectRatio: 1.0,
                     children: [
                       _StatCard(
@@ -98,6 +114,8 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9)),
                   
+                  const SizedBox(height: 24),
+                  const InlineAdWidget(), // Added back inline ad
                   const SizedBox(height: 32),
                   
                   // Action Menu
