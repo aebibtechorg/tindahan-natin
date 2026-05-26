@@ -251,43 +251,43 @@ class _EntryCard extends ConsumerWidget {
                 subtitle: Text('₱${item.price} x ${item.quantity}'),
                 trailing: Text('₱${(item.price * item.quantity).toStringAsFixed(2)}'),
               )),
-          if (entry.isCredit)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Mark as Paid?'),
-                          content: Text('Are you sure you want to mark this transaction as paid by ${entry.customerName}?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Yes, Paid')),
-                          ],
-                        ),
-                      );
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () async {
+                    final action = entry.isCredit ? 'paid' : 'unpaid';
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Mark as $action?'),
+                        content: Text('Are you sure you want to mark this transaction as $action?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Yes, $action')),
+                        ],
+                      ),
+                    );
 
-                      if (confirmed == true) {
-                        try {
-                          await ref.read(listaServiceProvider).markAsPaid(entry.id);
-                          ref.invalidate(publicListaHistoryProvider);
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-                          }
+                    if (confirmed == true) {
+                      try {
+                        await ref.read(listaServiceProvider).toggleCreditStatus(entry.id);
+                        ref.invalidate(publicListaHistoryProvider);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
                         }
                       }
-                    },
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Mark as Paid'),
-                  ),
-                ],
-              ),
+                    }
+                  },
+                  icon: Icon(entry.isCredit ? Icons.check_circle_outline : Icons.history),
+                  label: Text(entry.isCredit ? 'Mark as Paid' : 'Mark as Unpaid'),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );

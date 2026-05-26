@@ -87,14 +87,12 @@ public static class ListaEndpoints
             )));
         }).AllowAnonymous();
 
-        publicGroup.MapPut("/{id}/pay", async (Guid id, TindahanDbContext db) =>
+        publicGroup.MapPut("/{id}/toggle-credit", async (Guid id, TindahanDbContext db) =>
         {
             var entry = await db.ListaEntries.FindAsync(id);
             if (entry == null) return Results.NotFound();
 
-            if (!entry.IsCredit) return Results.BadRequest("Entry is already paid or not a credit.");
-
-            entry.IsCredit = false; // Mark as paid by setting IsCredit to false
+            entry.IsCredit = !entry.IsCredit; // Toggle between paid (false) and unpaid (true)
             entry.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
 

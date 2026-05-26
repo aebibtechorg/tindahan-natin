@@ -29,8 +29,8 @@ class ListaService {
     await _dio.delete('/lista/$id');
   }
 
-  Future<void> markAsPaid(String id) async {
-    await _dio.put('/public/lista/$id/pay');
+  Future<void> toggleCreditStatus(String id) async {
+    await _dio.put('/public/lista/$id/toggle-credit');
   }
 }
 
