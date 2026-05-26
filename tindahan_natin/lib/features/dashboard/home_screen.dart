@@ -66,6 +66,15 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildMenuCard(
               context,
+              title: 'Lista History',
+              subtitle: 'View sales and credit records',
+              icon: Icons.history_outlined,
+              color: Colors.deepPurple,
+              onTap: () => context.push('/lista-history'),
+            ).animate().fadeIn(delay: 900.ms).slideX(begin: -0.1),
+            const SizedBox(height: 16),
+            _buildMenuCard(
+              context,
               title: 'Product Search',
               subtitle: 'Quickly find products in your store',
               icon: Icons.search_outlined,

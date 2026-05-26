@@ -64,6 +64,11 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
             selectedIcon: Icon(Icons.map),
             label: 'Map',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.event_note_outlined),
+            selectedIcon: Icon(Icons.event_note),
+            label: 'Lista',
+          ),
         ],
       ),
     );

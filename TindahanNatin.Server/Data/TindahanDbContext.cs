@@ -16,6 +16,8 @@ public class TindahanDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Shelf> Shelves => Set<Shelf>();
     public DbSet<ProductLocation> ProductLocations => Set<ProductLocation>();
+    public DbSet<ListaEntry> ListaEntries => Set<ListaEntry>();
+    public DbSet<ListaItem> ListaItems => Set<ListaItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,5 +76,14 @@ public class TindahanDbContext : DbContext
         modelBuilder.Entity<ProductLocation>().Property(pl => pl.UpdatedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<ProductLocation>().Property(pl => pl.DeletedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<ProductLocation>().HasQueryFilter(pl => !pl.IsDeleted);
+
+        modelBuilder.Entity<ListaEntry>().Property(le => le.Id).HasColumnType("uuid");
+        modelBuilder.Entity<ListaEntry>().Property(le => le.StoreId).HasColumnType("uuid");
+        modelBuilder.Entity<ListaEntry>().Property(le => le.CreatedAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<ListaEntry>().Property(le => le.UpdatedAt).HasColumnType("timestamp with time zone");
+
+        modelBuilder.Entity<ListaItem>().Property(li => li.Id).HasColumnType("uuid");
+        modelBuilder.Entity<ListaItem>().Property(li => li.ListaEntryId).HasColumnType("uuid");
+        modelBuilder.Entity<ListaItem>().Property(li => li.ProductId).HasColumnType("uuid");
     }
 }
