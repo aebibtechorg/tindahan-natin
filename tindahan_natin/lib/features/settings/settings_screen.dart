@@ -46,6 +46,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const Divider(),
+          const InlineAdWidget(),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24.0),
             child: Consumer(
@@ -253,17 +254,16 @@ class _StoreSettingsScreenState extends ConsumerState<StoreSettingsScreen> {
                             ),
                             const SizedBox(height: 24),
                             const Spacer(),
-                            const InlineAdWidget(),
                             const SizedBox(height: 16),
-                            ref.watch(packageInfoProvider).when(
-                                  data: (info) => Text(
-                                    'Version ${info.version} (${info.buildNumber})',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  loading: () => const SizedBox.shrink(),
-                                  error: (_, stack) => const SizedBox.shrink(),
-                                ),
+                            // ref.watch(packageInfoProvider).when(
+                            //       data: (info) => Text(
+                            //         'Version ${info.version} (${info.buildNumber})',
+                            //         style: Theme.of(context).textTheme.bodySmall,
+                            //         textAlign: TextAlign.center,
+                            //       ),
+                            //       loading: () => const SizedBox.shrink(),
+                            //       error: (_, stack) => const SizedBox.shrink(),
+                            //     ),
                           ],
                         ),
                       ),
