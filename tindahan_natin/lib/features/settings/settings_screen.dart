@@ -281,7 +281,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
+    // final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Privacy Policy')),
@@ -290,7 +290,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Privacy Policy', style: titleStyle),
+            // Text('Privacy Policy', style: titleStyle),
             const Text('Last updated: May 20, 2026', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 24),
             _buildSection(
@@ -367,7 +367,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
+    // final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Terms and Conditions')),
@@ -376,7 +376,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Terms and Conditions', style: titleStyle),
+            // Text('Terms and Conditions', style: titleStyle),
             const Text('Last updated: May 20, 2026', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 24),
             _buildSection(
