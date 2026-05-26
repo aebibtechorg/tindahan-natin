@@ -115,36 +115,41 @@ class _AddListaEntryScreenState extends ConsumerState<AddListaEntryScreen> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _customerController,
-                  decoration: const InputDecoration(
-                    labelText: 'Customer Name (Optional)',
-                    hintText: 'For credit/utang transactions',
-                    prefixIcon: Icon(Icons.face),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _customerController,
+                    decoration: const InputDecoration(
+                      labelText: 'Customer Name (Optional)',
+                      hintText: 'For credit/utang transactions',
+                      prefixIcon: Icon(Icons.face),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  title: const Text('Is Credit (Pa-lista/Utang)?'),
-                  subtitle: const Text('Check this if the items are not paid yet'),
-                  value: _isCredit,
-                  onChanged: (val) => setState(() => _isCredit = val),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    title: const Text('Is Credit (Pa-lista/Utang)?'),
+                    subtitle: const Text('Check this if the items are not paid yet'),
+                    value: _isCredit,
+                    onChanged: (val) => setState(() => _isCredit = val),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: _items.isEmpty
-                ? const Center(child: Text('Add products to start recording.'))
+            const Divider(height: 1),
+            _items.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Center(child: Text('Add products to start recording.')),
+                  )
                 : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: _items.length,
                     separatorBuilder: (context, index) => const Divider(height: 1),
                     itemBuilder: (context, index) {
@@ -192,57 +197,57 @@ class _AddListaEntryScreenState extends ConsumerState<AddListaEntryScreen> {
                       );
                     },
                   ),
-          ),
-          const Divider(height: 1),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Total Amount:', style: TextStyle(fontSize: 18)),
-                    Text(
-                      '₱${_total.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showProductPicker(context),
-                        icon: const Icon(Icons.add_shopping_cart),
-                        label: const Text('Add Product'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _submit,
-                        icon: const Icon(Icons.save),
-                        label: const Text('Save Sale'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            const Divider(height: 1),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Amount:', style: TextStyle(fontSize: 18)),
+                      Text(
+                        '₱${_total.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showProductPicker(context),
+                          icon: const Icon(Icons.add_shopping_cart),
+                          label: const Text('Add Product'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _submit,
+                          icon: const Icon(Icons.save),
+                          label: const Text('Save Sale'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
