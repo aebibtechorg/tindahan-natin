@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/lista/lista_entry.dart';
 import 'package:tindahan_natin/features/lista/lista_service.dart';
@@ -39,6 +40,12 @@ class PublicListaScreen extends ConsumerWidget {
           return storeInfoAsync.when(
             data: (info) {
               final String storeId = info['store'].id;
+              
+              // Connect to SignalR for real-time updates
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ref.read(realtimeClientProvider.notifier).connect(storeId);
+              });
+
               final historyAsync = ref.watch(publicListaHistoryProvider(storeId));
 
               return historyAsync.when(

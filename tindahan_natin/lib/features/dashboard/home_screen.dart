@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
@@ -65,6 +66,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }
 
           final statsAsync = ref.watch(storeStatsProvider(store.id));
+          
+          // Connect to SignalR for real-time updates
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(realtimeClientProvider.notifier).connect(store.id);
+          });
 
           return statsAsync.when(
             data: (stats) => SingleChildScrollView(

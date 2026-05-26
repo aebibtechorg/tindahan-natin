@@ -5,6 +5,9 @@ using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
 using TindahanNatin.Server.Models;
 
+using Microsoft.AspNetCore.SignalR;
+using TindahanNatin.Server.Hubs;
+
 namespace TindahanNatin.Server.Features;
 
 public static class ProductEndpoints
@@ -83,7 +86,7 @@ public static class ProductEndpoints
             };
         });
 
-        group.MapPost("/", async (CreateProductDto dto, HttpContext context, TindahanDbContext db) =>
+        group.MapPost("/", async (CreateProductDto dto, HttpContext context, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
         {
             var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -110,10 +113,12 @@ public static class ProductEndpoints
             db.Products.Add(product);
             await db.SaveChangesAsync();
 
+            await hubContext.Clients.Group(dto.StoreId.ToString()).SendAsync("InventoryUpdated", dto.StoreId);
+
             return Results.Created($"/api/products/{product.Id}", new ProductDto(product.Id, product.Name, product.Price, product.Quantity, product.CategoryId, product.ShelfId, product.Description, product.ImageUrl, product.Barcode, product.StoreId, product.CreatedAt, product.UpdatedAt, product.IsDeleted, product.DeletedAt));
         });
 
-        group.MapPut("/{id}", async (Guid id, UpdateProductDto dto, HttpContext context, TindahanDbContext db) =>
+        group.MapPut("/{id}", async (Guid id, UpdateProductDto dto, HttpContext context, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
         {
             var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -134,10 +139,13 @@ public static class ProductEndpoints
             product.UpdatedAt = DateTimeOffset.UtcNow;
 
             await db.SaveChangesAsync();
+
+            await hubContext.Clients.Group(product.StoreId.ToString()).SendAsync("InventoryUpdated", product.StoreId);
+
             return Results.NoContent();
         });
 
-        group.MapDelete("/{id}", async (Guid id, HttpContext context, TindahanDbContext db) =>
+        group.MapDelete("/{id}", async (Guid id, HttpContext context, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
         {
             var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -157,7 +165,11 @@ public static class ProductEndpoints
                 location.UpdatedAt = product.DeletedAt.Value;
             }
 
+            var storeId = product.StoreId;
             await db.SaveChangesAsync();
+
+            await hubContext.Clients.Group(storeId.ToString()).SendAsync("InventoryUpdated", storeId);
+
             return Results.NoContent();
         });
     }

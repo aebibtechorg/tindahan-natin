@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Models;
 using TindahanNatin.Server.Features;
+using TindahanNatin.Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,24 +15,23 @@ var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<st
 
 builder.Services.AddCors(o =>
 {
-    if (builder.Environment.IsDevelopment())
+    o.AddPolicy(corsPolicy, b =>
     {
-        o.AddPolicy(corsPolicy, builder =>
+        if (corsOrigins.Length > 0)
         {
-            builder.AllowAnyOrigin()
+            b.WithOrigins(corsOrigins)
                 .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-    }
-    else
-    {
-        o.AddPolicy(corsPolicy, builder =>
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+        else
         {
-            builder.WithOrigins(corsOrigins)
+            b.SetIsOriginAllowed(_ => true)
                 .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-    }
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+    });
 });
 
 // Add service defaults & Aspire client integrations.
@@ -45,6 +45,21 @@ builder.AddMinioClient("minio");
 // Add services to the container.
 builder.Services.AddProblemDetails();
 builder.Services.AddHttpClient();
+
+var signalRBuilder = builder.Services.AddSignalR();
+
+// Configure SignalR Backplane / Service
+var signalRConnectionString = builder.Configuration.GetConnectionString("signalr");
+var redisConnectionString = builder.Configuration.GetConnectionString("cache");
+
+if (!string.IsNullOrEmpty(signalRConnectionString))
+{
+    signalRBuilder.AddAzureSignalR(signalRConnectionString);
+}
+else if (!string.IsNullOrEmpty(redisConnectionString) && builder.Environment.IsDevelopment())
+{
+    signalRBuilder.AddStackExchangeRedis(redisConnectionString);
+}
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -82,6 +97,8 @@ app.MapPublicEndpoints();
 app.MapCategoryEndpoints();
 app.MapListaEndpoints();
 app.MapDashboardEndpoints();
+
+app.MapHub<TindahanHub>("/hubs/tindahan");
 
 app.Use(async (context, next) =>
 {

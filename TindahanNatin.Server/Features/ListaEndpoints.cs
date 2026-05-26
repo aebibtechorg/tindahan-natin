@@ -4,6 +4,9 @@ using TindahanNatin.Server.Data;
 using TindahanNatin.Server.Dtos;
 using TindahanNatin.Server.Models;
 
+using Microsoft.AspNetCore.SignalR;
+using TindahanNatin.Server.Hubs;
+
 namespace TindahanNatin.Server.Features;
 
 public static class ListaEndpoints
@@ -12,7 +15,7 @@ public static class ListaEndpoints
     {
         var publicGroup = routes.MapGroup("/api/public/lista").WithTags("Lista (Public)");
 
-        publicGroup.MapPost("/", async (CreateListaEntryDto dto, TindahanDbContext db) =>
+        publicGroup.MapPost("/", async (CreateListaEntryDto dto, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
         {
             var store = await db.Stores.FindAsync(dto.StoreId);
             if (store == null) return Results.NotFound("Store not found");
@@ -55,6 +58,8 @@ public static class ListaEndpoints
             db.ListaEntries.Add(entry);
             await db.SaveChangesAsync();
 
+            await hubContext.Clients.Group(dto.StoreId.ToString()).SendAsync("ListaUpdated", dto.StoreId);
+
             return Results.Created($"/api/public/lista/{entry.Id}", new ListaEntryDto(
                 entry.Id,
                 entry.StoreId,
@@ -87,7 +92,7 @@ public static class ListaEndpoints
             )));
         }).AllowAnonymous();
 
-        publicGroup.MapPut("/{id}/toggle-credit", async (Guid id, TindahanDbContext db) =>
+        publicGroup.MapPut("/{id}/toggle-credit", async (Guid id, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
         {
             var entry = await db.ListaEntries.FindAsync(id);
             if (entry == null) return Results.NotFound();
@@ -95,6 +100,8 @@ public static class ListaEndpoints
             entry.IsCredit = !entry.IsCredit; // Toggle between paid (false) and unpaid (true)
             entry.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
+
+            await hubContext.Clients.Group(entry.StoreId.ToString()).SendAsync("ListaUpdated", entry.StoreId);
 
             return Results.NoContent();
         }).AllowAnonymous();
@@ -125,7 +132,7 @@ public static class ListaEndpoints
             )));
         });
 
-        protectedGroup.MapDelete("/{id}", async (Guid id, HttpContext context, TindahanDbContext db) =>
+        protectedGroup.MapDelete("/{id}", async (Guid id, HttpContext context, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
         {
             var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
@@ -135,8 +142,12 @@ public static class ListaEndpoints
 
             if (!await db.OwnsStoreAsync(userId, entry.StoreId)) return Results.Forbid();
 
+            var storeId = entry.StoreId;
             db.ListaEntries.Remove(entry);
             await db.SaveChangesAsync();
+
+            await hubContext.Clients.Group(storeId.ToString()).SendAsync("ListaUpdated", storeId);
+
             return Results.NoContent();
         });
     }

@@ -61,6 +61,11 @@ resource "google_cloud_run_v2_service" "server" {
         value = var.redis_connection_string
       }
 
+      env {
+        name  = "ConnectionStrings__signalr"
+        value = var.signalr_connection_string
+      }
+
       # For Cloudflare R2, we use the S3-compatible connection string format
       # Format: Endpoint=https://<account_id>.r2.cloudflarestorage.com;AccessKey=...;SecretKey=...;Region=auto;UseSsl=true
       # We assume these keys are passed in via variables for now as R2 keys are often account-level.

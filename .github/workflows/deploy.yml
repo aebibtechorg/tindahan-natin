@@ -61,6 +61,7 @@ jobs:
         TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         TF_VAR_postgres_connection_string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
         TF_VAR_redis_connection_string: ${{ secrets.REDIS_CONNECTION_STRING }}
+        TF_VAR_signalr_connection_string: ${{ secrets.SIGNALR_CONNECTION_STRING }}
         TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
         TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
         TF_VAR_auth0_domain: ${{ secrets.AUTH0_DOMAIN }}
@@ -100,6 +101,7 @@ jobs:
         TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         TF_VAR_postgres_connection_string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
         TF_VAR_redis_connection_string: ${{ secrets.REDIS_CONNECTION_STRING }}
+        TF_VAR_signalr_connection_string: ${{ secrets.SIGNALR_CONNECTION_STRING }}
         TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
         TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
         TF_VAR_auth0_domain: ${{ secrets.AUTH0_DOMAIN }}

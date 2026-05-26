@@ -14,6 +14,7 @@ import 'package:tindahan_natin/features/products/add_product_screen.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
+import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({super.key});
@@ -56,6 +57,12 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       data: (store) {
         if (store == null) return const Center(child: Text('No store found'));
         final storeId = store.id;
+
+        // Connect to SignalR for real-time updates
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(realtimeClientProvider.notifier).connect(storeId);
+        });
+
         final productsAsync = ref.watch(productsProvider(storeId));
         final categoriesAsync = ref.watch(categoriesProvider(storeId));
         final shelvesAsync = ref.watch(shelvesProvider(storeId));

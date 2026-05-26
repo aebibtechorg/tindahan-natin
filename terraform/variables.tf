@@ -38,6 +38,13 @@ variable "redis_connection_string" {
   sensitive   = true
 }
 
+variable "signalr_connection_string" {
+  description = "Connection string for the Azure SignalR Service"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "auth0_domain" {
   description = "Auth0 Domain"
   type        = string
