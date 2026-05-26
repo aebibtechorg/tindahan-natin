@@ -6,7 +6,7 @@ import Layout from '../layouts/Layout.astro';
 	<div class="container policy-container">
 		<div class="policy-header">
 			<h1>Privacy Policy</h1>
-			<p class="last-updated">Last updated: May 20, 2026</p>
+			<p class="last-updated">Last updated: May 27, 2026</p>
 		</div>
 		
 		<div class="policy-content">
@@ -16,10 +16,12 @@ import Layout from '../layouts/Layout.astro';
 				<ul>
 					<li><strong>Account Information:</strong> We use <strong>Auth0</strong> to manage authentication. This includes your name, email, and profile picture provided by your chosen login provider.</li>
 					<li><strong>Store Data:</strong> Details about your sari-sari store, including store name, product names, pricing, inventory levels, and categories.</li>
+					<li><strong>Sales and Credit Data (Lista):</strong> Records of transactions including products sold, quantities, total amounts, and transaction dates. For credit (utang) transactions, we store the customer's name if provided.</li>
+					<li><strong>Staff Identity:</strong> The names provided by you or your staff to record transactions. This is used to attribute sales and is stored locally on your device for convenience.</li>
 					<li><strong>Organizational Data:</strong> Visual layouts of your shelves and the specific placement of products within your store.</li>
 					<li><strong>Media:</strong> Images of products you choose to upload to our storage service. These are collected to display within the app and on your coordination storefronts.</li>
 					<li><strong>Device Features (Camera & Gallery):</strong> We access your device's camera to scan barcodes and to take product photos. We access your photo gallery only when you choose to select an existing product image. Camera frames used for barcode scanning are processed ephemerally on your device and are not stored. Product photos you capture or select are uploaded to our secure storage.</li>
-					<li><strong>Local Data:</strong> We use <strong>Hive</strong> to store a copy of your data on your device for offline use and faster performance.</li>
+					<li><strong>Local Data:</strong> We use <strong>Hive</strong> and <strong>SharedPreferences</strong> to store a copy of your data and settings on your device for offline use, staff identification, and faster performance.</li>
 				</ul>
 				<p><em>Note: We do NOT collect GPS coordinates or precise location data from your device.</em></p>
 			</section>
@@ -30,6 +32,8 @@ import Layout from '../layouts/Layout.astro';
 				<ul>
 					<li>Authenticate your identity and secure your account.</li>
 					<li>Provide and maintain our inventory, barcode scanning, and shelf-mapping features.</li>
+					<li>Maintain your sales journal (Lista) and track customer credit records.</li>
+					<li>Generate store performance insights and dashboard analytics.</li>
 					<li>Automatically populate product details by querying third-party APIs (such as Open Food Facts, Open Beauty Facts, and others) when you scan a barcode.</li>
 					<li>Synchronize your data between your device and our servers when you are online.</li>
 					<li>Generate internal storefronts for coordination with your family and staff.</li>

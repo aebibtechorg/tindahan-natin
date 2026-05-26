@@ -291,7 +291,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Text('Privacy Policy', style: titleStyle),
-            const Text('Last updated: May 20, 2026', style: TextStyle(color: Colors.grey)),
+            const Text('Last updated: May 27, 2026', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 24),
             _buildSection(
               context,
@@ -299,10 +299,12 @@ class PrivacyPolicyScreen extends StatelessWidget {
               'Tindahan Natin collects information to provide store management services. This includes:\n\n'
                   '• Account Information: We use Auth0 to manage authentication. This includes your name, email, and profile picture provided by your chosen login provider.\n'
                   '• Store Data: Details about your sari-sari store, including store name, product names, pricing, inventory levels, and categories.\n'
+                  '• Sales and Credit Data (Lista): Records of transactions including products sold, quantities, total amounts, and transaction dates. For credit (utang) transactions, we store the customer\'s name if provided.\n'
+                  '• Staff Identity: The names provided by you or your staff to record transactions. This is used to attribute sales and is stored locally on your device for convenience.\n'
                   '• Organizational Data: Visual layouts of your shelves and the specific placement of products within your store.\n'
                   '• Media: Images of products you choose to upload to our storage service. These are collected to display within the app and on your coordination storefronts.\n'
                   '• Device Features (Camera & Gallery): We access your device\'s camera to scan barcodes and to take product photos. We access your photo gallery only when you choose to select an existing product image. Camera frames used for barcode scanning are processed ephemerally on your device and are not stored. Product photos you capture or select are uploaded to our secure storage.\n'
-                  '• Local Data: We use Hive to store a copy of your data on your device for offline use and faster performance.\n\n'
+                  '• Local Data: We use Hive and SharedPreferences to store a copy of your data and settings on your device for offline use, staff identification, and faster performance.\n\n'
                   'Note: We do NOT collect GPS coordinates or precise location data from your device.',
             ),
             _buildSection(
@@ -311,6 +313,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
               'We use the information we collect to:\n\n'
                   '• Authenticate your identity and secure your account.\n'
                   '• Provide and maintain our inventory, barcode scanning, and shelf-mapping features.\n'
+                  '• Maintain your sales journal (Lista) and track customer credit records.\n'
+                  '• Generate store performance insights and dashboard analytics.\n'
                   '• Automatically populate product details by querying third-party APIs (such as Open Food Facts, Open Beauty Facts, and others) when you scan a barcode.\n'
                   '• Synchronize your data between your device and our servers when you are online.\n'
                   '• Generate internal storefronts for coordination with your family and staff.\n'
@@ -377,22 +381,24 @@ class TermsAndConditionsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Text('Terms and Conditions', style: titleStyle),
-            const Text('Last updated: May 20, 2026', style: TextStyle(color: Colors.grey)),
+            const Text('Last updated: May 27, 2026', style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 24),
             _buildSection(
               context,
               '1. Agreement to Terms',
-              'By accessing or using Tindahan Natin, you agree to be bound by these Terms and Conditions. Our service is designed to help sari-sari store owners manage their inventory and store layout.',
+              'By accessing or using Tindahan Natin, you agree to be bound by these Terms and Conditions. Our service is designed to help sari-sari store owners manage their inventory, sales, and store layout.',
             ),
             _buildSection(
               context,
               '2. Description of Service',
               'Tindahan Natin provides a digital companion for sari-sari store management. Key features include:\n\n'
                   '• Inventory Management: Tracking products, prices, and stock levels.\n'
+                  '• Sales & Credit Journal (Lista): Recording daily transactions, managing customer credit ("pa-lista/utang"), and viewing sales history.\n'
+                  '• Performance Dashboard: Visualizing store sales performance, credit levels, and top-selling products.\n'
                   '• Barcode Scanning & Photo Management: Using your device camera to identify products and capture or select product images for your inventory.\n'
                   '• Visual Store Map: Designing and organizing shelf layouts.\n'
                   '• Offline Support: Local data persistence and automatic background synchronization.\n'
-                  '• Internal Coordination: Generation of storefront links for family members, tinderos, and tinderas to view store data.',
+                  '• Internal Coordination: Generation of storefront links for family members, tinderos, and tinderas to view store data and record transactions.',
             ),
             _buildSection(
               context,
