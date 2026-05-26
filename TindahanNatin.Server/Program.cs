@@ -81,6 +81,7 @@ app.MapUserEndpoints();
 app.MapPublicEndpoints();
 app.MapCategoryEndpoints();
 app.MapListaEndpoints();
+app.MapDashboardEndpoints();
 
 app.Use(async (context, next) =>
 {
