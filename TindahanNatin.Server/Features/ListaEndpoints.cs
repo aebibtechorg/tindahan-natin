@@ -87,6 +87,20 @@ public static class ListaEndpoints
             )));
         }).AllowAnonymous();
 
+        publicGroup.MapPut("/{id}/pay", async (Guid id, TindahanDbContext db) =>
+        {
+            var entry = await db.ListaEntries.FindAsync(id);
+            if (entry == null) return Results.NotFound();
+
+            if (!entry.IsCredit) return Results.BadRequest("Entry is already paid or not a credit.");
+
+            entry.IsCredit = false; // Mark as paid by setting IsCredit to false
+            entry.UpdatedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync();
+
+            return Results.NoContent();
+        }).AllowAnonymous();
+
         var protectedGroup = routes.MapGroup("/api/lista").WithTags("Lista (Protected)").RequireAuthorization();
 
         protectedGroup.MapGet("/", async (HttpContext context, TindahanDbContext db, Guid storeId) =>

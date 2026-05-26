@@ -203,34 +203,93 @@ class _HistoryList extends StatelessWidget {
                     ),
               ),
             ),
-            ...dayEntries.map((entry) => Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: ExpansionTile(
-                    leading: Icon(
-                      entry.isCredit ? Icons.event_note : Icons.receipt_long,
-                      color: entry.isCredit ? Colors.orange : Colors.green,
-                    ),
-                    title: Text(entry.customerName ?? 'Walk-in Customer'),
-                    subtitle: Text(
-                      '${entry.createdAt.toLocal().toString().split(' ')[1].split('.')[0]} • By: ${entry.staffName}',
-                    ),
-                    trailing: Text(
-                      '₱${entry.totalAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    children: [
-                      ...entry.items.map((item) => ListTile(
-                            dense: true,
-                            title: Text(item.productName),
-                            subtitle: Text('₱${item.price} x ${item.quantity}'),
-                            trailing: Text('₱${(item.price * item.quantity).toStringAsFixed(2)}'),
-                          )),
-                    ],
-                  ),
-                )),
+            ...dayEntries.map((entry) => _EntryCard(entry: entry)),
           ],
         );
       },
+    );
+  }
+}
+
+class _EntryCard extends ConsumerWidget {
+  final ListaEntry entry;
+
+  const _EntryCard({required this.entry});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ExpansionTile(
+        leading: Icon(
+          entry.isCredit ? Icons.event_note : Icons.receipt_long,
+          color: entry.isCredit ? Colors.orange : Colors.green,
+        ),
+        title: Text(entry.customerName ?? 'Walk-in Customer'),
+        subtitle: Text(
+          '${entry.createdAt.toLocal().toString().split(' ')[1].split('.')[0]} • By: ${entry.staffName}',
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '₱${entry.totalAmount.toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            if (entry.isCredit)
+              const Text(
+                'UNPAID',
+                style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+          ],
+        ),
+        children: [
+          ...entry.items.map((item) => ListTile(
+                dense: true,
+                title: Text(item.productName),
+                subtitle: Text('₱${item.price} x ${item.quantity}'),
+                trailing: Text('₱${(item.price * item.quantity).toStringAsFixed(2)}'),
+              )),
+          if (entry.isCredit)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Mark as Paid?'),
+                          content: Text('Are you sure you want to mark this transaction as paid by ${entry.customerName}?'),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Yes, Paid')),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        try {
+                          await ref.read(listaServiceProvider).markAsPaid(entry.id);
+                          ref.invalidate(publicListaHistoryProvider);
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                          }
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Mark as Paid'),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

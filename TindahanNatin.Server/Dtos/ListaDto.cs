@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 
 namespace TindahanNatin.Server.Dtos;
-
 public record ListaEntryDto(
     Guid Id,
     Guid StoreId,
