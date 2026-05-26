@@ -11,6 +11,7 @@ abstract class StoreMembership with _$StoreMembership {
     required String storeName,
     required String storeSlug,
     required String role,
+    String? inviteCode,
     required DateTime createdAt,
   }) = _StoreMembership;
 

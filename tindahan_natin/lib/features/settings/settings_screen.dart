@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tindahan_natin/core/config/package_info.dart';
@@ -133,7 +134,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
         body: _loading || showInitialLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,
@@ -166,13 +167,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 await ref
                                     .read(authStateProvider.notifier)
                                     .logout();
-                                if (mounted) {
+                                if (context.mounted) {
                                   messenger.showSnackBar(
                                     const SnackBar(content: Text('Logged out')),
                                   );
                                 }
                               } catch (e) {
-                                if (mounted) {
+                                if (context.mounted) {
                                   messenger.showSnackBar(
                                     const SnackBar(
                                       content: Text('Failed to log out'),
@@ -180,7 +181,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   );
                                 }
                               } finally {
-                                if (mounted) {
+                                if (context.mounted) {
                                   setState(() => _loading = false);
                                 }
                               }
@@ -214,7 +215,92 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           loading: () => const Center(child: CircularProgressIndicator()),
                           error: (e, s) => Text('Error loading stores: $e'),
                         ),
-                    const Spacer(),
+                    const Divider(height: 32),
+                    myStoreAsync.when(
+                      data: (store) {
+                        if (store == null) return const SizedBox.shrink();
+                        final membership = ref.watch(selectedStoreMembershipProvider);
+                        final canInvite = membership?.role == 'Owner' || membership?.role == 'Manager';
+
+                        if (!canInvite) return const SizedBox.shrink();
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text('Invite Staff', style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Share this code with your crew to allow them to join this store.',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 16),
+                            Card(
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        store.inviteCode ?? 'No code generated',
+                                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                              fontFamily: 'monospace',
+                                              letterSpacing: 2,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
+                                    if (store.inviteCode != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.share_outlined),
+                                        onPressed: () {
+                                          final joinUrl = buildJoinStoreUrl(inviteCode: store.inviteCode!);
+                                          if (joinUrl != null) {
+                                            SharePlus.instance.share(ShareParams(
+                                              text: 'Join my store "${store.name}" as staff on Tindahan Natin! \n\nClick here to join: $joinUrl',
+                                            ));
+                                          }
+                                        },
+                                      ),
+                                    if (store.inviteCode != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.copy),
+                                        onPressed: () {
+                                          Clipboard.setData(ClipboardData(text: store.inviteCode!));
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Invite code copied to clipboard')),
+                                          );
+                                        },
+                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.refresh),
+                                      onPressed: () async {
+                                        setState(() => _loading = true);
+                                        try {
+                                          await ref.read(storeServiceProvider).generateInviteCode(store.id);
+                                          ref.invalidate(myStoreProvider);
+                                          ref.invalidate(membershipsProvider);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Invite code refreshed')),
+                                            );
+                                          }
+                                        } finally {
+                                          if (context.mounted) setState(() => _loading = false);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (e, s) => const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: 32),
                     const InlineAdWidget(),
                     const SizedBox(height: 16),
                     ref.watch(packageInfoProvider).when(

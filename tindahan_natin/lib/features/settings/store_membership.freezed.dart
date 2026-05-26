@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreMembership {
 
- String get id; String get storeId; String get storeName; String get storeSlug; String get role; DateTime get createdAt;
+ String get id; String get storeId; String get storeName; String get storeSlug; String get role; String? get inviteCode; DateTime get createdAt;
 /// Create a copy of StoreMembership
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StoreMembershipCopyWith<StoreMembership> get copyWith => _$StoreMembershipCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreMembership&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.storeSlug, storeSlug) || other.storeSlug == storeSlug)&&(identical(other.role, role) || other.role == role)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreMembership&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.storeSlug, storeSlug) || other.storeSlug == storeSlug)&&(identical(other.role, role) || other.role == role)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,storeId,storeName,storeSlug,role,createdAt);
+int get hashCode => Object.hash(runtimeType,id,storeId,storeName,storeSlug,role,inviteCode,createdAt);
 
 @override
 String toString() {
-  return 'StoreMembership(id: $id, storeId: $storeId, storeName: $storeName, storeSlug: $storeSlug, role: $role, createdAt: $createdAt)';
+  return 'StoreMembership(id: $id, storeId: $storeId, storeName: $storeName, storeSlug: $storeSlug, role: $role, inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StoreMembershipCopyWith<$Res>  {
   factory $StoreMembershipCopyWith(StoreMembership value, $Res Function(StoreMembership) _then) = _$StoreMembershipCopyWithImpl;
 @useResult
 $Res call({
- String id, String storeId, String storeName, String storeSlug, String role, DateTime createdAt
+ String id, String storeId, String storeName, String storeSlug, String role, String? inviteCode, DateTime createdAt
 });
 
 
@@ -65,14 +65,15 @@ class _$StoreMembershipCopyWithImpl<$Res>
 
 /// Create a copy of StoreMembership
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeId = null,Object? storeName = null,Object? storeSlug = null,Object? role = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? storeId = null,Object? storeName = null,Object? storeSlug = null,Object? role = null,Object? inviteCode = freezed,Object? createdAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,storeName: null == storeName ? _self.storeName : storeName // ignore: cast_nullable_to_non_nullable
 as String,storeSlug: null == storeSlug ? _self.storeSlug : storeSlug // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,inviteCode: freezed == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String storeId,  String storeName,  String storeSlug,  String role,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String storeId,  String storeName,  String storeSlug,  String role,  String? inviteCode,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreMembership() when $default != null:
-return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.role,_that.createdAt);case _:
+return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.role,_that.inviteCode,_that.createdAt);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.rol
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String storeId,  String storeName,  String storeSlug,  String role,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String storeId,  String storeName,  String storeSlug,  String role,  String? inviteCode,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _StoreMembership():
-return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.role,_that.createdAt);case _:
+return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.role,_that.inviteCode,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.rol
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String storeId,  String storeName,  String storeSlug,  String role,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String storeId,  String storeName,  String storeSlug,  String role,  String? inviteCode,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreMembership() when $default != null:
-return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.role,_that.createdAt);case _:
+return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.role,_that.inviteCode,_that.createdAt);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.id,_that.storeId,_that.storeName,_that.storeSlug,_that.rol
 @JsonSerializable()
 
 class _StoreMembership implements StoreMembership {
-  const _StoreMembership({required this.id, required this.storeId, required this.storeName, required this.storeSlug, required this.role, required this.createdAt});
+  const _StoreMembership({required this.id, required this.storeId, required this.storeName, required this.storeSlug, required this.role, this.inviteCode, required this.createdAt});
   factory _StoreMembership.fromJson(Map<String, dynamic> json) => _$StoreMembershipFromJson(json);
 
 @override final  String id;
@@ -222,6 +223,7 @@ class _StoreMembership implements StoreMembership {
 @override final  String storeName;
 @override final  String storeSlug;
 @override final  String role;
+@override final  String? inviteCode;
 @override final  DateTime createdAt;
 
 /// Create a copy of StoreMembership
@@ -237,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreMembership&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.storeSlug, storeSlug) || other.storeSlug == storeSlug)&&(identical(other.role, role) || other.role == role)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreMembership&&(identical(other.id, id) || other.id == id)&&(identical(other.storeId, storeId) || other.storeId == storeId)&&(identical(other.storeName, storeName) || other.storeName == storeName)&&(identical(other.storeSlug, storeSlug) || other.storeSlug == storeSlug)&&(identical(other.role, role) || other.role == role)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,storeId,storeName,storeSlug,role,createdAt);
+int get hashCode => Object.hash(runtimeType,id,storeId,storeName,storeSlug,role,inviteCode,createdAt);
 
 @override
 String toString() {
-  return 'StoreMembership(id: $id, storeId: $storeId, storeName: $storeName, storeSlug: $storeSlug, role: $role, createdAt: $createdAt)';
+  return 'StoreMembership(id: $id, storeId: $storeId, storeName: $storeName, storeSlug: $storeSlug, role: $role, inviteCode: $inviteCode, createdAt: $createdAt)';
 }
 
 
@@ -257,7 +259,7 @@ abstract mixin class _$StoreMembershipCopyWith<$Res> implements $StoreMembership
   factory _$StoreMembershipCopyWith(_StoreMembership value, $Res Function(_StoreMembership) _then) = __$StoreMembershipCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String storeId, String storeName, String storeSlug, String role, DateTime createdAt
+ String id, String storeId, String storeName, String storeSlug, String role, String? inviteCode, DateTime createdAt
 });
 
 
@@ -274,14 +276,15 @@ class __$StoreMembershipCopyWithImpl<$Res>
 
 /// Create a copy of StoreMembership
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? storeId = null,Object? storeName = null,Object? storeSlug = null,Object? role = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? storeId = null,Object? storeName = null,Object? storeSlug = null,Object? role = null,Object? inviteCode = freezed,Object? createdAt = null,}) {
   return _then(_StoreMembership(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,storeName: null == storeName ? _self.storeName : storeName // ignore: cast_nullable_to_non_nullable
 as String,storeSlug: null == storeSlug ? _self.storeSlug : storeSlug // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as String,inviteCode: freezed == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
+as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }

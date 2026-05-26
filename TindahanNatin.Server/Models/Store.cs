@@ -8,6 +8,7 @@ public class Store
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty; // for the shareable link
     public string OwnerId { get; set; } = string.Empty;
+    public string? InviteCode { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

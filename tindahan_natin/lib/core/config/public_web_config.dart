@@ -32,3 +32,19 @@ String? buildPublicStoreUrl({
 
   return '$normalizedBaseUrl/#/store/${Uri.encodeComponent(trimmedSlug)}';
 }
+
+String? buildJoinStoreUrl({
+  required String inviteCode,
+  String? baseUrlOverride,
+}) {
+  final normalizedBaseUrl = normalizePublicWebAppBaseUrl(
+    baseUrlOverride ?? PublicWebConfig.baseUrl,
+  );
+  final trimmedCode = inviteCode.trim();
+
+  if (normalizedBaseUrl.isEmpty || trimmedCode.isEmpty) {
+    return null;
+  }
+
+  return '$normalizedBaseUrl/#/join/${Uri.encodeComponent(trimmedCode)}';
+}

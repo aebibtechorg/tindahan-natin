@@ -19,7 +19,7 @@ class StoreService {
     // Cleanup obsolete single-store cache key if it exists
     await _local.deleteCacheEntry('store_me');
 
-    final cached = _local.getCachedRecords('store_memberships');
+    final cached = _local.getCachedRecords('store_memberships_v2');
     if (cached != null && cached.isNotEmpty) {
       return cached.map((e) => StoreMembership.fromJson(Map<String, dynamic>.from(e))).toList();
     }
@@ -27,10 +27,10 @@ class StoreService {
     try {
       final response = await _dio.get('/stores/memberships');
       final data = (response.data as List).map((e) => Map<String, dynamic>.from(e as Map)).toList();
-      await _local.cacheRecords('store_memberships', data);
+      await _local.cacheRecords('store_memberships_v2', data);
       return data.map((e) => StoreMembership.fromJson(e)).toList();
     } catch (error) {
-      final cached = _local.getCachedRecords('store_memberships');
+      final cached = _local.getCachedRecords('store_memberships_v2');
       if (cached != null && cached.isNotEmpty) {
         return cached.map((e) => StoreMembership.fromJson(Map<String, dynamic>.from(e))).toList();
       }
@@ -39,7 +39,7 @@ class StoreService {
   }
 
   Future<void> updateStoreName(String storeId, String name) async {
-    final cachedRecords = _local.getCachedRecords('store_memberships') ?? [];
+    final cachedRecords = _local.getCachedRecords('store_memberships_v2') ?? [];
     final updatedRecords = cachedRecords.map((e) {
       final record = Map<String, dynamic>.from(e as Map);
       if (record['storeId'] == storeId) {
@@ -62,7 +62,32 @@ class StoreService {
       });
     }
 
-    await _local.cacheRecords('store_memberships', updatedRecords);
+    await _local.cacheRecords('store_memberships_v2', updatedRecords);
+  }
+
+  Future<String> generateInviteCode(String storeId) async {
+    final response = await _dio.post('/stores/$storeId/invite-code');
+    final newCode = response.data['inviteCode'] as String;
+
+    // Update local cache
+    final cachedRecords = _local.getCachedRecords('store_memberships_v2') ?? [];
+    final updatedRecords = cachedRecords.map((e) {
+      final record = Map<String, dynamic>.from(e as Map);
+      if (record['storeId'] == storeId) {
+        return {
+          ...record,
+          'inviteCode': newCode,
+        };
+      }
+      return record;
+    }).toList();
+    await _local.cacheRecords('store_memberships_v2', updatedRecords);
+
+    return newCode;
+  }
+
+  Future<void> joinStore(String inviteCode) async {
+    await _dio.post('/stores/join', data: {'inviteCode': inviteCode});
   }
 }
 
@@ -100,5 +125,6 @@ final myStoreProvider = FutureProvider<Store?>((ref) async {
     name: membership.storeName,
     slug: membership.storeSlug,
     ownerId: '',
+    inviteCode: membership.inviteCode,
   );
 });

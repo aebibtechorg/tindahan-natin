@@ -11,6 +11,7 @@ _Store _$StoreFromJson(Map<String, dynamic> json) => _Store(
   name: json['name'] as String,
   slug: json['slug'] as String,
   ownerId: json['ownerId'] as String,
+  inviteCode: json['inviteCode'] as String?,
 );
 
 Map<String, dynamic> _$StoreToJson(_Store instance) => <String, dynamic>{
@@ -18,4 +19,5 @@ Map<String, dynamic> _$StoreToJson(_Store instance) => <String, dynamic>{
   'name': instance.name,
   'slug': instance.slug,
   'ownerId': instance.ownerId,
+  'inviteCode': instance.inviteCode,
 };

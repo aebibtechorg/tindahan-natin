@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Store {
 
- String get id; String get name; String get slug; String get ownerId;
+ String get id; String get name; String get slug; String get ownerId; String? get inviteCode;
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StoreCopyWith<Store> get copyWith => _$StoreCopyWithImpl<Store>(this as Store, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,slug,ownerId);
+int get hashCode => Object.hash(runtimeType,id,name,slug,ownerId,inviteCode);
 
 @override
 String toString() {
-  return 'Store(id: $id, name: $name, slug: $slug, ownerId: $ownerId)';
+  return 'Store(id: $id, name: $name, slug: $slug, ownerId: $ownerId, inviteCode: $inviteCode)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StoreCopyWith<$Res>  {
   factory $StoreCopyWith(Store value, $Res Function(Store) _then) = _$StoreCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String slug, String ownerId
+ String id, String name, String slug, String ownerId, String? inviteCode
 });
 
 
@@ -65,13 +65,14 @@ class _$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? ownerId = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? ownerId = null,Object? inviteCode = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,inviteCode: freezed == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String ownerId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String ownerId,  String? inviteCode)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.name,_that.slug,_that.ownerId);case _:
+return $default(_that.id,_that.name,_that.slug,_that.ownerId,_that.inviteCode);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.id,_that.name,_that.slug,_that.ownerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String ownerId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String ownerId,  String? inviteCode)  $default,) {final _that = this;
 switch (_that) {
 case _Store():
-return $default(_that.id,_that.name,_that.slug,_that.ownerId);case _:
+return $default(_that.id,_that.name,_that.slug,_that.ownerId,_that.inviteCode);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +198,10 @@ return $default(_that.id,_that.name,_that.slug,_that.ownerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String slug,  String ownerId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String slug,  String ownerId,  String? inviteCode)?  $default,) {final _that = this;
 switch (_that) {
 case _Store() when $default != null:
-return $default(_that.id,_that.name,_that.slug,_that.ownerId);case _:
+return $default(_that.id,_that.name,_that.slug,_that.ownerId,_that.inviteCode);case _:
   return null;
 
 }
@@ -212,13 +213,14 @@ return $default(_that.id,_that.name,_that.slug,_that.ownerId);case _:
 @JsonSerializable()
 
 class _Store implements Store {
-  const _Store({required this.id, required this.name, required this.slug, required this.ownerId});
+  const _Store({required this.id, required this.name, required this.slug, required this.ownerId, this.inviteCode});
   factory _Store.fromJson(Map<String, dynamic> json) => _$StoreFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  String slug;
 @override final  String ownerId;
+@override final  String? inviteCode;
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Store&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.inviteCode, inviteCode) || other.inviteCode == inviteCode));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,slug,ownerId);
+int get hashCode => Object.hash(runtimeType,id,name,slug,ownerId,inviteCode);
 
 @override
 String toString() {
-  return 'Store(id: $id, name: $name, slug: $slug, ownerId: $ownerId)';
+  return 'Store(id: $id, name: $name, slug: $slug, ownerId: $ownerId, inviteCode: $inviteCode)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$StoreCopyWith<$Res> implements $StoreCopyWith<$Res> {
   factory _$StoreCopyWith(_Store value, $Res Function(_Store) _then) = __$StoreCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String slug, String ownerId
+ String id, String name, String slug, String ownerId, String? inviteCode
 });
 
 
@@ -270,13 +272,14 @@ class __$StoreCopyWithImpl<$Res>
 
 /// Create a copy of Store
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? ownerId = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? ownerId = null,Object? inviteCode = freezed,}) {
   return _then(_Store(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,inviteCode: freezed == inviteCode ? _self.inviteCode : inviteCode // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

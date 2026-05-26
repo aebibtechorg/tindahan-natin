@@ -908,6 +908,15 @@ class MockLocalStorage extends _i1.Mock implements _i10.LocalStorage {
           as _i8.Future<void>);
 
   @override
+  _i8.Future<void> deleteCacheEntry(String? cacheKey) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteCacheEntry, [cacheKey]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
   _i8.Future<void> queueMutation(Map<String, dynamic>? mutation) =>
       (super.noSuchMethod(
             Invocation.method(#queueMutation, [mutation]),

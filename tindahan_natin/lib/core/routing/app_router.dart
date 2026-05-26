@@ -11,6 +11,7 @@ import 'package:tindahan_natin/features/public_store/store_lookup_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_store_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_map_screen.dart';
 import 'package:tindahan_natin/features/public_store/lista_screen.dart';
+import 'package:tindahan_natin/features/public_store/join_store_screen.dart';
 import 'package:tindahan_natin/features/public_store/public_store_shell.dart';
 import 'package:tindahan_natin/features/store_map/store_map_screen.dart';
 import 'package:tindahan_natin/features/settings/settings_screen.dart';
@@ -121,6 +122,12 @@ GoRouter appRouter(Ref ref) {
             path: '/settings',
             builder: (context, state) => const SettingsScreen(),
           ),
+          GoRoute(
+            path: '/join/:code',
+            builder: (context, state) => JoinStoreScreen(
+              code: state.pathParameters['code']!,
+            ),
+          ),
         ],
       ),
       GoRoute(
@@ -134,8 +141,8 @@ GoRouter appRouter(Ref ref) {
       final loggedIn = authState.value != null;
       final matchedLocation = state.matchedLocation;
 
-      // Allow public store access
-      if (matchedLocation == '/store' || matchedLocation.startsWith('/store/')) return null;
+      // Allow public store and join access
+      if (matchedLocation == '/store' || matchedLocation.startsWith('/store/') || matchedLocation.startsWith('/join/')) return null;
 
       final loggingIn = matchedLocation == '/login';
 

@@ -10,6 +10,7 @@ abstract class Store with _$Store {
     required String name,
     required String slug,
     required String ownerId,
+    String? inviteCode,
   }) = _Store;
 
   factory Store.fromJson(Map<String, dynamic> json) => _$StoreFromJson(json);
