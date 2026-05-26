@@ -130,76 +130,90 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
         body: _loading || showInitialLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Store name',
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Enter a store name'
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loading ? null : _save,
-                      child: const Text('Save'),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _loading
-                          ? null
-                          : () async {
-                              final messenger = ScaffoldMessenger.of(context);
+          : LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Store name',
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Enter a store name'
+                                  : null,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loading ? null : _save,
+                              child: const Text('Save'),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              onPressed: _loading
+                                  ? null
+                                  : () async {
+                                      final messenger =
+                                          ScaffoldMessenger.of(context);
 
-                              setState(() => _loading = true);
-                              try {
-                                await ref
-                                    .read(authStateProvider.notifier)
-                                    .logout();
-                                if (mounted) {
-                                  messenger.showSnackBar(
-                                    const SnackBar(content: Text('Logged out')),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  messenger.showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Failed to log out'),
-                                    ),
-                                  );
-                                }
-                              } finally {
-                                if (mounted) {
-                                  setState(() => _loading = false);
-                                }
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                      ),
-                      child: const Text('Log out'),
-                    ),
-                    const Spacer(),
-                    const InlineAdWidget(),
-                    const SizedBox(height: 16),
-                    ref.watch(packageInfoProvider).when(
-                          data: (info) => Text(
-                            'Version ${info.version} (${info.buildNumber})',
-                            style: Theme.of(context).textTheme.bodySmall,
-                            textAlign: TextAlign.center,
-                          ),
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, stack) => const SizedBox.shrink(),
+                                      setState(() => _loading = true);
+                                      try {
+                                        await ref
+                                            .read(authStateProvider.notifier)
+                                            .logout();
+                                        if (mounted) {
+                                          messenger.showSnackBar(
+                                            const SnackBar(
+                                                content: Text('Logged out')),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (mounted) {
+                                          messenger.showSnackBar(
+                                            const SnackBar(
+                                              content:
+                                                  Text('Failed to log out'),
+                                            ),
+                                          );
+                                        }
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() => _loading = false);
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                              ),
+                              child: const Text('Log out'),
+                            ),
+                            const SizedBox(height: 24),
+                            const Spacer(),
+                            const InlineAdWidget(),
+                            const SizedBox(height: 16),
+                            ref.watch(packageInfoProvider).when(
+                                  data: (info) => Text(
+                                    'Version ${info.version} (${info.buildNumber})',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, stack) => const SizedBox.shrink(),
+                                ),
+                          ],
                         ),
-                  ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
