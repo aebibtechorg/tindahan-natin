@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
+import 'package:tindahan_natin/features/lista/lista_service.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
 
 class PublicStoreShell extends ConsumerStatefulWidget {
@@ -22,9 +24,11 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
   @override
   Widget build(BuildContext context) {
     final storeInfoAsync = ref.watch(publicStoreInfoProvider(widget.slug));
+    final authState = ref.watch(authStateProvider);
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: authState.value != null,
         title: storeInfoAsync.when(
           data: (info) {
             final Store store = info['store'];
@@ -39,6 +43,7 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
             onPressed: () {
               ref.invalidate(publicStoreInfoProvider(widget.slug));
               ref.invalidate(publicProductSearchProvider);
+              ref.invalidate(publicListaHistoryProvider);
             },
             tooltip: 'Refresh',
           ),
@@ -64,8 +69,14 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
             selectedIcon: Icon(Icons.map),
             label: 'Map',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.event_note_outlined),
+            selectedIcon: Icon(Icons.event_note),
+            label: 'Lista',
+          ),
         ],
       ),
     );
   }
 }
+

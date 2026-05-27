@@ -14,6 +14,9 @@ import 'package:tindahan_natin/features/public_store/public_store_shell.dart';
 import 'package:tindahan_natin/features/store_map/store_map_screen.dart';
 import 'package:tindahan_natin/features/settings/settings_screen.dart';
 import 'package:tindahan_natin/features/categories/category_list_screen.dart';
+import 'package:tindahan_natin/features/lista/public_lista_screen.dart';
+import 'package:tindahan_natin/features/lista/add_lista_entry_screen.dart';
+import 'package:tindahan_natin/features/lista/lista_history_screen.dart';
 import 'package:tindahan_natin/core/widgets/app_shell.dart';
 
 part 'app_router.g.dart';
@@ -78,6 +81,24 @@ GoRouter appRouter(Ref ref) {
                           ),
                         ],
                       ),
+                      StatefulShellBranch(
+                        routes: [
+                          GoRoute(
+                            path: 'lista',
+                            builder: (context, state) => PublicListaScreen(
+                              slug: state.pathParameters['slug']!,
+                            ),
+                            routes: [
+                              GoRoute(
+                                path: 'add',
+                                builder: (context, state) => AddListaEntryScreen(
+                                  slug: state.pathParameters['slug']!,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
@@ -101,6 +122,10 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: '/categories',
             builder: (context, state) => const CategoryListScreen(),
+          ),
+          GoRoute(
+            path: '/lista-history',
+            builder: (context, state) => const ListaHistoryScreen(),
           ),
           GoRoute(
             path: '/map',
