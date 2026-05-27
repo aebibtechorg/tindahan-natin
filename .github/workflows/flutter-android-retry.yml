@@ -70,6 +70,23 @@ jobs:
       #   run: flutter test
       #   working-directory: tindahan_natin
 
+      - name: Extract Release Notes
+        id: release_notes
+        run: |
+          # Extract the content of the latest version from CHANGELOG.md
+          awk '/^## \[/{if (count++) exit; next} count' CHANGELOG.md > release_notes.txt
+          echo "NOTES<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        working-directory: tindahan_natin
+
+      - name: Prepare Google Play Release Notes
+        run: |
+          mkdir -p google-play-notes/whatsnew
+          # Use the same extracted notes for Google Play (en-US default)
+          cp release_notes.txt google-play-notes/whatsnew/whatsnew-en-US
+        working-directory: tindahan_natin
+
       - name: Build APK
         run: |
           flutter build apk --release \
@@ -136,5 +153,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
           packageName: com.aebibtech.tindahan_natin
           releaseFiles: tindahan_natin/build/app/outputs/bundle/release/app-release.aab
+          whatsNewDirectory: tindahan_natin/google-play-notes/whatsnew
           tracks: alpha
           status: completed
