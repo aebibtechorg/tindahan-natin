@@ -83,8 +83,8 @@ jobs:
       - name: Prepare Google Play Release Notes
         run: |
           mkdir -p google-play-notes/whatsnew
-          # Use the same extracted notes for Google Play (en-US default)
-          cp release_notes.txt google-play-notes/whatsnew/whatsnew-en-US
+          # Use the same extracted notes for Google Play (en-US default), truncated to 500 chars
+          head -c 500 release_notes.txt > google-play-notes/whatsnew/whatsnew-en-US
         working-directory: tindahan_natin
 
       - name: Build APK
