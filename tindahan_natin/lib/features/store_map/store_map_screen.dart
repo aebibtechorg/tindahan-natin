@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_manager.dart';
@@ -16,7 +17,8 @@ class StoreMapScreen extends ConsumerStatefulWidget {
 }
 
 class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
   final GlobalKey _containerKey = GlobalKey();
   final Set<String> _selectedShelfIds = {};
   bool _multiSelectMode = false;
@@ -52,7 +54,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     return (value / _gridSize).round() * _gridSize;
   }
 
-
   void _removeLocalShelfState(Iterable<String> shelfIds) {
     for (final shelfId in shelfIds) {
       _optimisticShelves.remove(shelfId);
@@ -75,7 +76,10 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     return Offset(scene.x - _canvasOrigin, scene.y - _canvasOrigin);
   }
 
-  Future<void> _addShelfAtVisibleCenter(BuildContext context, String storeId) async {
+  Future<void> _addShelfAtVisibleCenter(
+    BuildContext context,
+    String storeId,
+  ) async {
     if (_viewportSize.isEmpty) {
       return;
     }
@@ -131,9 +135,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
         _selectedShelfIds.remove(tempId);
       });
 
-      messenger?.showSnackBar(
-        SnackBar(content: Text('Create failed: $e')),
-      );
+      messenger?.showSnackBar(SnackBar(content: Text('Create failed: $e')));
     }
   }
 
@@ -182,7 +184,11 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                 onPressed: () => setState(() => _snapToGrid = !_snapToGrid),
               ),
               IconButton(
-                icon: Icon(_multiSelectMode ? Icons.check_box : Icons.check_box_outline_blank),
+                icon: Icon(
+                  _multiSelectMode
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                ),
                 tooltip: 'Multi-select',
                 onPressed: () => setState(() {
                   _multiSelectMode = !_multiSelectMode;
@@ -194,12 +200,15 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     final shelfId = _selectedShelfIds.first;
-                    final shelves = ref.read(shelvesProvider(storeId)).value ?? [];
-                    
+                    final shelves =
+                        ref.read(shelvesProvider(storeId)).value ?? [];
+
                     Shelf? targetShelf = _optimisticShelves[shelfId];
                     if (targetShelf == null) {
                       try {
-                        targetShelf = shelves.firstWhere((s) => s.id == shelfId);
+                        targetShelf = shelves.firstWhere(
+                          (s) => s.id == shelfId,
+                        );
                       } catch (_) {}
                     }
 
@@ -207,7 +216,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       _showEditShelfDialog(context, ref, targetShelf, storeId);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Shelf not found. Please try again.')),
+                        const SnackBar(
+                          content: Text('Shelf not found. Please try again.'),
+                        ),
                       );
                     }
                   },
@@ -221,25 +232,33 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       context: context,
                       builder: (c) => AlertDialog(
                         title: const Text('Delete Shelf?'),
-                        content: const Text('Are you sure you want to delete this shelf?'),
+                        content: const Text(
+                          'Are you sure you want to delete this shelf?',
+                        ),
                         actions: [
-                          ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: const Text('Delete'),
+                          ),
                         ],
                       ),
                     );
                     if (confirm == true) {
-                        setState(() {
-                          _optimisticRemovedIds.add(id);
-                          _selectedShelfIds.clear();
-                        });
-                        try {
-                          await ref.read(mapServiceProvider).deleteShelf(id);
-                          ref.invalidate(shelvesProvider(storeId));
-                          setState(() => _removeLocalShelfState([id]));
-                        } catch (e) {
-                          setState(() => _optimisticRemovedIds.remove(id));
-                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
-                        }
+                      setState(() {
+                        _optimisticRemovedIds.add(id);
+                        _selectedShelfIds.clear();
+                      });
+                      try {
+                        await ref.read(mapServiceProvider).deleteShelf(id);
+                        ref.invalidate(shelvesProvider(storeId));
+                        setState(() => _removeLocalShelfState([id]));
+                      } catch (e) {
+                        setState(() => _optimisticRemovedIds.remove(id));
+                        if (context.mounted)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Delete failed: $e')),
+                          );
+                      }
                     }
                   },
                 ),
@@ -252,9 +271,14 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       context: context,
                       builder: (c) => AlertDialog(
                         title: const Text('Delete Selected Shelves?'),
-                        content: Text('Delete ${_selectedShelfIds.length} selected shelves?'),
+                        content: Text(
+                          'Delete ${_selectedShelfIds.length} selected shelves?',
+                        ),
                         actions: [
-                          ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete')),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: const Text('Delete'),
+                          ),
                         ],
                       ),
                     );
@@ -269,7 +293,12 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           await ref.read(mapServiceProvider).deleteShelf(id);
                         } catch (e) {
                           setState(() => _optimisticRemovedIds.remove(id));
-                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed for $id: $e')));
+                          if (context.mounted)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Delete failed for $id: $e'),
+                              ),
+                            );
                         }
                       }
                       setState(() => _removeLocalShelfState(idsToDelete));
@@ -292,7 +321,8 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
               }
 
               for (final shelf in _optimisticShelves.values) {
-                if (!serverById.containsKey(shelf.id) && !_optimisticRemovedIds.contains(shelf.id)) {
+                if (!serverById.containsKey(shelf.id) &&
+                    !_optimisticRemovedIds.contains(shelf.id)) {
                   displayedShelves.add(shelf);
                 }
               }
@@ -351,13 +381,27 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                 }
                               });
                             },
-                            onDoubleTap: () => _showEditShelfDialog(context, ref, shelf, storeId),
+                            onDoubleTap: () => _showEditShelfDialog(
+                              context,
+                              ref,
+                              shelf,
+                              storeId,
+                            ),
                             snapToGrid: _snapToGrid,
                             gridSize: _gridSize,
-                            onOptimisticUpdate: (updated) => setState(() => _optimisticShelves[updated.id] = updated),
-                            onBulkMoveStart: (ids) => _startBulkShelfMove(displayedShelves, ids),
-                            onBulkOptimisticUpdate: (ids, delta) => _applyBulkShelfMove(displayedShelves, ids, delta),
-                            onBulkCommit: (ids) => _commitBulkShelfMove(displayedShelves, ids),
+                            onOptimisticUpdate: (updated) => setState(
+                              () => _optimisticShelves[updated.id] = updated,
+                            ),
+                            onBulkMoveStart: (ids) =>
+                                _startBulkShelfMove(displayedShelves, ids),
+                            onBulkOptimisticUpdate: (ids, delta) =>
+                                _applyBulkShelfMove(
+                                  displayedShelves,
+                                  ids,
+                                  delta,
+                                ),
+                            onBulkCommit: (ids) =>
+                                _commitBulkShelfMove(displayedShelves, ids),
                           ),
                         ),
                       ],
@@ -371,16 +415,25 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           ),
         );
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) => Scaffold(body: Center(child: Text('Error loading store: $e'))),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) =>
+          Scaffold(body: Center(child: Text('Error loading store: $e'))),
     );
   }
 
-  void _applyBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds, Offset delta) {
+  void _applyBulkShelfMove(
+    List<Shelf> shelves,
+    Set<String> shelfIds,
+    Offset delta,
+  ) {
     setState(() {
       for (final shelf in shelves) {
         if (!shelfIds.contains(shelf.id)) continue;
-        final base = _bulkMoveStartShelves[shelf.id] ?? _optimisticShelves[shelf.id] ?? shelf;
+        final base =
+            _bulkMoveStartShelves[shelf.id] ??
+            _optimisticShelves[shelf.id] ??
+            shelf;
         final updatedX = base.x + delta.dx;
         final updatedY = base.y + delta.dy;
         _optimisticShelves[shelf.id] = base.copyWith(x: updatedX, y: updatedY);
@@ -392,16 +445,26 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     _bulkMoveStartShelves
       ..clear()
       ..addEntries(
-        shelves.where((shelf) => shelfIds.contains(shelf.id)).map((shelf) => MapEntry(shelf.id, _optimisticShelves[shelf.id] ?? shelf)),
+        shelves
+            .where((shelf) => shelfIds.contains(shelf.id))
+            .map(
+              (shelf) =>
+                  MapEntry(shelf.id, _optimisticShelves[shelf.id] ?? shelf),
+            ),
       );
   }
 
-  Future<void> _commitBulkShelfMove(List<Shelf> shelves, Set<String> shelfIds) async {
+  Future<void> _commitBulkShelfMove(
+    List<Shelf> shelves,
+    Set<String> shelfIds,
+  ) async {
     final snapshot = Map<String, Shelf>.from(_bulkMoveStartShelves);
 
     try {
       for (final shelfId in shelfIds) {
-        final updatedShelf = _optimisticShelves[shelfId] ?? shelves.firstWhere((s) => s.id == shelfId);
+        final updatedShelf =
+            _optimisticShelves[shelfId] ??
+            shelves.firstWhere((s) => s.id == shelfId);
         if (updatedShelf.id.startsWith('tmp-')) {
           continue;
         }
@@ -424,7 +487,12 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     }
   }
 
-  void _showEditShelfDialog(BuildContext context, WidgetRef ref, Shelf shelf, String storeId) {
+  void _showEditShelfDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Shelf shelf,
+    String storeId,
+  ) {
     final controller = TextEditingController(text: shelf.name);
     double rotation = shelf.rotation;
     final Map<String, ProductLocation> localProductLocationOverrides = {};
@@ -435,7 +503,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
       builder: (context) => Consumer(
         builder: (context, dialogRef, _) {
           final productsAsync = dialogRef.watch(productsProvider(storeId));
-          final productLocationsAsync = dialogRef.watch(productLocationsProvider(storeId));
+          final productLocationsAsync = dialogRef.watch(
+            productLocationsProvider(storeId),
+          );
 
           return StatefulBuilder(
             builder: (context, setDialogState) {
@@ -449,7 +519,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       children: [
                         TextField(
                           controller: controller,
-                          decoration: const InputDecoration(hintText: 'Shelf Name'),
+                          decoration: const InputDecoration(
+                            hintText: 'Shelf Name',
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -458,12 +530,13 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Slider(
-                                value: rotation,
-                                min: 0,
+                                value: rotation.clamp(-360.0, 360.0),
+                                min: -360,
                                 max: 360,
-                                divisions: 36,
+                                divisions: 72,
                                 label: '${rotation.round()}°',
-                                onChanged: (v) => setDialogState(() => rotation = v),
+                                onChanged: (v) =>
+                                    setDialogState(() => rotation = v),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -475,14 +548,21 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Product Locations', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text(
+                              'Product Locations',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                             TextButton.icon(
                               onPressed: () async {
                                 final products = productsAsync.asData?.value;
                                 if (productsAsync.isLoading) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Products are still loading')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'Products are still loading',
+                                        ),
+                                      ),
                                     );
                                   }
                                   return;
@@ -490,7 +570,11 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                 if (productsAsync.hasError) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Failed to load products: ${productsAsync.error}')),
+                                      SnackBar(
+                                        content: Text(
+                                          'Failed to load products: ${productsAsync.error}',
+                                        ),
+                                      ),
                                     );
                                   }
                                   return;
@@ -498,45 +582,79 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                 if (products == null || products.isEmpty) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('No products available')),
+                                      const SnackBar(
+                                        content: Text('No products available'),
+                                      ),
                                     );
                                   }
                                   return;
                                 }
 
-                                final selected = await showDialog<Map<String, dynamic>?>(
-                                  context: context,
-                                  builder: (ctx) => SimpleDialog(
-                                    title: const Text('Select Product'),
-                                    children: products
-                                        .map(
-                                          (prod) => SimpleDialogOption(
-                                            onPressed: () => Navigator.pop(ctx, {'id': prod.id, 'name': prod.name}),
-                                            child: Text(prod.name),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ),
-                                );
+                                final selected =
+                                    await showDialog<Map<String, dynamic>?>(
+                                      context: context,
+                                      builder: (ctx) => SimpleDialog(
+                                        title: const Text('Select Product'),
+                                        children: products
+                                            .map(
+                                              (prod) => SimpleDialogOption(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, {
+                                                      'id': prod.id,
+                                                      'name': prod.name,
+                                                    }),
+                                                child: Text(prod.name),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    );
 
                                 if (selected != null) {
-                                  final tempLocId = 'tmp-loc-${DateTime.now().microsecondsSinceEpoch}';
-                                  final tempLoc = ProductLocation(id: tempLocId, productId: selected['id'], shelfId: shelf.id, position: 'default');
-                                  setDialogState(() => localProductLocationOverrides[tempLocId] = tempLoc);
+                                  final tempLocId =
+                                      'tmp-loc-${DateTime.now().microsecondsSinceEpoch}';
+                                  final tempLoc = ProductLocation(
+                                    id: tempLocId,
+                                    productId: selected['id'],
+                                    shelfId: shelf.id,
+                                    position: 'default',
+                                  );
+                                  setDialogState(
+                                    () =>
+                                        localProductLocationOverrides[tempLocId] =
+                                            tempLoc,
+                                  );
                                   try {
-                                    final created = await ref.read(mapServiceProvider).createProductLocation({
-                                      'productId': selected['id'],
-                                      'shelfId': shelf.id,
-                                      'position': 'default',
-                                    });
+                                    final created = await ref
+                                        .read(mapServiceProvider)
+                                        .createProductLocation({
+                                          'productId': selected['id'],
+                                          'shelfId': shelf.id,
+                                          'position': 'default',
+                                        });
                                     setDialogState(() {
-                                      localProductLocationOverrides.remove(tempLocId);
-                                      localProductLocationOverrides[created.id] = created;
+                                      localProductLocationOverrides.remove(
+                                        tempLocId,
+                                      );
+                                      localProductLocationOverrides[created
+                                              .id] =
+                                          created;
                                     });
                                   } catch (e) {
-                                    setDialogState(() => localProductLocationOverrides.remove(tempLocId));
+                                    setDialogState(
+                                      () => localProductLocationOverrides
+                                          .remove(tempLocId),
+                                    );
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Add location failed: $e')));
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Add location failed: $e',
+                                          ),
+                                        ),
+                                      );
                                     }
                                   }
                                 }
@@ -548,14 +666,26 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         ),
                         productLocationsAsync.when(
                           data: (locations) {
-                            final serverById = {for (var l in locations) l.id: l};
+                            final serverById = {
+                              for (var l in locations) l.id: l,
+                            };
                             final merged = <ProductLocation>[];
-                            for (final l in locations.where((l) => l.shelfId == shelf.id)) {
-                              if (localDeletedProductLocationIds.contains(l.id)) continue;
-                              merged.add(localProductLocationOverrides[l.id] ?? l);
+                            for (final l in locations.where(
+                              (l) => l.shelfId == shelf.id,
+                            )) {
+                              if (localDeletedProductLocationIds.contains(l.id))
+                                continue;
+                              merged.add(
+                                localProductLocationOverrides[l.id] ?? l,
+                              );
                             }
-                            for (final l in localProductLocationOverrides.values) {
-                              if (!serverById.containsKey(l.id) && l.shelfId == shelf.id && !localDeletedProductLocationIds.contains(l.id)) {
+                            for (final l
+                                in localProductLocationOverrides.values) {
+                              if (!serverById.containsKey(l.id) &&
+                                  l.shelfId == shelf.id &&
+                                  !localDeletedProductLocationIds.contains(
+                                    l.id,
+                                  )) {
                                 merged.add(l);
                               }
                             }
@@ -568,10 +698,14 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                             return Column(
                               children: merged.map((loc) {
                                 String productName = loc.productId;
-                                final productsList = productsAsync.asData?.value;
+                                final productsList =
+                                    productsAsync.asData?.value;
                                 if (productsList != null) {
-                                  final matches = productsList.where((p) => p.id == loc.productId);
-                                  if (matches.isNotEmpty) productName = matches.first.name;
+                                  final matches = productsList.where(
+                                    (p) => p.id == loc.productId,
+                                  );
+                                  if (matches.isNotEmpty)
+                                    productName = matches.first.name;
                                 }
                                 return ListTile(
                                   title: Text(productName),
@@ -580,18 +714,42 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                     icon: const Icon(Icons.delete),
                                     onPressed: () async {
                                       if (loc.id.startsWith('tmp-')) {
-                                        setDialogState(() => localProductLocationOverrides.remove(loc.id));
+                                        setDialogState(
+                                          () => localProductLocationOverrides
+                                              .remove(loc.id),
+                                        );
                                         return;
                                       }
-                                      setDialogState(() => localDeletedProductLocationIds.add(loc.id));
+                                      setDialogState(
+                                        () => localDeletedProductLocationIds
+                                            .add(loc.id),
+                                      );
                                       try {
-                                        await ref.read(mapServiceProvider).deleteProductLocation(loc.id);
-                                        setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
-                                        ref.invalidate(productLocationsProvider(storeId));
+                                        await ref
+                                            .read(mapServiceProvider)
+                                            .deleteProductLocation(loc.id);
+                                        setDialogState(
+                                          () => localDeletedProductLocationIds
+                                              .remove(loc.id),
+                                        );
+                                        ref.invalidate(
+                                          productLocationsProvider(storeId),
+                                        );
                                       } catch (e) {
-                                        setDialogState(() => localDeletedProductLocationIds.remove(loc.id));
+                                        setDialogState(
+                                          () => localDeletedProductLocationIds
+                                              .remove(loc.id),
+                                        );
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete location failed: $e')));
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Delete location failed: $e',
+                                              ),
+                                            ),
+                                          );
                                         }
                                       }
                                     },
@@ -617,20 +775,32 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       if (controller.text.isNotEmpty) {
-                        final updatedShelf = shelf.copyWith(name: controller.text, rotation: rotation);
-                        setState(() => _optimisticShelves[shelf.id] = updatedShelf);
+                        final updatedShelf = shelf.copyWith(
+                          name: controller.text,
+                          rotation: rotation,
+                        );
+                        setState(
+                          () => _optimisticShelves[shelf.id] = updatedShelf,
+                        );
                         if (context.mounted) Navigator.pop(context);
                         try {
-                          await ref.read(mapServiceProvider).updateShelf(shelf.id, {
-                            'name': controller.text,
-                            'x': updatedShelf.x,
-                            'y': updatedShelf.y,
-                            'rotation': rotation,
-                          });
-                          setState(() => _optimisticShelves[shelf.id] = updatedShelf);
+                          await ref
+                              .read(mapServiceProvider)
+                              .updateShelf(shelf.id, {
+                                'name': controller.text,
+                                'x': updatedShelf.x,
+                                'y': updatedShelf.y,
+                                'rotation': rotation,
+                              });
+                          setState(
+                            () => _optimisticShelves[shelf.id] = updatedShelf,
+                          );
                         } catch (e) {
                           setState(() => _optimisticShelves.remove(shelf.id));
-                          if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+                          if (context.mounted)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Save failed: $e')),
+                            );
                         }
                       }
                     },
@@ -692,6 +862,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
   late double rotation;
   late double _dragStartX;
   late double _dragStartY;
+  late double _startRotation;
   Offset? _dragOffset;
   bool _dragging = false;
 
@@ -716,7 +887,8 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
   }
 
   Offset _globalToScene(Offset global) {
-    final renderBox = widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
+    final renderBox =
+        widget.containerKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return Offset.zero;
     final local = renderBox.globalToLocal(global);
     final m = widget.transformationController.value;
@@ -726,7 +898,9 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
     return Offset(scene.x - widget.canvasOrigin, scene.y - widget.canvasOrigin);
   }
 
-  bool get _isBulkMoveTarget => widget.selectedShelfIds.length > 1 && widget.selectedShelfIds.contains(widget.shelf.id);
+  bool get _isBulkMoveTarget =>
+      widget.selectedShelfIds.length > 1 &&
+      widget.selectedShelfIds.contains(widget.shelf.id);
 
   @override
   Widget build(BuildContext context) {
@@ -737,30 +911,41 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
         behavior: HitTestBehavior.opaque,
         onTap: () => widget.onSelect(widget.shelf.id),
         onDoubleTap: widget.onDoubleTap,
-        onPanStart: (details) {
+        onScaleStart: (details) {
           widget.onSelect(widget.shelf.id);
-          final scenePoint = _globalToScene(details.globalPosition);
+          final scenePoint = _globalToScene(details.focalPoint);
           _dragOffset = scenePoint - Offset(x, y);
           _dragStartX = x;
           _dragStartY = y;
+          _startRotation = rotation;
           if (_isBulkMoveTarget) {
             widget.onBulkMoveStart?.call(widget.selectedShelfIds);
           }
           setState(() => _dragging = true);
         },
-        onPanUpdate: (details) {
-          final scenePoint = _globalToScene(details.globalPosition);
+        onScaleUpdate: (details) {
+          final scenePoint = _globalToScene(details.focalPoint);
           final newX = scenePoint.dx - (_dragOffset?.dx ?? 0);
           final newY = scenePoint.dy - (_dragOffset?.dy ?? 0);
+          double newRotation = rotation;
+          if (details.pointerCount >= 2) {
+            newRotation = _startRotation + (details.rotation * (180 / math.pi));
+          }
           setState(() {
             x = newX;
             y = newY;
+            if (details.pointerCount >= 2) {
+              rotation = newRotation % 360.0;
+            }
           });
           if (_isBulkMoveTarget) {
-            widget.onBulkOptimisticUpdate?.call(widget.selectedShelfIds, Offset(x - _dragStartX, y - _dragStartY));
+            widget.onBulkOptimisticUpdate?.call(
+              widget.selectedShelfIds,
+              Offset(x - _dragStartX, y - _dragStartY),
+            );
           }
         },
-        onPanEnd: (details) async {
+        onScaleEnd: (details) async {
           setState(() => _dragging = false);
           final prevX = widget.shelf.x;
           final prevY = widget.shelf.y;
@@ -770,16 +955,25 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             y = (y / widget.gridSize).round() * widget.gridSize;
           }
 
-          final updatedShelf = widget.shelf.copyWith(x: x, y: y, rotation: rotation);
+          final updatedShelf = widget.shelf.copyWith(
+            x: x,
+            y: y,
+            rotation: rotation,
+          );
           widget.onOptimisticUpdate?.call(updatedShelf);
 
           if (_isBulkMoveTarget) {
-            widget.onBulkOptimisticUpdate?.call(widget.selectedShelfIds, Offset(x - _dragStartX, y - _dragStartY));
+            widget.onBulkOptimisticUpdate?.call(
+              widget.selectedShelfIds,
+              Offset(x - _dragStartX, y - _dragStartY),
+            );
             try {
               await widget.onBulkCommit?.call(widget.selectedShelfIds);
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Bulk update failed: $e')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Bulk update failed: $e')),
+                );
               }
             }
             return;
@@ -801,8 +995,13 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               y = prevY;
               rotation = prevRotation;
             });
-            widget.onOptimisticUpdate?.call(widget.shelf.copyWith(x: prevX, y: prevY, rotation: prevRotation));
-            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+            widget.onOptimisticUpdate?.call(
+              widget.shelf.copyWith(x: prevX, y: prevY, rotation: prevRotation),
+            );
+            if (context.mounted)
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Update failed: $e')));
           }
         },
         child: ConstrainedBox(
