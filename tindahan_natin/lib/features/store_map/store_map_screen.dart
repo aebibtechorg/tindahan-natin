@@ -254,10 +254,11 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         setState(() => _removeLocalShelfState([id]));
                       } catch (e) {
                         setState(() => _optimisticRemovedIds.remove(id));
-                        if (context.mounted)
+                        if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Delete failed: $e')),
                           );
+                        }
                       }
                     }
                   },
@@ -293,12 +294,13 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           await ref.read(mapServiceProvider).deleteShelf(id);
                         } catch (e) {
                           setState(() => _optimisticRemovedIds.remove(id));
-                          if (context.mounted)
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Delete failed for $id: $e'),
                               ),
                             );
+                          }
                         }
                       }
                       setState(() => _removeLocalShelfState(idsToDelete));
@@ -673,8 +675,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                             for (final l in locations.where(
                               (l) => l.shelfId == shelf.id,
                             )) {
-                              if (localDeletedProductLocationIds.contains(l.id))
+                              if (localDeletedProductLocationIds.contains(l.id)) {
                                 continue;
+                              }
                               merged.add(
                                 localProductLocationOverrides[l.id] ?? l,
                               );
@@ -704,8 +707,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                   final matches = productsList.where(
                                     (p) => p.id == loc.productId,
                                   );
-                                  if (matches.isNotEmpty)
+                                  if (matches.isNotEmpty) {
                                     productName = matches.first.name;
+                                  }
                                 }
                                 return ListTile(
                                   title: Text(productName),
@@ -797,10 +801,11 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           );
                         } catch (e) {
                           setState(() => _optimisticShelves.remove(shelf.id));
-                          if (context.mounted)
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Save failed: $e')),
                             );
+                          }
                         }
                       }
                     },
@@ -998,10 +1003,11 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
             widget.onOptimisticUpdate?.call(
               widget.shelf.copyWith(x: prevX, y: prevY, rotation: prevRotation),
             );
-            if (context.mounted)
+            if (context.mounted) {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+            }
           }
         },
         child: ConstrainedBox(
