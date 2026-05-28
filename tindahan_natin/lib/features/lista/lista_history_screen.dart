@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tindahan_natin/features/lista/lista_report_service.dart';
 import 'package:tindahan_natin/features/lista/lista_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
+
+part 'lista_history_screen.g.dart';
+
+@riverpod
+class ListaDateRange extends _$ListaDateRange {
+  @override
+  DateTimeRange? build() => null;
+
+  void setRange(DateTimeRange? range) {
+    state = range;
+  }
+}
 
 class ListaHistoryScreen extends ConsumerWidget {
   const ListaHistoryScreen({super.key});
@@ -9,20 +23,72 @@ class ListaHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final myStoreAsync = ref.watch(myStoreProvider);
+    final dateRange = ref.watch(listaDateRangeProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lista / Sales History'),
-      ),
-      body: myStoreAsync.when(
-        data: (store) {
-          if (store == null) return const Center(child: Text('Store not found.'));
+    return myStoreAsync.when(
+      data: (store) {
+        if (store == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Lista History')),
+            body: const Center(child: Text('Store not found.')),
+          );
+        }
 
-          final historyAsync = ref.watch(listaHistoryProvider(store.id));
+        final historyAsync = ref.watch(listaHistoryProvider(
+          store.id,
+          startDate: dateRange?.start,
+          // Add 1 day minus 1 microsecond to include the entire end date
+          endDate: dateRange?.end.add(const Duration(days: 1)).subtract(const Duration(microseconds: 1)),
+        ));
 
-          return historyAsync.when(
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Lista / Sales History'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.date_range),
+                onPressed: () async {
+                  final initialRange = ref.read(listaDateRangeProvider);
+                  final now = DateTime.now();
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    initialDateRange: initialRange,
+                    firstDate: DateTime(2020),
+                    lastDate: now,
+                  );
+                  if (picked != null) {
+                    ref.read(listaDateRangeProvider.notifier).setRange(picked);
+                  }
+                },
+                tooltip: 'Filter by Date',
+              ),
+              if (dateRange != null)
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => ref.read(listaDateRangeProvider.notifier).setRange(null),
+                  tooltip: 'Clear Filter',
+                ),
+              historyAsync.when(
+                data: (entries) => IconButton(
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  onPressed: entries.isEmpty
+                      ? null
+                      : () => ListaReportService.generateAndDownloadPdf(
+                            store: store,
+                            entries: entries,
+                          ),
+                  tooltip: 'Download PDF Report',
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (error, stack) => const SizedBox.shrink(),
+              ),
+            ],
+          ),
+          body: historyAsync.when(
             data: (entries) {
-              if (entries.isEmpty) return const Center(child: Text('No transactions recorded yet.'));
+              if (entries.isEmpty) {
+                return const Center(child: Text('No transactions recorded yet.'));
+              }
 
               return ListView.builder(
                 itemCount: entries.length,
@@ -45,11 +111,11 @@ class ListaHistoryScreen extends ConsumerWidget {
                       ),
                       children: [
                         ...entry.items.map((item) => ListTile(
-                          dense: true,
-                          title: Text(item.productName),
-                          subtitle: Text('₱${item.price} x ${item.quantity}'),
-                          trailing: Text('₱${(item.price * item.quantity).toStringAsFixed(2)}'),
-                        )),
+                              dense: true,
+                              title: Text(item.productName),
+                              subtitle: Text('₱${item.price} x ${item.quantity}'),
+                              trailing: Text('₱${(item.price * item.quantity).toStringAsFixed(2)}'),
+                            )),
                         OverflowBar(
                           alignment: MainAxisAlignment.end,
                           children: [
@@ -68,10 +134,16 @@ class ListaHistoryScreen extends ConsumerWidget {
             },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(child: Text('Error: $e')),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
+          ),
+        );
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('Lista History')),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, s) => Scaffold(
+        appBar: AppBar(title: const Text('Lista History')),
+        body: Center(child: Text('Error: $e')),
       ),
     );
   }

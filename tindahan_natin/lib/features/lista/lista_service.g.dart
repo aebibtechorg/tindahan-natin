@@ -63,7 +63,7 @@ final class ListaHistoryProvider
     with $FutureModifier<List<ListaEntry>>, $FutureProvider<List<ListaEntry>> {
   ListaHistoryProvider._({
     required ListaHistoryFamily super.from,
-    required String super.argument,
+    required (String, {DateTime? startDate, DateTime? endDate}) super.argument,
   }) : super(
          retry: null,
          name: r'listaHistoryProvider',
@@ -79,7 +79,7 @@ final class ListaHistoryProvider
   String toString() {
     return r'listaHistoryProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -90,8 +90,14 @@ final class ListaHistoryProvider
 
   @override
   FutureOr<List<ListaEntry>> create(Ref ref) {
-    final argument = this.argument as String;
-    return listaHistory(ref, argument);
+    final argument =
+        this.argument as (String, {DateTime? startDate, DateTime? endDate});
+    return listaHistory(
+      ref,
+      argument.$1,
+      startDate: argument.startDate,
+      endDate: argument.endDate,
+    );
   }
 
   @override
@@ -105,10 +111,14 @@ final class ListaHistoryProvider
   }
 }
 
-String _$listaHistoryHash() => r'1a7dec986686dd6e51b47f225d8e101fcff9fc35';
+String _$listaHistoryHash() => r'21017a412ccde9c802cc6d88eeba0a4504bf982c';
 
 final class ListaHistoryFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<ListaEntry>>, String> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<ListaEntry>>,
+          (String, {DateTime? startDate, DateTime? endDate})
+        > {
   ListaHistoryFamily._()
     : super(
         retry: null,
@@ -118,8 +128,14 @@ final class ListaHistoryFamily extends $Family
         isAutoDispose: true,
       );
 
-  ListaHistoryProvider call(String storeId) =>
-      ListaHistoryProvider._(argument: storeId, from: this);
+  ListaHistoryProvider call(
+    String storeId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) => ListaHistoryProvider._(
+    argument: (storeId, startDate: startDate, endDate: endDate),
+    from: this,
+  );
 
   @override
   String toString() => r'listaHistoryProvider';
@@ -138,7 +154,7 @@ final class PublicListaHistoryProvider
     with $FutureModifier<List<ListaEntry>>, $FutureProvider<List<ListaEntry>> {
   PublicListaHistoryProvider._({
     required PublicListaHistoryFamily super.from,
-    required String super.argument,
+    required (String, {DateTime? startDate, DateTime? endDate}) super.argument,
   }) : super(
          retry: null,
          name: r'publicListaHistoryProvider',
@@ -154,7 +170,7 @@ final class PublicListaHistoryProvider
   String toString() {
     return r'publicListaHistoryProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -165,8 +181,14 @@ final class PublicListaHistoryProvider
 
   @override
   FutureOr<List<ListaEntry>> create(Ref ref) {
-    final argument = this.argument as String;
-    return publicListaHistory(ref, argument);
+    final argument =
+        this.argument as (String, {DateTime? startDate, DateTime? endDate});
+    return publicListaHistory(
+      ref,
+      argument.$1,
+      startDate: argument.startDate,
+      endDate: argument.endDate,
+    );
   }
 
   @override
@@ -181,10 +203,14 @@ final class PublicListaHistoryProvider
 }
 
 String _$publicListaHistoryHash() =>
-    r'888ca24e6747c347070d9d914486e8a35c87f304';
+    r'7fa3dcb8b111d6b2f2a8cc5cbd28fc4e7ac9c754';
 
 final class PublicListaHistoryFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<ListaEntry>>, String> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<ListaEntry>>,
+          (String, {DateTime? startDate, DateTime? endDate})
+        > {
   PublicListaHistoryFamily._()
     : super(
         retry: null,
@@ -194,8 +220,14 @@ final class PublicListaHistoryFamily extends $Family
         isAutoDispose: true,
       );
 
-  PublicListaHistoryProvider call(String storeId) =>
-      PublicListaHistoryProvider._(argument: storeId, from: this);
+  PublicListaHistoryProvider call(
+    String storeId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) => PublicListaHistoryProvider._(
+    argument: (storeId, startDate: startDate, endDate: endDate),
+    from: this,
+  );
 
   @override
   String toString() => r'publicListaHistoryProvider';

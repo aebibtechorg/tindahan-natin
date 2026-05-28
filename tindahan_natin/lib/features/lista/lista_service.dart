@@ -15,13 +15,21 @@ class ListaService {
     return ListaEntry.fromJson(response.data);
   }
 
-  Future<List<ListaEntry>> getListaEntries(String storeId) async {
-    final response = await _dio.get('/lista', queryParameters: {'storeId': storeId});
+  Future<List<ListaEntry>> getListaEntries(String storeId, {DateTime? startDate, DateTime? endDate}) async {
+    final response = await _dio.get('/lista', queryParameters: {
+      'storeId': storeId,
+      if (startDate != null) 'startDate': startDate.toUtc().toIso8601String(),
+      if (endDate != null) 'endDate': endDate.toUtc().toIso8601String(),
+    });
     return (response.data as List).map((e) => ListaEntry.fromJson(e)).toList();
   }
 
-  Future<List<ListaEntry>> getPublicListaEntries(String storeId) async {
-    final response = await _dio.get('/public/lista', queryParameters: {'storeId': storeId});
+  Future<List<ListaEntry>> getPublicListaEntries(String storeId, {DateTime? startDate, DateTime? endDate}) async {
+    final response = await _dio.get('/public/lista', queryParameters: {
+      'storeId': storeId,
+      if (startDate != null) 'startDate': startDate.toUtc().toIso8601String(),
+      if (endDate != null) 'endDate': endDate.toUtc().toIso8601String(),
+    });
     return (response.data as List).map((e) => ListaEntry.fromJson(e)).toList();
   }
 
@@ -40,11 +48,11 @@ ListaService listaService(Ref ref) {
 }
 
 @riverpod
-Future<List<ListaEntry>> listaHistory(Ref ref, String storeId) {
-  return ref.watch(listaServiceProvider).getListaEntries(storeId);
+Future<List<ListaEntry>> listaHistory(Ref ref, String storeId, {DateTime? startDate, DateTime? endDate}) {
+  return ref.watch(listaServiceProvider).getListaEntries(storeId, startDate: startDate, endDate: endDate);
 }
 
 @riverpod
-Future<List<ListaEntry>> publicListaHistory(Ref ref, String storeId) {
-  return ref.watch(listaServiceProvider).getPublicListaEntries(storeId);
+Future<List<ListaEntry>> publicListaHistory(Ref ref, String storeId, {DateTime? startDate, DateTime? endDate}) {
+  return ref.watch(listaServiceProvider).getPublicListaEntries(storeId, startDate: startDate, endDate: endDate);
 }
