@@ -72,10 +72,15 @@ public static class ListaEndpoints
             ));
         }).AllowAnonymous();
 
-        publicGroup.MapGet("/", async (Guid storeId, TindahanDbContext db) =>
+        publicGroup.MapGet("/", async (Guid storeId, DateTimeOffset? startDate, DateTimeOffset? endDate, TindahanDbContext db) =>
         {
-            var entries = await db.ListaEntries
-                .Where(e => e.StoreId == storeId)
+            var query = db.ListaEntries
+                .Where(e => e.StoreId == storeId);
+
+            if (startDate.HasValue) query = query.Where(e => e.CreatedAt >= startDate.Value);
+            if (endDate.HasValue) query = query.Where(e => e.CreatedAt <= endDate.Value);
+
+            var entries = await query
                 .OrderByDescending(e => e.CreatedAt)
                 .Include(e => e.Items)
                 .ToListAsync();
@@ -108,14 +113,19 @@ public static class ListaEndpoints
 
         var protectedGroup = routes.MapGroup("/api/lista").WithTags("Lista (Protected)").RequireAuthorization();
 
-        protectedGroup.MapGet("/", async (HttpContext context, TindahanDbContext db, Guid storeId) =>
+        protectedGroup.MapGet("/", async (HttpContext context, TindahanDbContext db, Guid storeId, DateTimeOffset? startDate, DateTimeOffset? endDate) =>
         {
             var userId = context.User.GetUserId();
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
             if (!await db.OwnsStoreAsync(userId, storeId)) return Results.Forbid();
 
-            var entries = await db.ListaEntries
-                .Where(e => e.StoreId == storeId)
+            var query = db.ListaEntries
+                .Where(e => e.StoreId == storeId);
+
+            if (startDate.HasValue) query = query.Where(e => e.CreatedAt >= startDate.Value);
+            if (endDate.HasValue) query = query.Where(e => e.CreatedAt <= endDate.Value);
+
+            var entries = await query
                 .OrderByDescending(e => e.CreatedAt)
                 .Include(e => e.Items)
                 .ToListAsync();
