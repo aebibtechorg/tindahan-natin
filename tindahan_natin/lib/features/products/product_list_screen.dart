@@ -106,6 +106,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 onPressed: () {
                   setState(() {
                     if (_isSearching) {
+                      _debounce?.cancel();
                       _isSearching = false;
                       _searchController.clear();
                       _query = '';
