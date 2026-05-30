@@ -242,7 +242,7 @@ class ProductService {
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
       final List data = response.data as List;
-      await _local.cacheProducts(storeId, data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
+      // Do not cache search results to avoid overwriting the full list
       return data.map((e) => Product.fromJson(e)).toList();
     } catch (error) {
       return cached;

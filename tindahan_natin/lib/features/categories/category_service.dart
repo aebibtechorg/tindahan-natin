@@ -52,10 +52,7 @@ class CategoryService {
     try {
       final res = await _dio.get('/categories', queryParameters: {'storeId': storeId, 'q': query});
       final List data = res.data as List;
-      await _local.cacheRecords(
-        _cacheKey(storeId),
-        data.map((e) => Map<String, dynamic>.from(e as Map)).toList(),
-      );
+      // Do not cache search results to avoid overwriting the full list
       return data.map((e) => Category.fromJson(Map<String, dynamic>.from(e as Map))).toList();
     } catch (error) {
       return cached;

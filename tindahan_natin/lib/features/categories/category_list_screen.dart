@@ -79,6 +79,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                 icon: Icon(_isSearching ? Icons.close : Icons.search),
                 onPressed: () => setState(() {
                   if (_isSearching) {
+                    _debounce?.cancel();
                     _isSearching = false;
                     _searchController.clear();
                     _query = '';

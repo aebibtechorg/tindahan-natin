@@ -11,6 +11,7 @@ import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/features/store_map/map_service.dart';
+import 'package:tindahan_natin/features/store_map/visual_shelf_selector.dart';
 import 'package:tindahan_natin/shared/widgets/barcode_scanner_dialog.dart';
 
 class AddProductScreen extends ConsumerStatefulWidget {
@@ -359,25 +360,39 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                       final shelvesAsync = ref.watch(shelvesProvider(storeId));
                       return shelvesAsync.when(
                         data: (shelves) {
-                          return DropdownButtonFormField<String>(
-                            initialValue: _selectedShelfId ?? '',
-                            decoration: const InputDecoration(
-                              labelText: 'Shelf (optional)',
-                            ),
-                            items: [
-                              const DropdownMenuItem(
-                                value: '',
-                                child: Text('Unassigned'),
-                              ),
-                              ...shelves.map(
-                                (s) => DropdownMenuItem(
-                                  value: s.id,
-                                  child: Text(s.name),
+                          final selectedShelf = shelves
+                              .where((s) => s.id == _selectedShelfId)
+                              .firstOrNull;
+                          return InkWell(
+                            onTap: () async {
+                              final result = await Navigator.push<String>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => VisualShelfSelector(
+                                    storeId: storeId,
+                                    initialShelfId: _selectedShelfId,
+                                  ),
+                                  fullscreenDialog: true,
                                 ),
+                              );
+                              if (result != null) {
+                                setState(
+                                  () =>
+                                      _selectedShelfId =
+                                          (result == '' ? null : result),
+                                );
+                              }
+                            },
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Shelf (optional)',
+                                prefixIcon: Icon(Icons.map),
+                                suffixIcon: Icon(Icons.arrow_drop_down),
                               ),
-                            ],
-                            onChanged: (v) => setState(
-                              () => _selectedShelfId = (v == '' ? null : v),
+                              child: Text(
+                                selectedShelf?.name ?? 'Unassigned',
+                                style: const TextStyle(fontSize: 16),
+                              ),
                             ),
                           );
                         },
