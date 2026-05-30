@@ -188,6 +188,8 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
         'categoryId': selectedCategoryId,
         'storeId': storeId,
         'imageUrl': _imageUrl,
+        'barcode': _barcodeController.text,
+        'description': _descriptionController.text,
       };
       if (selectedShelfId != null) {
         data['shelfId'] = selectedShelfId;
