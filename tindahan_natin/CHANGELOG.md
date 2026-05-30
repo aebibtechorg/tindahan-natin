@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0+13] - 2026-05-30
+
+### Added
+- Visual selection of shelf on product forms
+
+### Fixed
+- Missing barcode and description on product update
+- Search fixes
+
 ## [1.0.0+12] - 2026-05-28
 
 ### Added
