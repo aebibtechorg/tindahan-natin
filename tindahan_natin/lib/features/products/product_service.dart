@@ -105,9 +105,10 @@ class ProductService {
     }
   }
 
-  Future<void> updateProduct(String id, Map<String, dynamic> data) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> updateProduct(String id, Map<String, dynamic> data, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('products_', id)?['storeId']?.toString();
+    final existing = sId != null ? _local.getCachedRecordById(_cacheKey(sId), id) : null;
+    
     final optimisticMap = {
       ...?existing,
       ...data,
@@ -115,9 +116,9 @@ class ProductService {
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     };
 
-    if (storeId != null) {
-      await _local.upsertCachedProduct(storeId, optimisticMap);
-      await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
+    if (sId != null) {
+      await _local.upsertCachedProduct(sId, optimisticMap);
+      await _local.upsertCachedRecord(_cacheKey(sId), optimisticMap);
     }
 
     try {
@@ -129,19 +130,18 @@ class ProductService {
         'method': 'PUT',
         'path': '/products/$id',
         'body': data,
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
   }
 
-  Future<void> deleteProduct(String id) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> deleteProduct(String id, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('products_', id)?['storeId']?.toString();
 
-    if (storeId != null) {
-      await _local.removeCachedProduct(storeId, id);
-      await _local.removeCachedRecord(_cacheKey(storeId), id);
+    if (sId != null) {
+      await _local.removeCachedProduct(sId, id);
+      await _local.removeCachedRecord(_cacheKey(sId), id);
     }
 
     try {
@@ -152,7 +152,7 @@ class ProductService {
         'resource': 'products',
         'method': 'DELETE',
         'path': '/products/$id',
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
@@ -307,7 +307,7 @@ class Products extends _$Products {
     state = AsyncData(updated);
     
     try {
-      await ref.read(productServiceProvider).updateProduct(id, data);
+      await ref.read(productServiceProvider).updateProduct(id, data, storeId: storeId);
     } catch (e) {
       // Keep optimistic since it's queued
     }
@@ -318,7 +318,7 @@ class Products extends _$Products {
     state = AsyncData(previousState.where((p) => p.id != id).toList());
     
     try {
-      await ref.read(productServiceProvider).deleteProduct(id);
+      await ref.read(productServiceProvider).deleteProduct(id, storeId: storeId);
     } catch (e) {
       // Keep it deleted since it's queued
     }

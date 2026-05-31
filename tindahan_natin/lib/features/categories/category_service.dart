@@ -86,9 +86,10 @@ class CategoryService {
     }
   }
 
-  Future<void> updateCategory(String id, String name) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('categories_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> updateCategory(String id, String name, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('categories_', id)?['storeId']?.toString();
+    final existing = sId != null ? _local.getCachedRecordById(_cacheKey(sId), id) : null;
+    
     final optimistic = {
       ...?existing,
       'id': id,
@@ -96,8 +97,8 @@ class CategoryService {
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     };
 
-    if (storeId != null) {
-      await _local.upsertCachedRecord(_cacheKey(storeId), optimistic);
+    if (sId != null) {
+      await _local.upsertCachedRecord(_cacheKey(sId), optimistic);
     }
 
     try {
@@ -108,18 +109,17 @@ class CategoryService {
         'method': 'PUT',
         'path': '/categories/$id',
         'body': {'name': name},
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
   }
 
-  Future<void> deleteCategory(String id) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('categories_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> deleteCategory(String id, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('categories_', id)?['storeId']?.toString();
 
-    if (storeId != null) {
-      await _local.removeCachedRecord(_cacheKey(storeId), id);
+    if (sId != null) {
+      await _local.removeCachedRecord(_cacheKey(sId), id);
     }
 
     try {
@@ -129,7 +129,7 @@ class CategoryService {
         'resource': 'categories',
         'method': 'DELETE',
         'path': '/categories/$id',
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
@@ -179,7 +179,7 @@ class Categories extends _$Categories {
     state = AsyncData(updated);
     
     try {
-      await ref.read(categoryServiceProvider).updateCategory(id, name);
+      await ref.read(categoryServiceProvider).updateCategory(id, name, storeId: storeId);
     } catch (e) {
       // Keep optimistic
     }
@@ -190,7 +190,7 @@ class Categories extends _$Categories {
     state = AsyncData(previousState.where((c) => c.id != id).toList());
     
     try {
-      await ref.read(categoryServiceProvider).deleteCategory(id);
+      await ref.read(categoryServiceProvider).deleteCategory(id, storeId: storeId);
     } catch (e) {
       // Keep deleted
     }

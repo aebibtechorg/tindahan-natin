@@ -3,7 +3,7 @@ using NpgsqlTypes;
 
 namespace TindahanNatin.Server.Models;
 
-public class Product
+public class Product : ISoftDelete, IAuditable
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;

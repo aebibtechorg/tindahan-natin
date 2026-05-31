@@ -26,9 +26,7 @@ public static class ListaEndpoints
                 StoreId = dto.StoreId,
                 StaffName = dto.StaffName,
                 CustomerName = dto.CustomerName,
-                IsCredit = dto.IsCredit,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                IsCredit = dto.IsCredit
             };
 
             decimal total = 0;
@@ -51,7 +49,6 @@ public static class ListaEndpoints
 
                 // Deduct from inventory
                 product.Quantity -= item.Quantity;
-                product.UpdatedAt = DateTimeOffset.UtcNow;
             }
 
             entry.TotalAmount = total;
@@ -103,7 +100,6 @@ public static class ListaEndpoints
             if (entry == null) return Results.NotFound();
 
             entry.IsCredit = !entry.IsCredit; // Toggle between paid (false) and unpaid (true)
-            entry.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
 
             await hubContext.Clients.Group(entry.StoreId.ToString()).SendAsync("ListaUpdated", entry.StoreId);

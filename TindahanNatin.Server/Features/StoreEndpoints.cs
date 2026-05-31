@@ -36,7 +36,6 @@ public static class StoreEndpoints
             if (store == null) return Results.NotFound();
 
             store.Name = dto.Name;
-            store.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).RequireAuthorization();

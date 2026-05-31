@@ -37,7 +37,7 @@ public static class MapEndpoints
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
             if (!await db.OwnsStoreAsync(userId, dto.StoreId)) return Results.Forbid();
 
-            var shelf = new Shelf { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId, X = dto.X, Y = dto.Y, Rotation = dto.Rotation, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+            var shelf = new Shelf { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId, X = dto.X, Y = dto.Y, Rotation = dto.Rotation };
             db.Shelves.Add(shelf);
             await db.SaveChangesAsync();
             return Results.Created($"/api/map/shelves/{shelf.Id}", new ShelfDto(shelf.Id, shelf.Name, shelf.StoreId, shelf.X, shelf.Y, shelf.Rotation, shelf.CreatedAt, shelf.UpdatedAt, shelf.IsDeleted, shelf.DeletedAt));
@@ -55,7 +55,6 @@ public static class MapEndpoints
             shelf.X = dto.X;
             shelf.Y = dto.Y;
             shelf.Rotation = dto.Rotation;
-            shelf.UpdatedAt = DateTimeOffset.UtcNow;
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -69,17 +68,9 @@ public static class MapEndpoints
             var shelf = await db.OwnedShelves(userId).FirstOrDefaultAsync(s => s.Id == id);
             if (shelf is null) return Results.NotFound();
 
-            shelf.IsDeleted = true;
-            shelf.DeletedAt = DateTimeOffset.UtcNow;
-            shelf.UpdatedAt = shelf.DeletedAt.Value;
-
             var locations = await db.OwnedProductLocations(userId).Where(pl => pl.ShelfId == id).ToListAsync();
-            foreach (var location in locations)
-            {
-                location.IsDeleted = true;
-                location.DeletedAt = shelf.DeletedAt;
-                location.UpdatedAt = shelf.DeletedAt.Value;
-            }
+            db.ProductLocations.RemoveRange(locations);
+            db.Shelves.Remove(shelf);
 
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -127,9 +118,7 @@ public static class MapEndpoints
                 Id = dto.Id ?? Guid.NewGuid(),
                 ProductId = dto.ProductId,
                 ShelfId = dto.ShelfId,
-                Position = dto.Position,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                Position = dto.Position
             };
             db.ProductLocations.Add(location);
             await db.SaveChangesAsync();
@@ -144,9 +133,7 @@ public static class MapEndpoints
             var location = await db.OwnedProductLocations(userId).FirstOrDefaultAsync(pl => pl.Id == id);
             if (location is null) return Results.NotFound();
 
-            location.IsDeleted = true;
-            location.DeletedAt = DateTimeOffset.UtcNow;
-            location.UpdatedAt = location.DeletedAt.Value;
+            db.ProductLocations.Remove(location);
 
             await db.SaveChangesAsync();
             return Results.NoContent();

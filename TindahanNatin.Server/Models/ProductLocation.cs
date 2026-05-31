@@ -2,7 +2,7 @@ using System;
 
 namespace TindahanNatin.Server.Models;
 
-public class ProductLocation
+public class ProductLocation : ISoftDelete, IAuditable
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid ProductId { get; set; }

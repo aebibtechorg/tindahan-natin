@@ -66,9 +66,9 @@ class MapService {
     }
   }
 
-  Future<void> updateShelf(String id, Map<String, dynamic> data) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('shelves_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> updateShelf(String id, Map<String, dynamic> data, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('shelves_', id)?['storeId']?.toString();
+    final existing = sId != null ? _local.getCachedRecordById(_shelvesKey(sId), id) : null;
     final optimistic = {
       ...?existing,
       ...data,
@@ -84,19 +84,18 @@ class MapService {
         'method': 'PUT',
         'path': '/map/shelves/$id',
         'body': data,
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
 
-    if (storeId != null) {
-      await _local.upsertCachedRecord(_shelvesKey(storeId), optimistic);
+    if (sId != null) {
+      await _local.upsertCachedRecord(_shelvesKey(sId), optimistic);
     }
   }
 
-  Future<void> deleteShelf(String id) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('shelves_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> deleteShelf(String id, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('shelves_', id)?['storeId']?.toString();
 
     try {
       await _dio.delete('/map/shelves/$id');
@@ -105,13 +104,13 @@ class MapService {
         'resource': 'shelves',
         'method': 'DELETE',
         'path': '/map/shelves/$id',
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
 
-    if (storeId != null) {
-      await _local.removeCachedRecord(_shelvesKey(storeId), id);
+    if (sId != null) {
+      await _local.removeCachedRecord(_shelvesKey(sId), id);
     }
   }
 
@@ -156,9 +155,8 @@ class MapService {
     }
   }
 
-  Future<void> deleteProductLocation(String id) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('locations_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> deleteProductLocation(String id, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('locations_', id)?['storeId']?.toString();
 
     try {
       await _dio.delete('/map/locations/$id');
@@ -167,13 +165,13 @@ class MapService {
         'resource': 'productLocations',
         'method': 'DELETE',
         'path': '/map/locations/$id',
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
 
-    if (storeId != null) {
-      await _local.removeCachedRecord(_locationsKey(storeId), id);
+    if (sId != null) {
+      await _local.removeCachedRecord(_locationsKey(sId), id);
     }
   }
 }

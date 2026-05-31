@@ -150,7 +150,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
         return;
       }
 
-      _transformationController.value = Matrix4.identity()
+      _transformationController.value = vm.Matrix4.identity()
         ..setTranslationRaw(
           viewportSize.width / 2 - _canvasOrigin,
           viewportSize.height / 2 - _canvasOrigin,
@@ -249,7 +249,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         _selectedShelfIds.clear();
                       });
                       try {
-                        await ref.read(mapServiceProvider).deleteShelf(id);
+                        await ref.read(mapServiceProvider).deleteShelf(id, storeId: storeId);
                         ref.invalidate(shelvesProvider(storeId));
                         setState(() => _removeLocalShelfState([id]));
                       } catch (e) {
@@ -291,7 +291,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       });
                       for (final id in idsToDelete) {
                         try {
-                          await ref.read(mapServiceProvider).deleteShelf(id);
+                          await ref.read(mapServiceProvider).deleteShelf(id, storeId: storeId);
                         } catch (e) {
                           setState(() => _optimisticRemovedIds.remove(id));
                           if (context.mounted) {
@@ -403,7 +403,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                   delta,
                                 ),
                             onBulkCommit: (ids) =>
-                                _commitBulkShelfMove(displayedShelves, ids),
+                                _commitBulkShelfMove(displayedShelves, ids, storeId),
                           ),
                         ),
                       ],
@@ -459,6 +459,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   Future<void> _commitBulkShelfMove(
     List<Shelf> shelves,
     Set<String> shelfIds,
+    String storeId,
   ) async {
     final snapshot = Map<String, Shelf>.from(_bulkMoveStartShelves);
 
@@ -475,7 +476,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           'x': updatedShelf.x,
           'y': updatedShelf.y,
           'rotation': updatedShelf.rotation,
-        });
+        }, storeId: storeId);
       }
     } catch (e) {
       setState(() {
@@ -731,7 +732,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                       try {
                                         await ref
                                             .read(mapServiceProvider)
-                                            .deleteProductLocation(loc.id);
+                                            .deleteProductLocation(loc.id, storeId: storeId);
                                         setDialogState(
                                           () => localDeletedProductLocationIds
                                               .remove(loc.id),
@@ -795,7 +796,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                 'x': updatedShelf.x,
                                 'y': updatedShelf.y,
                                 'rotation': rotation,
-                              });
+                              }, storeId: storeId);
                           setState(
                             () => _optimisticShelves[shelf.id] = updatedShelf,
                           );
@@ -992,7 +993,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               'x': x,
               'y': y,
               'rotation': rotation,
-            });
+            }, storeId: widget.storeId);
             widget.onOptimisticUpdate?.call(updatedShelf);
           } catch (e) {
             setState(() {

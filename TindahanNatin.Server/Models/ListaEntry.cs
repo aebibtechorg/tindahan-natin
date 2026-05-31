@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TindahanNatin.Server.Models;
 
-public class ListaEntry
+public class ListaEntry : IAuditable
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid StoreId { get; set; }
