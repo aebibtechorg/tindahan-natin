@@ -96,19 +96,28 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
               return RefreshIndicator(
                 onRefresh: () => ref.read(categoriesProvider(storeId).notifier).refresh(),
-                child: ListView.builder(
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    if (index % 10 == 9) {
-                      return const Column(
-                        children: [
-                          InlineAdWidget(),
-                          Divider(),
-                        ],
-                      );
-                    }
-                    final c = categories[index];
-                    return ListTile(
+                child: Builder(builder: (context) {
+                  if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
+
+                  const adInterval = 10;
+                  final itemCount = categories.length + (categories.length / adInterval).floor();
+
+                  return ListView.builder(
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      final isAd = (index + 1) % (adInterval + 1) == 0;
+                      if (isAd) {
+                        return const Column(
+                          children: [
+                            InlineAdWidget(),
+                            Divider(),
+                          ],
+                        );
+                      }
+
+                      final categoryIndex = index - (index / (adInterval + 1)).floor();
+                      final c = categories[categoryIndex];
+                      return ListTile(
                       leading: const Icon(Icons.label),
                       title: Text(c.name),
                       trailing: Row(
@@ -165,9 +174,10 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                       ),
                     );
                   },
-                ),
-              );
-            },
+                );
+              }),
+            );
+          },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => Center(child: Text('Error loading categories: $e')),
           ),
