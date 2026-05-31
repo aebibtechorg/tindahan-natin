@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:tindahan_natin/core/config/public_web_config.dart';
 import 'package:tindahan_natin/core/network/connectivity_provider.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
+import 'package:tindahan_natin/features/dashboard/store.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
@@ -25,6 +28,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(interstitialAdProvider).showAdIfReady();
     });
+  }
+
+  Future<void> _shareStore(Store store) async {
+    final shareUrl = buildPublicStoreUrl(slug: store.slug);
+    if (shareUrl == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Public store sharing is not configured')),
+      );
+      return;
+    }
+
+    final shareText = store.name.trim().isEmpty
+        ? shareUrl
+        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
+
+    await SharePlus.instance.share(ShareParams(text: shareText));
   }
 
   @override
@@ -183,6 +203,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: Icons.storefront,
                           onTap: () => context.push('/store/${store.slug}'),
                         ),
+                        if (PublicWebConfig.hasBaseUrl)
+                          _QuickAction(
+                            label: 'Share',
+                            icon: Icons.share_outlined,
+                            onTap: () => _shareStore(store),
+                          ),
                       ],
                     ),
                   ),
