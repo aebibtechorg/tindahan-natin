@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/lista/lista_entry.dart';
 import 'package:tindahan_natin/features/lista/lista_service.dart';
@@ -62,15 +63,27 @@ class PublicListaScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, s) => Center(child: Text('Error: $e')),
+                error: (e, s) => AppErrorWidget(
+                  error: e,
+                  stackTrace: s,
+                  onRetry: () => ref.invalidate(publicListaHistoryProvider(storeId)),
+                ),
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              onRetry: () => ref.invalidate(publicStoreInfoProvider(slug)),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
+        error: (e, s) => AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(listaStaffNameProvider),
+        ),
       ),
       floatingActionButton: staffNameAsync.value != null
           ? FloatingActionButton.extended(

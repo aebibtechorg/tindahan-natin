@@ -50,8 +50,8 @@ jobs:
       run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
       working-directory: ./terraform
 
-    - name: Terraform Apply Artifact Registry
-      run: terraform apply -target=google_artifact_registry_repository.repo -auto-approve
+    - name: Terraform Apply Infrastructure
+      run: terraform apply -target=google_artifact_registry_repository.repo -target=cloudflare_r2_bucket.products -target=cloudflare_r2_bucket.backups -auto-approve
       working-directory: ./terraform
       env:
         TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
@@ -83,6 +83,40 @@ jobs:
 
     - name: Install EF Tool
       run: dotnet tool install --global dotnet-ef
+
+    - name: Database Backup
+      run: |
+        # Parse connection string to get PostgreSQL URI
+        # Expecting: Host=myhost;Database=mydb;Username=myuser;Password=mypass
+        # Or: Server=myhost;Database=mydb;User Id=myuser;Password=mypass
+        # This is a bit fragile but common for .NET. 
+        # For a more robust way, we'd use a dedicated script.
+        
+        CONN_STR="${{ secrets.POSTGRES_CONNECTION_STRING }}"
+        
+        extract_val() {
+          echo "$CONN_STR" | grep -oEi "$1=[^;]+" | cut -d'=' -f2
+        }
+        
+        HOST=$(extract_val "Host" || extract_val "Server")
+        DB=$(extract_val "Database")
+        USER=$(extract_val "Username" || extract_val "User Id")
+        PASS=$(extract_val "Password")
+        
+        export PGPASSWORD="$PASS"
+        BACKUP_FILE="backup-$(date +%Y%m%d%H%M%S).sql.gz"
+        
+        echo "Starting backup of $DB from $HOST..."
+        pg_dump -h "$HOST" -U "$USER" -d "$DB" | gzip > "$BACKUP_FILE"
+        
+        echo "Uploading $BACKUP_FILE to R2..."
+        # Use AWS CLI with R2 endpoint
+        aws s3 cp "$BACKUP_FILE" "s3://${{ secrets.R2_BUCKET_NAME }}-backups/$BACKUP_FILE" \
+          --endpoint-url "https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+          --region auto
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY }}
 
     - name: Update Database
       run: |

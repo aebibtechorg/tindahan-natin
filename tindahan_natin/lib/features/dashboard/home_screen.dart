@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:tindahan_natin/core/config/public_web_config.dart';
+import 'package:tindahan_natin/core/network/connectivity_provider.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
+import 'package:tindahan_natin/features/dashboard/store.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
@@ -26,9 +31,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  Future<void> _shareStore(Store store) async {
+    final shareUrl = buildPublicStoreUrl(slug: store.slug);
+    if (shareUrl == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Public store sharing is not configured')),
+      );
+      return;
+    }
+
+    final shareText = store.name.trim().isEmpty
+        ? shareUrl
+        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
+
+    await SharePlus.instance.share(ShareParams(text: shareText));
+  }
+
   @override
   Widget build(BuildContext context) {
     final myStoreAsync = ref.watch(myStoreProvider);
+    final isOnline = ref.watch(isOnlineProvider);
+
+    // Refresh when internet is back
+    ref.listen(isOnlineProvider, (previous, next) {
+      if (previous == false && next == true) {
+        ref.invalidate(myStoreProvider);
+        if (myStoreAsync.value != null) {
+          ref.invalidate(storeStatsProvider(myStoreAsync.value!.id));
+        }
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -44,6 +77,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ],
+        bottom: !isOnline
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(32),
+                child: Container(
+                  color: Colors.orange,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: const Text(
+                    'Offline Mode - Showing cached data',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            : null,
       ),
       body: myStoreAsync.when(
         data: (store) {
@@ -67,10 +115,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           final statsAsync = ref.watch(storeStatsProvider(store.id));
           
-          // Connect to SignalR for real-time updates
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(realtimeClientProvider.notifier).connect(store.id);
-          });
+          // Connect to SignalR for real-time updates (only if online)
+          if (isOnline) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(realtimeClientProvider.notifier).connect(store.id);
+            });
+          }
 
           return statsAsync.when(
             data: (stats) => SingleChildScrollView(
@@ -154,6 +204,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           icon: Icons.storefront,
                           onTap: () => context.push('/store/${store.slug}'),
                         ),
+                        if (PublicWebConfig.hasBaseUrl)
+                          _QuickAction(
+                            label: 'Share',
+                            icon: Icons.share_outlined,
+                            onTap: () => _shareStore(store),
+                          ),
                       ],
                     ),
                   ),
@@ -191,11 +247,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error loading stats: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              compact: true,
+              onRetry: () => ref.invalidate(storeStatsProvider(store.id)),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
+        error: (e, s) => AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(myStoreProvider),
+        ),
       ),
     );
   }

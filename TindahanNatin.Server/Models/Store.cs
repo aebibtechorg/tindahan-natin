@@ -2,7 +2,7 @@ using System;
 
 namespace TindahanNatin.Server.Models;
 
-public class Store
+public class Store : IAuditable
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = string.Empty;

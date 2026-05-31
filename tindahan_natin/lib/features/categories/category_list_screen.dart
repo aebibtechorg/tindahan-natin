@@ -3,7 +3,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
+import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 
@@ -96,19 +98,28 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
               return RefreshIndicator(
                 onRefresh: () => ref.read(categoriesProvider(storeId).notifier).refresh(),
-                child: ListView.builder(
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    if (index % 10 == 9) {
-                      return const Column(
-                        children: [
-                          InlineAdWidget(),
-                          Divider(),
-                        ],
-                      );
-                    }
-                    final c = categories[index];
-                    return ListTile(
+                child: Builder(builder: (context) {
+                  if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
+
+                  const adInterval = 10;
+                  final itemCount = categories.length + (categories.length / adInterval).floor();
+
+                  return ListView.builder(
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      final isAd = (index + 1) % (adInterval + 1) == 0;
+                      if (isAd) {
+                        return const Column(
+                          children: [
+                            InlineAdWidget(),
+                            Divider(),
+                          ],
+                        );
+                      }
+
+                      final categoryIndex = index - (index / (adInterval + 1)).floor();
+                      final c = categories[categoryIndex];
+                      return ListTile(
                       leading: const Icon(Icons.label),
                       title: Text(c.name),
                       trailing: Row(
@@ -131,9 +142,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                               if (result != null && result.trim().isNotEmpty) {
                                 try {
                                   await ref.read(categoriesProvider(storeId).notifier).updateCategory(c.id, result.trim());
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category updated')));
+                                  if (mounted) SnackBarUtils.showSuccess(context, 'Category updated');
                                 } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+                                  if (mounted) SnackBarUtils.showError(context, e);
                                 }
                               }
                             },
@@ -154,9 +165,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                               if (confirmed == true) {
                                 try {
                                   await ref.read(categoriesProvider(storeId).notifier).deleteCategory(c.id);
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category deleted')));
+                                  if (mounted) SnackBarUtils.showSuccess(context, 'Category deleted');
                                 } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+                                  if (mounted) SnackBarUtils.showError(context, e);
                                 }
                               }
                             },
@@ -165,11 +176,16 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                       ),
                     );
                   },
-                ),
-              );
-            },
+                );
+              }),
+            );
+          },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error loading categories: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              onRetry: () => ref.read(categoriesProvider(storeId).notifier).refresh(),
+            ),
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
@@ -187,9 +203,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               if (result != null && result.trim().isNotEmpty) {
                 try {
                   await ref.read(categoriesProvider(storeId).notifier).addCategory(result.trim());
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Category created')));
+                  if (mounted) SnackBarUtils.showSuccess(context, 'Category created');
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create: $e')));
+                  if (mounted) SnackBarUtils.showError(context, e);
                 }
               }
             },

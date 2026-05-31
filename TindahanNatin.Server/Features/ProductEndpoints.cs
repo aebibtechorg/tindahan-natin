@@ -105,9 +105,7 @@ public static class ProductEndpoints
                 Description = dto.Description,
                 ImageUrl = dto.ImageUrl,
                 Barcode = dto.Barcode,
-                StoreId = dto.StoreId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                StoreId = dto.StoreId
             };
 
             db.Products.Add(product);
@@ -136,7 +134,6 @@ public static class ProductEndpoints
             product.Description = dto.Description;
             product.ImageUrl = dto.ImageUrl;
             product.Barcode = dto.Barcode;
-            product.UpdatedAt = DateTimeOffset.UtcNow;
 
             await db.SaveChangesAsync();
 
@@ -153,17 +150,9 @@ public static class ProductEndpoints
             var product = await db.OwnedProducts(userId).FirstOrDefaultAsync(p => p.Id == id);
             if (product is null) return Results.NotFound();
 
-            product.IsDeleted = true;
-            product.DeletedAt = DateTimeOffset.UtcNow;
-            product.UpdatedAt = product.DeletedAt.Value;
-
             var locations = await db.OwnedProductLocations(userId).Where(pl => pl.ProductId == id).ToListAsync();
-            foreach (var location in locations)
-            {
-                location.IsDeleted = true;
-                location.DeletedAt = product.DeletedAt;
-                location.UpdatedAt = product.DeletedAt.Value;
-            }
+            db.ProductLocations.RemoveRange(locations);
+            db.Products.Remove(product);
 
             var storeId = product.StoreId;
             await db.SaveChangesAsync();

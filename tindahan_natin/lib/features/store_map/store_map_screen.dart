@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_manager.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
+import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/features/store_map/map_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
@@ -85,7 +87,6 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
     }
 
     const shelfName = 'New Shelf';
-    final messenger = ScaffoldMessenger.maybeOf(context);
     final scenePosition = _viewportCenterScene();
     final snapX = _snapCoordinate(scenePosition.dx);
     final snapY = _snapCoordinate(scenePosition.dy);
@@ -135,7 +136,9 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
         _selectedShelfIds.remove(tempId);
       });
 
-      messenger?.showSnackBar(SnackBar(content: Text('Create failed: $e')));
+      if (context.mounted) {
+        SnackBarUtils.showError(context, e);
+      }
     }
   }
 
@@ -150,7 +153,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
         return;
       }
 
-      _transformationController.value = Matrix4.identity()
+      _transformationController.value = vm.Matrix4.identity()
         ..setTranslationRaw(
           viewportSize.width / 2 - _canvasOrigin,
           viewportSize.height / 2 - _canvasOrigin,
@@ -249,15 +252,14 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                         _selectedShelfIds.clear();
                       });
                       try {
-                        await ref.read(mapServiceProvider).deleteShelf(id);
+                        await ref.read(mapServiceProvider).deleteShelf(id, storeId: storeId);
                         ref.invalidate(shelvesProvider(storeId));
                         setState(() => _removeLocalShelfState([id]));
+                        if (context.mounted) SnackBarUtils.showSuccess(context, 'Shelf deleted');
                       } catch (e) {
                         setState(() => _optimisticRemovedIds.remove(id));
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Delete failed: $e')),
-                          );
+                          SnackBarUtils.showError(context, e);
                         }
                       }
                     }
@@ -291,20 +293,17 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                       });
                       for (final id in idsToDelete) {
                         try {
-                          await ref.read(mapServiceProvider).deleteShelf(id);
+                          await ref.read(mapServiceProvider).deleteShelf(id, storeId: storeId);
                         } catch (e) {
                           setState(() => _optimisticRemovedIds.remove(id));
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Delete failed for $id: $e'),
-                              ),
-                            );
+                            SnackBarUtils.showError(context, 'Delete failed for $id');
                           }
                         }
                       }
                       setState(() => _removeLocalShelfState(idsToDelete));
                       ref.invalidate(shelvesProvider(storeId));
+                      if (context.mounted) SnackBarUtils.showSuccess(context, '${idsToDelete.length} shelves deleted');
                     }
                   },
                 ),
@@ -403,7 +402,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                   delta,
                                 ),
                             onBulkCommit: (ids) =>
-                                _commitBulkShelfMove(displayedShelves, ids),
+                                _commitBulkShelfMove(displayedShelves, ids, storeId),
                           ),
                         ),
                       ],
@@ -413,14 +412,22 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              onRetry: () => ref.invalidate(shelvesProvider(storeId)),
+            ),
           ),
         );
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) =>
-          Scaffold(body: Center(child: Text('Error loading store: $e'))),
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) => Scaffold(
+        body: AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(myStoreProvider),
+        ),
+      ),
     );
   }
 
@@ -459,6 +466,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   Future<void> _commitBulkShelfMove(
     List<Shelf> shelves,
     Set<String> shelfIds,
+    String storeId,
   ) async {
     final snapshot = Map<String, Shelf>.from(_bulkMoveStartShelves);
 
@@ -475,7 +483,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           'x': updatedShelf.x,
           'y': updatedShelf.y,
           'rotation': updatedShelf.rotation,
-        });
+        }, storeId: storeId);
       }
     } catch (e) {
       setState(() {
@@ -731,7 +739,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                       try {
                                         await ref
                                             .read(mapServiceProvider)
-                                            .deleteProductLocation(loc.id);
+                                            .deleteProductLocation(loc.id, storeId: storeId);
                                         setDialogState(
                                           () => localDeletedProductLocationIds
                                               .remove(loc.id),
@@ -795,16 +803,15 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                 'x': updatedShelf.x,
                                 'y': updatedShelf.y,
                                 'rotation': rotation,
-                              });
+                              }, storeId: storeId);
                           setState(
                             () => _optimisticShelves[shelf.id] = updatedShelf,
                           );
+                          if (context.mounted) SnackBarUtils.showSuccess(context, 'Shelf updated');
                         } catch (e) {
                           setState(() => _optimisticShelves.remove(shelf.id));
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Save failed: $e')),
-                            );
+                            SnackBarUtils.showError(context, e);
                           }
                         }
                       }
@@ -976,9 +983,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               await widget.onBulkCommit?.call(widget.selectedShelfIds);
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Bulk update failed: $e')),
-                );
+                SnackBarUtils.showError(context, e);
               }
             }
             return;
@@ -992,7 +997,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               'x': x,
               'y': y,
               'rotation': rotation,
-            });
+            }, storeId: widget.storeId);
             widget.onOptimisticUpdate?.call(updatedShelf);
           } catch (e) {
             setState(() {
@@ -1004,9 +1009,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               widget.shelf.copyWith(x: prevX, y: prevY, rotation: prevRotation),
             );
             if (context.mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+              SnackBarUtils.showError(context, e);
             }
           }
         },

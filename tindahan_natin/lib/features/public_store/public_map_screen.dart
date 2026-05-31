@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
 import 'package:tindahan_natin/features/store_map/store_shelf_tile.dart';
@@ -28,7 +29,11 @@ class PublicMapScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
+        error: (e, s) => AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(publicStoreInfoProvider(slug)),
+        ),
       ),
     );
   }

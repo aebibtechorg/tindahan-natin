@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
@@ -50,21 +51,29 @@ class SyncCoordinator {
     try {
       final credentials = await _ref.read(authStateProvider.future);
       if (credentials == null) {
+        debugPrint('SyncCoordinator: No credentials, skipping sync');
         return;
       }
 
       final pending = _local.getPendingMutations();
+      if (pending.isEmpty) return;
+
+      debugPrint('SyncCoordinator: Syncing ${pending.length} mutations...');
       for (final mutation in pending) {
         final applied = await _applyMutation(mutation);
         if (!applied) {
+          debugPrint('SyncCoordinator: Failed to apply mutation, stopping sync');
           break;
         }
 
         final mutationId = mutation['mutationId']?.toString();
         if (mutationId != null && mutationId.isNotEmpty) {
           await _local.removePendingMutation(mutationId);
+          debugPrint('SyncCoordinator: Applied and removed mutation $mutationId');
         }
       }
+    } catch (e) {
+      debugPrint('SyncCoordinator: Sync error: $e');
     } finally {
       _syncInProgress = false;
     }
@@ -77,6 +86,8 @@ class SyncCoordinator {
     final body = mutation['body'];
     final storeId = mutation['storeId']?.toString();
     final entityId = mutation['entityId']?.toString();
+
+    debugPrint('SyncCoordinator: Applying $method $path for $resource');
 
     if (resource == null || method == null || path == null) {
       return false;

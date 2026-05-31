@@ -71,7 +71,7 @@ public static class CategoryEndpoints
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
             if (!await db.OwnsStoreAsync(userId, dto.StoreId)) return Results.Forbid();
 
-            var cat = new Category { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+            var cat = new Category { Id = dto.Id ?? Guid.NewGuid(), Name = dto.Name, StoreId = dto.StoreId };
             db.Categories.Add(cat);
             await db.SaveChangesAsync();
             return Results.Created($"/api/categories/{cat.Id}", new CategoryDto(cat.Id, cat.Name, cat.StoreId, cat.CreatedAt, cat.UpdatedAt, cat.IsDeleted, cat.DeletedAt));
@@ -85,7 +85,6 @@ public static class CategoryEndpoints
             var cat = await db.OwnedCategories(userId).FirstOrDefaultAsync(c => c.Id == id);
             if (cat is null) return Results.NotFound();
             cat.Name = dto.Name;
-            cat.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
             return Results.NoContent();
         });
@@ -98,9 +97,7 @@ public static class CategoryEndpoints
             var cat = await db.OwnedCategories(userId).FirstOrDefaultAsync(c => c.Id == id);
             if (cat is null) return Results.NotFound();
 
-            cat.IsDeleted = true;
-            cat.DeletedAt = DateTimeOffset.UtcNow;
-            cat.UpdatedAt = cat.DeletedAt.Value;
+            db.Categories.Remove(cat);
             await db.SaveChangesAsync();
             return Results.NoContent();
         });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/features/lista/lista_report_service.dart';
 import 'package:tindahan_natin/features/lista/lista_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
@@ -133,7 +134,11 @@ class ListaHistoryScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              onRetry: () => ref.invalidate(listaHistoryProvider),
+            ),
           ),
         );
       },
@@ -143,7 +148,11 @@ class ListaHistoryScreen extends ConsumerWidget {
       ),
       error: (e, s) => Scaffold(
         appBar: AppBar(title: const Text('Lista History')),
-        body: Center(child: Text('Error: $e')),
+        body: AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(myStoreProvider),
+        ),
       ),
     );
   }

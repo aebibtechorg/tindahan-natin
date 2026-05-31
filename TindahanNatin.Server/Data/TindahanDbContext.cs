@@ -19,6 +19,43 @@ public class TindahanDbContext : DbContext
     public DbSet<ListaEntry> ListaEntries => Set<ListaEntry>();
     public DbSet<ListaItem> ListaItems => Set<ListaItem>();
 
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker
+            .Entries()
+            .Where(e => e.Entity is ISoftDelete || e.Entity is IAuditable);
+
+        foreach (var entityEntry in entries)
+        {
+            if (entityEntry.Entity is IAuditable auditable)
+            {
+                if (entityEntry.State == EntityState.Added)
+                {
+                    auditable.CreatedAt = DateTimeOffset.UtcNow;
+                }
+
+                if (entityEntry.State == EntityState.Added || entityEntry.State == EntityState.Modified)
+                {
+                    auditable.UpdatedAt = DateTimeOffset.UtcNow;
+                }
+            }
+
+            if (entityEntry.Entity is ISoftDelete softDelete && entityEntry.State == EntityState.Deleted)
+            {
+                entityEntry.State = EntityState.Modified;
+                softDelete.IsDeleted = true;
+                softDelete.DeletedAt = DateTimeOffset.UtcNow;
+
+                if (entityEntry.Entity is IAuditable auditableSoftDelete)
+                {
+                    auditableSoftDelete.UpdatedAt = softDelete.DeletedAt.Value;
+                }
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

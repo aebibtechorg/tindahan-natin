@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -88,7 +89,12 @@ class LoginScreen extends ConsumerWidget {
                           ],
                         ),
                   loading: () => const CircularProgressIndicator(color: Colors.white),
-                  error: (e, s) => Text('Error: $e', style: const TextStyle(color: Colors.white)),
+                  error: (e, s) => AppErrorWidget(
+                    error: e,
+                    stackTrace: s,
+                    compact: true,
+                    onRetry: () => ref.read(authStateProvider.notifier).login(),
+                  ),
                 ),
               ),
             ],

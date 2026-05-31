@@ -42,7 +42,16 @@ class ProductService {
 
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId});
-      final List data = response.data;
+      final rawData = response.data;
+      if (rawData is! List) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected List from /products, but got ${rawData?.runtimeType}',
+        );
+      }
+      final List data = rawData;
       await _local.cacheProducts(storeId, data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
       return data.map((e) => Product.fromJson(e)).toList();
     } catch (e) {
@@ -63,7 +72,16 @@ class ProductService {
 
     try {
       final response = await _dio.post('/products', data: requestData);
-      final created = Product.fromJson(Map<String, dynamic>.from(response.data as Map));
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected Map from POST /products, but got ${rawData?.runtimeType}',
+        );
+      }
+      final created = Product.fromJson(Map<String, dynamic>.from(rawData));
       if (storeId != null) {
         await _local.upsertCachedProduct(storeId, created.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), created.toJson());
@@ -91,7 +109,16 @@ class ProductService {
     
     try {
       final response = await _dio.get('/products/$id');
-      final product = Product.fromJson(response.data);
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected Map from /products/$id, but got ${rawData?.runtimeType}',
+        );
+      }
+      final product = Product.fromJson(rawData as Map<String, dynamic>);
       if (product.id.isNotEmpty) {
         await _local.upsertCachedRecord(_cacheKey(product.storeId), product.toJson());
         await _local.upsertCachedProduct(product.storeId, product.toJson());
@@ -105,9 +132,10 @@ class ProductService {
     }
   }
 
-  Future<void> updateProduct(String id, Map<String, dynamic> data) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> updateProduct(String id, Map<String, dynamic> data, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('products_', id)?['storeId']?.toString();
+    final existing = sId != null ? _local.getCachedRecordById(_cacheKey(sId), id) : null;
+    
     final optimisticMap = {
       ...?existing,
       ...data,
@@ -115,9 +143,9 @@ class ProductService {
       'updatedAt': DateTime.now().toUtc().toIso8601String(),
     };
 
-    if (storeId != null) {
-      await _local.upsertCachedProduct(storeId, optimisticMap);
-      await _local.upsertCachedRecord(_cacheKey(storeId), optimisticMap);
+    if (sId != null) {
+      await _local.upsertCachedProduct(sId, optimisticMap);
+      await _local.upsertCachedRecord(_cacheKey(sId), optimisticMap);
     }
 
     try {
@@ -129,19 +157,18 @@ class ProductService {
         'method': 'PUT',
         'path': '/products/$id',
         'body': data,
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
   }
 
-  Future<void> deleteProduct(String id) async {
-    final existing = _local.findCachedRecordByIdWithPrefix('products_', id);
-    final storeId = existing?['storeId']?.toString();
+  Future<void> deleteProduct(String id, {String? storeId}) async {
+    final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('products_', id)?['storeId']?.toString();
 
-    if (storeId != null) {
-      await _local.removeCachedProduct(storeId, id);
-      await _local.removeCachedRecord(_cacheKey(storeId), id);
+    if (sId != null) {
+      await _local.removeCachedProduct(sId, id);
+      await _local.removeCachedRecord(_cacheKey(sId), id);
     }
 
     try {
@@ -152,7 +179,7 @@ class ProductService {
         'resource': 'products',
         'method': 'DELETE',
         'path': '/products/$id',
-        'storeId': storeId,
+        'storeId': sId,
         'entityId': id,
       });
     }
@@ -241,7 +268,11 @@ class ProductService {
 
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
-      final List data = response.data as List;
+      final rawData = response.data;
+      if (rawData is! List) {
+        return cached;
+      }
+      final List data = rawData;
       // Do not cache search results to avoid overwriting the full list
       return data.map((e) => Product.fromJson(e)).toList();
     } catch (error) {
@@ -307,7 +338,7 @@ class Products extends _$Products {
     state = AsyncData(updated);
     
     try {
-      await ref.read(productServiceProvider).updateProduct(id, data);
+      await ref.read(productServiceProvider).updateProduct(id, data, storeId: storeId);
     } catch (e) {
       // Keep optimistic since it's queued
     }
@@ -318,7 +349,7 @@ class Products extends _$Products {
     state = AsyncData(previousState.where((p) => p.id != id).toList());
     
     try {
-      await ref.read(productServiceProvider).deleteProduct(id);
+      await ref.read(productServiceProvider).deleteProduct(id, storeId: storeId);
     } catch (e) {
       // Keep it deleted since it's queued
     }

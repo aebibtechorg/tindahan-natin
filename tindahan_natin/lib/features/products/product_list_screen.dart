@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category.dart';
@@ -145,12 +146,14 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 child: Builder(builder: (ctx) {
                   if (products.isEmpty) return const Center(child: Text('No products yet.'));
                   
-                  final itemCount = products.length;
+                  const adInterval = 10;
+                  final itemCount = products.length + (products.length / adInterval).floor();
 
                   return ListView.builder(
                     itemCount: itemCount,
                     itemBuilder: (context, index) {
-                      if (index % 10 == 9) {
+                      final isAd = (index + 1) % (adInterval + 1) == 0;
+                      if (isAd) {
                         return const Column(
                           children: [
                             InlineAdWidget(),
@@ -158,7 +161,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                           ],
                         );
                       }
-                      final product = products[index];
+
+                      final productIndex = index - (index / (adInterval + 1)).floor();
+                      final product = products[productIndex];
                       final cat = categoriesData.firstWhere(
                         (c) => c.id == product.categoryId,
                         orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
@@ -180,6 +185,27 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
                         direction: DismissDirection.endToStart,
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirm Delete'),
+                                content: Text('Are you sure you want to delete ${product.name}?\nThis action cannot be undone.'),
+                                actions: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).colorScheme.error,
+                                      foregroundColor: Theme.of(context).colorScheme.onError,
+                                    ),
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                         onDismissed: (direction) {
                           ref.read(productsProvider(storeId).notifier).deleteProduct(product.id);
                         },
@@ -217,17 +243,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error: $e'),
-                  ElevatedButton(
-                    onPressed: () => ref.read(productsProvider(storeId).notifier).refresh(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              onRetry: () => ref.read(productsProvider(storeId).notifier).refresh(),
             ),
           ),
           floatingActionButton: OpenContainer(

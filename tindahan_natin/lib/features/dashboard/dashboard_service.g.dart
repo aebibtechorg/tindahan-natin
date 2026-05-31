@@ -53,7 +53,7 @@ final class DashboardServiceProvider
   }
 }
 
-String _$dashboardServiceHash() => r'aff18f630e84f6d6c7b54e4886ed68bd2603e84c';
+String _$dashboardServiceHash() => r'6320229ab96e3c2b4f9b0bfa5a00270c18303c4c';
 
 @ProviderFor(storeStats)
 final storeStatsProvider = StoreStatsFamily._();
