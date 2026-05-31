@@ -8,11 +8,29 @@ import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
+  Future<void> _shareStore(BuildContext context, WidgetRef ref, Store store) async {
+    final shareUrl = buildPublicStoreUrl(slug: store.slug);
+    if (shareUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Public store sharing is not configured')),
+      );
+      return;
+    }
+
+    final shareText = store.name.trim().isEmpty
+        ? shareUrl
+        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
+
+    await SharePlus.instance.share(ShareParams(text: shareText));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final myStoreAsync = ref.watch(myStoreProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -28,6 +46,28 @@ class SettingsScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const StoreSettingsScreen()),
             ),
           ),
+          if (PublicWebConfig.hasBaseUrl)
+            myStoreAsync.when(
+              data: (store) => ListTile(
+                leading: const Icon(Icons.share_outlined),
+                title: const Text('Share Store'),
+                subtitle: const Text('Invite others to view your store'),
+                onTap: store == null ? null : () => _shareStore(context, ref, store),
+              ),
+              loading: () => const ListTile(
+                leading: Icon(Icons.share_outlined),
+                title: Text('Share Store'),
+                trailing: Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+              error: (_, _) => const SizedBox.shrink(),
+            ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
@@ -46,22 +86,36 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.redAccent),
+            title: const Text('Log out', style: TextStyle(color: Colors.redAccent)),
+            onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await ref.read(authStateProvider.notifier).logout();
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Logged out')),
+                );
+              } catch (e) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Failed to log out')),
+                );
+              }
+            },
+          ),
+          const Divider(),
           const InlineAdWidget(),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24.0),
-            child: Consumer(
-              builder: (context, ref, child) {
-                return ref.watch(packageInfoProvider).when(
-                      data: (info) => Text(
-                        'Version ${info.version} (${info.buildNumber})',
-                        style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, stack) => const SizedBox.shrink(),
-                    );
-              },
-            ),
+            child: ref.watch(packageInfoProvider).when(
+                  data: (info) => Text(
+                    'Version ${info.version} (${info.buildNumber})',
+                    style: Theme.of(context).textTheme.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, stack) => const SizedBox.shrink(),
+                ),
           ),
         ],
       ),
@@ -81,26 +135,6 @@ class _StoreSettingsScreenState extends ConsumerState<StoreSettingsScreen> {
   final _nameController = TextEditingController();
   var _loading = false;
   String? _lastSyncedStoreName;
-
-  Future<void> _shareStore(Store store) async {
-    final shareUrl = buildPublicStoreUrl(slug: store.slug);
-    if (shareUrl == null) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Public store sharing is not configured')),
-      );
-      return;
-    }
-
-    final shareText = store.name.trim().isEmpty
-        ? shareUrl
-        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
-
-    await SharePlus.instance.share(ShareParams(text: shareText));
-  }
 
   void _syncNameFromStore(Store? store) {
     if (store == null) {
@@ -169,25 +203,6 @@ class _StoreSettingsScreenState extends ConsumerState<StoreSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Store Settings'),
-        actions: [
-          if (PublicWebConfig.hasBaseUrl)
-            myStoreAsync.when(
-              data: (store) => IconButton(
-                onPressed: store == null ? null : () => _shareStore(store),
-                tooltip: 'Share public store',
-                icon: const Icon(Icons.share_outlined),
-              ),
-              loading: () => const Padding(
-                padding: EdgeInsets.only(right: 16),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-              error: (_, _) => const SizedBox.shrink(),
-            ),
-        ],
       ),
       body: _loading || showInitialLoading
           ? const Center(child: CircularProgressIndicator())
@@ -217,53 +232,9 @@ class _StoreSettingsScreenState extends ConsumerState<StoreSettingsScreen> {
                               onPressed: _loading ? null : _save,
                               child: const Text('Save'),
                             ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: _loading
-                                  ? null
-                                  : () async {
-                                      final messenger = ScaffoldMessenger.of(context);
-
-                                      setState(() => _loading = true);
-                                      try {
-                                        await ref.read(authStateProvider.notifier).logout();
-                                        if (mounted) {
-                                          messenger.showSnackBar(
-                                            const SnackBar(content: Text('Logged out')),
-                                          );
-                                        }
-                                      } catch (e) {
-                                        if (mounted) {
-                                          messenger.showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Failed to log out'),
-                                            ),
-                                          );
-                                        }
-                                      } finally {
-                                        if (mounted) {
-                                          setState(() => _loading = false);
-                                        }
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text('Log out'),
-                            ),
                             const SizedBox(height: 24),
                             const Spacer(),
                             const SizedBox(height: 16),
-                            // ref.watch(packageInfoProvider).when(
-                            //       data: (info) => Text(
-                            //         'Version ${info.version} (${info.buildNumber})',
-                            //         style: Theme.of(context).textTheme.bodySmall,
-                            //         textAlign: TextAlign.center,
-                            //       ),
-                            //       loading: () => const SizedBox.shrink(),
-                            //       error: (_, stack) => const SizedBox.shrink(),
-                            //     ),
                           ],
                         ),
                       ),
