@@ -12,11 +12,6 @@ class StoreService {
   StoreService(this._dio, this._local);
 
   Future<Map<String, dynamic>> getMyStore() async {
-    final cached = _local.getCachedRecords('store_me');
-    if (cached != null && cached.isNotEmpty) {
-      return cached.first;
-    }
-
     try {
       final response = await _dio.get('/stores/me');
       final data = Map<String, dynamic>.from(response.data as Map);

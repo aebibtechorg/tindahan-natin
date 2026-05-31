@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/network/connectivity_provider.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
@@ -29,6 +30,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final myStoreAsync = ref.watch(myStoreProvider);
+    final isOnline = ref.watch(isOnlineProvider);
+
+    // Refresh when internet is back
+    ref.listen(isOnlineProvider, (previous, next) {
+      if (previous == false && next == true) {
+        ref.invalidate(myStoreProvider);
+        if (myStoreAsync.value != null) {
+          ref.invalidate(storeStatsProvider(myStoreAsync.value!.id));
+        }
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -44,6 +56,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ],
+        bottom: !isOnline
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(32),
+                child: Container(
+                  color: Colors.orange,
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: const Text(
+                    'Offline Mode - Showing cached data',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              )
+            : null,
       ),
       body: myStoreAsync.when(
         data: (store) {
@@ -67,10 +94,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           final statsAsync = ref.watch(storeStatsProvider(store.id));
           
-          // Connect to SignalR for real-time updates
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(realtimeClientProvider.notifier).connect(store.id);
-          });
+          // Connect to SignalR for real-time updates (only if online)
+          if (isOnline) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(realtimeClientProvider.notifier).connect(store.id);
+            });
+          }
 
           return statsAsync.when(
             data: (stats) => SingleChildScrollView(

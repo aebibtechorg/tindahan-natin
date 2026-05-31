@@ -1,24 +1,42 @@
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
+import 'package:tindahan_natin/core/storage/local_storage.dart';
 import 'package:tindahan_natin/features/dashboard/store_stats.dart';
 
 part 'dashboard_service.g.dart';
 
 class DashboardService {
   final Dio _dio;
+  final LocalStorage _local;
 
-  DashboardService(this._dio);
+  DashboardService(this._dio, this._local);
 
   Future<StoreStats> getStoreStats(String storeId) async {
-    final response = await _dio.get('/dashboard/stats', queryParameters: {'storeId': storeId});
-    return StoreStats.fromJson(response.data);
+    final cacheKey = 'stats_$storeId';
+    
+    try {
+      final response = await _dio.get('/dashboard/stats', queryParameters: {'storeId': storeId});
+      final data = Map<String, dynamic>.from(response.data as Map);
+      await _local.cacheRecords(cacheKey, [data]);
+      return StoreStats.fromJson(data);
+    } catch (error) {
+      // Fallback to cache if network fails
+      final cached = _local.getCachedRecords(cacheKey);
+      if (cached != null && cached.isNotEmpty) {
+        return StoreStats.fromJson(cached.first);
+      }
+      rethrow;
+    }
   }
 }
 
 @riverpod
 DashboardService dashboardService(Ref ref) {
-  return DashboardService(ref.watch(dioClientProvider));
+  return DashboardService(
+    ref.watch(dioClientProvider),
+    ref.watch(localStorageProvider),
+  );
 }
 
 @riverpod
