@@ -9,3 +9,7 @@ output "artifact_registry_repo" {
 output "r2_bucket_name" {
   value = cloudflare_r2_bucket.products.name
 }
+
+output "r2_backups_bucket_name" {
+  value = cloudflare_r2_bucket.backups.name
+}

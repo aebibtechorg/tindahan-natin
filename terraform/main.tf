@@ -34,10 +34,17 @@ resource "google_artifact_registry_repository" "repo" {
   format        = "DOCKER"
 }
 
-# Cloudflare R2 Bucket
+# Cloudflare R2 Bucket for Products
 resource "cloudflare_r2_bucket" "products" {
   account_id = var.cloudflare_account_id
   name       = var.r2_bucket_name
+  location   = "APAC"
+}
+
+# Cloudflare R2 Bucket for Database Backups
+resource "cloudflare_r2_bucket" "backups" {
+  account_id = var.cloudflare_account_id
+  name       = "${var.r2_bucket_name}-backups"
   location   = "APAC"
 }
 
