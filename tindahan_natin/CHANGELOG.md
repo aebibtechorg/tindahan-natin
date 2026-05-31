@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0+13] - 2026-05-30
 
 ### Added
+- Add Share to quick actions in dashboard
+- Move Share and Log out to main settings screen
+
+### Fixed
+- Performance improvements
+
+## [1.0.0+13] - 2026-05-30
+
+### Added
 - Visual selection of shelf on product forms
 
 ### Fixed
