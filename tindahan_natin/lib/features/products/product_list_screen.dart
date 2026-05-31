@@ -180,6 +180,27 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
                         direction: DismissDirection.endToStart,
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirm Delete'),
+                                content: Text('Are you sure you want to delete ${product.name}?\nThis action cannot be undone.'),
+                                actions: [
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).colorScheme.error,
+                                      foregroundColor: Theme.of(context).colorScheme.onError,
+                                    ),
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                         onDismissed: (direction) {
                           ref.read(productsProvider(storeId).notifier).deleteProduct(product.id);
                         },
