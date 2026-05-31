@@ -48,7 +48,7 @@ final class ConnectivityProvider
   }
 }
 
-String _$connectivityHash() => r'f18900083489763ed4066a1c33ea0447ca0093fc';
+String _$connectivityHash() => r'69c6e2db8337a9ff832358c4a079a4846fa6f28c';
 
 @ProviderFor(isOnline)
 final isOnlineProvider = IsOnlineProvider._();
@@ -88,4 +88,4 @@ final class IsOnlineProvider extends $FunctionalProvider<bool, bool, bool>
   }
 }
 
-String _$isOnlineHash() => r'9fb1e971f3721479a651d8ba1fc45b842f6c05af';
+String _$isOnlineHash() => r'd09a40f1e14cb38e9fb49edde87b6ac3c05a045f';

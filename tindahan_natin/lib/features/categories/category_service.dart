@@ -34,7 +34,16 @@ class CategoryService {
     
     try {
       final res = await _dio.get('/categories', queryParameters: {'storeId': storeId});
-      final List data = res.data as List;
+      final rawData = res.data;
+      if (rawData is! List) {
+        throw DioException(
+          requestOptions: res.requestOptions,
+          response: res,
+          type: DioExceptionType.badResponse,
+          error: 'Expected List from /categories, but got ${rawData?.runtimeType}',
+        );
+      }
+      final List data = rawData;
       await _local.cacheRecords(
         _cacheKey(storeId),
         data.map((e) => Map<String, dynamic>.from(e as Map)).toList(),
@@ -51,7 +60,11 @@ class CategoryService {
 
     try {
       final res = await _dio.get('/categories', queryParameters: {'storeId': storeId, 'q': query});
-      final List data = res.data as List;
+      final rawData = res.data;
+      if (rawData is! List) {
+        return cached;
+      }
+      final List data = rawData;
       // Do not cache search results to avoid overwriting the full list
       return data.map((e) => Category.fromJson(Map<String, dynamic>.from(e as Map))).toList();
     } catch (error) {

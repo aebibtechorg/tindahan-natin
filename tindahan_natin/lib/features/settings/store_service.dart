@@ -14,7 +14,16 @@ class StoreService {
   Future<Map<String, dynamic>> getMyStore() async {
     try {
       final response = await _dio.get('/stores/me');
-      final data = Map<String, dynamic>.from(response.data as Map);
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected Map from /stores/me, but got ${rawData?.runtimeType}',
+        );
+      }
+      final data = Map<String, dynamic>.from(rawData);
       await _local.cacheRecords('store_me', [data]);
       return data;
     } catch (error) {

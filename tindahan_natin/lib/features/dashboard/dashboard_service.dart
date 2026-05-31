@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
@@ -17,14 +18,29 @@ class DashboardService {
     
     try {
       final response = await _dio.get('/dashboard/stats', queryParameters: {'storeId': storeId});
-      final data = Map<String, dynamic>.from(response.data as Map);
+      
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected Map from /dashboard/stats, but got ${rawData?.runtimeType}',
+        );
+      }
+      
+      final data = Map<String, dynamic>.from(rawData);
       await _local.cacheRecords(cacheKey, [data]);
       return StoreStats.fromJson(data);
     } catch (error) {
-      // Fallback to cache if network fails
+      // Fallback to cache if network fails or response is invalid
       final cached = _local.getCachedRecords(cacheKey);
       if (cached != null && cached.isNotEmpty) {
-        return StoreStats.fromJson(cached.first);
+        try {
+          return StoreStats.fromJson(cached.first);
+        } catch (e) {
+          debugPrint('Error parsing cached stats: $e');
+        }
       }
       rethrow;
     }

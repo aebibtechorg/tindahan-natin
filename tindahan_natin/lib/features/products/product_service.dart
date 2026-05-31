@@ -42,7 +42,16 @@ class ProductService {
 
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId});
-      final List data = response.data;
+      final rawData = response.data;
+      if (rawData is! List) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected List from /products, but got ${rawData?.runtimeType}',
+        );
+      }
+      final List data = rawData;
       await _local.cacheProducts(storeId, data.map((e) => Map<String, dynamic>.from(e as Map)).toList());
       return data.map((e) => Product.fromJson(e)).toList();
     } catch (e) {
@@ -63,7 +72,16 @@ class ProductService {
 
     try {
       final response = await _dio.post('/products', data: requestData);
-      final created = Product.fromJson(Map<String, dynamic>.from(response.data as Map));
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected Map from POST /products, but got ${rawData?.runtimeType}',
+        );
+      }
+      final created = Product.fromJson(Map<String, dynamic>.from(rawData as Map));
       if (storeId != null) {
         await _local.upsertCachedProduct(storeId, created.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), created.toJson());
@@ -91,7 +109,16 @@ class ProductService {
     
     try {
       final response = await _dio.get('/products/$id');
-      final product = Product.fromJson(response.data);
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Expected Map from /products/$id, but got ${rawData?.runtimeType}',
+        );
+      }
+      final product = Product.fromJson(rawData as Map<String, dynamic>);
       if (product.id.isNotEmpty) {
         await _local.upsertCachedRecord(_cacheKey(product.storeId), product.toJson());
         await _local.upsertCachedProduct(product.storeId, product.toJson());
@@ -241,7 +268,11 @@ class ProductService {
 
     try {
       final response = await _dio.get('/products', queryParameters: {'storeId': storeId, 'q': query});
-      final List data = response.data as List;
+      final rawData = response.data;
+      if (rawData is! List) {
+        return cached;
+      }
+      final List data = rawData;
       // Do not cache search results to avoid overwriting the full list
       return data.map((e) => Product.fromJson(e)).toList();
     } catch (error) {
