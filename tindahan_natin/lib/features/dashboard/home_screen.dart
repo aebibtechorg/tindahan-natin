@@ -7,6 +7,7 @@ import 'package:tindahan_natin/core/config/public_web_config.dart';
 import 'package:tindahan_natin/core/network/connectivity_provider.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
@@ -246,11 +247,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error loading stats: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              compact: true,
+              onRetry: () => ref.invalidate(storeStatsProvider(store.id)),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, s) => Center(child: Text('Error: $e')),
+        error: (e, s) => AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(myStoreProvider),
+        ),
       ),
     );
   }

@@ -81,7 +81,7 @@ class ProductService {
           error: 'Expected Map from POST /products, but got ${rawData?.runtimeType}',
         );
       }
-      final created = Product.fromJson(Map<String, dynamic>.from(rawData as Map));
+      final created = Product.fromJson(Map<String, dynamic>.from(rawData));
       if (storeId != null) {
         await _local.upsertCachedProduct(storeId, created.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), created.toJson());

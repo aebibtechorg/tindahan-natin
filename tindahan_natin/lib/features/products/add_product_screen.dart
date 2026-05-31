@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/shared/widgets/custom_image_picker.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
@@ -107,9 +108,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       } catch (e) {
         setState(() => _isUploading = false);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+          SnackBarUtils.showError(context, e);
         }
       }
     }
@@ -122,9 +121,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       debugPrint('Store ID: $storeId');
       if (_selectedCategoryId == null || _selectedCategoryId!.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select a category')),
-          );
+          SnackBarUtils.showError(context, 'Please select a category');
         }
         return;
       }
@@ -147,12 +144,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         await ref.read(productsProvider(storeId).notifier).addProduct(data);
         if (mounted) {
           context.pop();
+          SnackBarUtils.showSuccess(context, 'Product added successfully');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          SnackBarUtils.showError(context, e);
         }
       }
     }
@@ -337,15 +333,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                                   setState(
                                     () => _selectedCategoryId = created.id,
                                   );
+                                  if (mounted) {
+                                    SnackBarUtils.showSuccess(context, 'Category created');
+                                  }
                                 } catch (e) {
                                   if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Failed to create category: $e',
-                                        ),
-                                      ),
-                                    );
+                                    SnackBarUtils.showError(context, e);
                                   }
                                 }
                               }

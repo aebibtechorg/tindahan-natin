@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/shared/widgets/custom_image_picker.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
@@ -78,9 +79,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
       _selectedShelfId = product.shelfId;
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load product: $e')));
+        SnackBarUtils.showError(context, e);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -150,9 +149,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
       } catch (e) {
         setState(() => _isUploading = false);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+          SnackBarUtils.showError(context, e);
         }
       }
     }
@@ -175,9 +172,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
 
       if (selectedCategoryId == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select a category')),
-          );
+          SnackBarUtils.showError(context, 'Please select a category');
         }
         return;
       }
@@ -200,12 +195,13 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
         await ref
             .read(productsProvider(storeId).notifier)
             .updateProduct(widget.id, data);
-        if (mounted) context.pop();
+        if (mounted) {
+          context.pop();
+          SnackBarUtils.showSuccess(context, 'Product updated');
+        }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          SnackBarUtils.showError(context, e);
         }
       }
     }
@@ -234,12 +230,13 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
       await ref
           .read(productsProvider(storeId).notifier)
           .deleteProduct(widget.id);
-      if (mounted) context.pop();
+      if (mounted) {
+        context.pop();
+        SnackBarUtils.showSuccess(context, 'Product deleted');
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+        SnackBarUtils.showError(context, e);
       }
     }
   }

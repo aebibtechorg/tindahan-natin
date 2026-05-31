@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tindahan_natin/core/config/package_info.dart';
 import 'package:tindahan_natin/core/config/public_web_config.dart';
+import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
@@ -163,23 +164,17 @@ class _StoreSettingsScreenState extends ConsumerState<StoreSettingsScreen> {
       return;
     }
 
-    final messenger = ScaffoldMessenger.of(context);
-
     setState(() => _loading = true);
     try {
       final svc = ref.read(storeServiceProvider);
       await svc.updateStoreName(_nameController.text.trim());
       ref.invalidate(myStoreProvider);
       if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Store updated')),
-        );
+        SnackBarUtils.showSuccess(context, 'Store updated');
       }
     } catch (e) {
       if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Failed to update store')),
-        );
+        SnackBarUtils.showError(context, e);
       }
     } finally {
       if (mounted) {

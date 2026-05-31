@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/features/lista/lista_service.dart';
 import 'package:tindahan_natin/features/lista/lista_settings.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
+import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 
 class AddListaEntryScreen extends ConsumerStatefulWidget {
   final String slug;
@@ -82,13 +84,13 @@ class _AddListaEntryScreenState extends ConsumerState<AddListaEntryScreen> {
     try {
       await ref.read(listaServiceProvider).createListaEntry(data);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lista saved!')));
+        SnackBarUtils.showSuccess(context, 'Lista saved!');
         ref.invalidate(publicListaHistoryProvider);
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        SnackBarUtils.showError(context, e);
       }
     }
   }
@@ -339,7 +341,12 @@ class _ProductPickerState extends ConsumerState<_ProductPicker> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(child: Text('Error: $e')),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              compact: true,
+              onRetry: () => ref.invalidate(publicProductSearchProvider(widget.slug, _query)),
+            ),
           ),
         ),
       ],

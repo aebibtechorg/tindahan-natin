@@ -11,6 +11,7 @@ import 'package:tindahan_natin/core/theme/app_theme.dart';
 
 void main() async {
   try {
+    AppLogger.initialize();
     debugPrint('Starting Tindahan Natin...');
     WidgetsFlutterBinding.ensureInitialized();
 

@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category.dart';
@@ -242,17 +243,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, s) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error: $e'),
-                  ElevatedButton(
-                    onPressed: () => ref.read(productsProvider(storeId).notifier).refresh(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            error: (e, s) => AppErrorWidget(
+              error: e,
+              stackTrace: s,
+              onRetry: () => ref.read(productsProvider(storeId).notifier).refresh(),
             ),
           ),
           floatingActionButton: OpenContainer(
