@@ -171,7 +171,16 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         final categoriesAsync = ref.watch(categoriesProvider(storeId));
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Add Product')),
+          appBar: AppBar(
+            title: const Text('Add Product'),
+            actions: [
+              IconButton(
+                onPressed: _isUploading ? null : _submit,
+                icon: const Icon(Icons.check),
+                tooltip: 'Save Product',
+              ),
+            ],
+          ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Form(
@@ -406,14 +415,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                         ),
                       );
                     },
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isUploading ? null : _submit,
-                      child: const Text('Save Product'),
-                    ),
                   ),
                 ],
               ),

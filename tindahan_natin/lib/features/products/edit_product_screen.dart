@@ -261,6 +261,11 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
             title: const Text('Edit Product'),
             actions: [
               IconButton(icon: const Icon(Icons.delete), onPressed: _delete),
+              IconButton(
+                onPressed: _isUploading ? null : _submit,
+                icon: const Icon(Icons.check),
+                tooltip: 'Save Product',
+              ),
             ],
           ),
           body: _loading
@@ -521,14 +526,6 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                               ),
                             );
                           },
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isUploading ? null : _submit,
-                            child: const Text('Save Product'),
-                          ),
                         ),
                       ],
                     ),
