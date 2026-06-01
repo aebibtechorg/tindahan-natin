@@ -163,9 +163,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       _StatCard(
                         title: 'Performance',
-                        value: '+12%', // Static for now
-                        icon: Icons.trending_up,
-                        color: Colors.purple,
+                        value: '${stats.performanceChange >= 0 ? '+' : ''}${stats.performanceChange.toStringAsFixed(1)}%',
+                        icon: stats.performanceChange >= 0 ? Icons.trending_up : Icons.trending_down,
+                        color: stats.performanceChange >= 0 ? Colors.purple : Colors.red,
                       ),
                     ],
                   ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9)),
@@ -174,6 +174,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const InlineAdWidget(), // Added back inline ad
                   const SizedBox(height: 32),
                   
+                  // Daily Performance
+                  if (stats.dailyPerformance.isNotEmpty) ...[
+                    Text(
+                      'Daily Sales (Last 7 Days)',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 120,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: stats.dailyPerformance.map((dp) {
+                          final maxAmount = stats.dailyPerformance
+                              .map((e) => e.amount)
+                              .fold(0.0, (prev, element) => element > prev ? element : prev);
+                          final heightFactor = maxAmount > 0 ? dp.amount / maxAmount : 0.0;
+                          
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  FittedBox(
+                                    child: Text(
+                                      '₱${dp.amount.toInt()}',
+                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    height: (heightFactor * 60).clamp(4, 60),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${dp.date.month}/${dp.date.day}',
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+
                   // Action Menu
                   Text(
                     'Quick Actions',

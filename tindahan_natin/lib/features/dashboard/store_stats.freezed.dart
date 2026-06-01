@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreStats {
 
- double get totalSales; double get totalCredit; int get totalTransactions; List<DailyStat> get dailyPerformance; List<TopProduct> get topProducts;
+ double get totalSales; double get totalCredit; int get totalTransactions; double get performanceChange; List<DailyStat> get dailyPerformance; List<TopProduct> get topProducts;
 /// Create a copy of StoreStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StoreStatsCopyWith<StoreStats> get copyWith => _$StoreStatsCopyWithImpl<StoreSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&const DeepCollectionEquality().equals(other.dailyPerformance, dailyPerformance)&&const DeepCollectionEquality().equals(other.topProducts, topProducts));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&(identical(other.performanceChange, performanceChange) || other.performanceChange == performanceChange)&&const DeepCollectionEquality().equals(other.dailyPerformance, dailyPerformance)&&const DeepCollectionEquality().equals(other.topProducts, topProducts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,const DeepCollectionEquality().hash(dailyPerformance),const DeepCollectionEquality().hash(topProducts));
+int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,performanceChange,const DeepCollectionEquality().hash(dailyPerformance),const DeepCollectionEquality().hash(topProducts));
 
 @override
 String toString() {
-  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, dailyPerformance: $dailyPerformance, topProducts: $topProducts)';
+  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, performanceChange: $performanceChange, dailyPerformance: $dailyPerformance, topProducts: $topProducts)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StoreStatsCopyWith<$Res>  {
   factory $StoreStatsCopyWith(StoreStats value, $Res Function(StoreStats) _then) = _$StoreStatsCopyWithImpl;
 @useResult
 $Res call({
- double totalSales, double totalCredit, int totalTransactions, List<DailyStat> dailyPerformance, List<TopProduct> topProducts
+ double totalSales, double totalCredit, int totalTransactions, double performanceChange, List<DailyStat> dailyPerformance, List<TopProduct> topProducts
 });
 
 
@@ -65,12 +65,13 @@ class _$StoreStatsCopyWithImpl<$Res>
 
 /// Create a copy of StoreStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? dailyPerformance = null,Object? topProducts = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? performanceChange = null,Object? dailyPerformance = null,Object? topProducts = null,}) {
   return _then(_self.copyWith(
 totalSales: null == totalSales ? _self.totalSales : totalSales // ignore: cast_nullable_to_non_nullable
 as double,totalCredit: null == totalCredit ? _self.totalCredit : totalCredit // ignore: cast_nullable_to_non_nullable
 as double,totalTransactions: null == totalTransactions ? _self.totalTransactions : totalTransactions // ignore: cast_nullable_to_non_nullable
-as int,dailyPerformance: null == dailyPerformance ? _self.dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
+as int,performanceChange: null == performanceChange ? _self.performanceChange : performanceChange // ignore: cast_nullable_to_non_nullable
+as double,dailyPerformance: null == dailyPerformance ? _self.dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
 as List<DailyStat>,topProducts: null == topProducts ? _self.topProducts : topProducts // ignore: cast_nullable_to_non_nullable
 as List<TopProduct>,
   ));
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  double performanceChange,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreStats() when $default != null:
-return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.dailyPerformance,_that.topProducts);case _:
+return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.performanceChange,_that.dailyPerformance,_that.topProducts);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  double performanceChange,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)  $default,) {final _that = this;
 switch (_that) {
 case _StoreStats():
-return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.dailyPerformance,_that.topProducts);case _:
+return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.performanceChange,_that.dailyPerformance,_that.topProducts);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double totalSales,  double totalCredit,  int totalTransactions,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double totalSales,  double totalCredit,  int totalTransactions,  double performanceChange,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreStats() when $default != null:
-return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.dailyPerformance,_that.topProducts);case _:
+return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.performanceChange,_that.dailyPerformance,_that.topProducts);case _:
   return null;
 
 }
@@ -213,12 +214,13 @@ return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that
 @JsonSerializable()
 
 class _StoreStats implements StoreStats {
-  const _StoreStats({required this.totalSales, required this.totalCredit, required this.totalTransactions, required final  List<DailyStat> dailyPerformance, required final  List<TopProduct> topProducts}): _dailyPerformance = dailyPerformance,_topProducts = topProducts;
+  const _StoreStats({required this.totalSales, required this.totalCredit, required this.totalTransactions, required this.performanceChange, required final  List<DailyStat> dailyPerformance, required final  List<TopProduct> topProducts}): _dailyPerformance = dailyPerformance,_topProducts = topProducts;
   factory _StoreStats.fromJson(Map<String, dynamic> json) => _$StoreStatsFromJson(json);
 
 @override final  double totalSales;
 @override final  double totalCredit;
 @override final  int totalTransactions;
+@override final  double performanceChange;
  final  List<DailyStat> _dailyPerformance;
 @override List<DailyStat> get dailyPerformance {
   if (_dailyPerformance is EqualUnmodifiableListView) return _dailyPerformance;
@@ -247,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&const DeepCollectionEquality().equals(other._dailyPerformance, _dailyPerformance)&&const DeepCollectionEquality().equals(other._topProducts, _topProducts));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&(identical(other.performanceChange, performanceChange) || other.performanceChange == performanceChange)&&const DeepCollectionEquality().equals(other._dailyPerformance, _dailyPerformance)&&const DeepCollectionEquality().equals(other._topProducts, _topProducts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,const DeepCollectionEquality().hash(_dailyPerformance),const DeepCollectionEquality().hash(_topProducts));
+int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,performanceChange,const DeepCollectionEquality().hash(_dailyPerformance),const DeepCollectionEquality().hash(_topProducts));
 
 @override
 String toString() {
-  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, dailyPerformance: $dailyPerformance, topProducts: $topProducts)';
+  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, performanceChange: $performanceChange, dailyPerformance: $dailyPerformance, topProducts: $topProducts)';
 }
 
 
@@ -267,7 +269,7 @@ abstract mixin class _$StoreStatsCopyWith<$Res> implements $StoreStatsCopyWith<$
   factory _$StoreStatsCopyWith(_StoreStats value, $Res Function(_StoreStats) _then) = __$StoreStatsCopyWithImpl;
 @override @useResult
 $Res call({
- double totalSales, double totalCredit, int totalTransactions, List<DailyStat> dailyPerformance, List<TopProduct> topProducts
+ double totalSales, double totalCredit, int totalTransactions, double performanceChange, List<DailyStat> dailyPerformance, List<TopProduct> topProducts
 });
 
 
@@ -284,12 +286,13 @@ class __$StoreStatsCopyWithImpl<$Res>
 
 /// Create a copy of StoreStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? dailyPerformance = null,Object? topProducts = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? performanceChange = null,Object? dailyPerformance = null,Object? topProducts = null,}) {
   return _then(_StoreStats(
 totalSales: null == totalSales ? _self.totalSales : totalSales // ignore: cast_nullable_to_non_nullable
 as double,totalCredit: null == totalCredit ? _self.totalCredit : totalCredit // ignore: cast_nullable_to_non_nullable
 as double,totalTransactions: null == totalTransactions ? _self.totalTransactions : totalTransactions // ignore: cast_nullable_to_non_nullable
-as int,dailyPerformance: null == dailyPerformance ? _self._dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
+as int,performanceChange: null == performanceChange ? _self.performanceChange : performanceChange // ignore: cast_nullable_to_non_nullable
+as double,dailyPerformance: null == dailyPerformance ? _self._dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
 as List<DailyStat>,topProducts: null == topProducts ? _self._topProducts : topProducts // ignore: cast_nullable_to_non_nullable
 as List<TopProduct>,
   ));

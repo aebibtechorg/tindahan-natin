@@ -25,6 +25,28 @@ public static class DashboardEndpoints
             var totalCredit = entries.Where(e => e.IsCredit).Sum(e => e.TotalAmount);
             var totalTransactions = entries.Count;
 
+            // Calculate performance (last 7 days vs previous 7 days)
+            var sevenDaysAgo = DateTime.UtcNow.Date.AddDays(-7);
+            var fourteenDaysAgo = DateTime.UtcNow.Date.AddDays(-14);
+
+            var currentWeekSales = entries
+                .Where(e => !e.IsCredit && e.CreatedAt >= sevenDaysAgo)
+                .Sum(e => e.TotalAmount);
+
+            var previousWeekSales = entries
+                .Where(e => !e.IsCredit && e.CreatedAt >= fourteenDaysAgo && e.CreatedAt < sevenDaysAgo)
+                .Sum(e => e.TotalAmount);
+
+            double performanceChange = 0;
+            if (previousWeekSales > 0)
+            {
+                performanceChange = (double)((currentWeekSales - previousWeekSales) / previousWeekSales * 100);
+            }
+            else if (currentWeekSales > 0)
+            {
+                performanceChange = 100;
+            }
+
             // Daily performance for last 7 days
             var last7Days = Enumerable.Range(0, 7)
                 .Select(i => DateTime.UtcNow.Date.AddDays(-i))
@@ -55,6 +77,7 @@ public static class DashboardEndpoints
                 totalSales,
                 totalCredit,
                 totalTransactions,
+                performanceChange,
                 dailyStats,
                 topProducts
             ));

@@ -10,6 +10,7 @@ _StoreStats _$StoreStatsFromJson(Map<String, dynamic> json) => _StoreStats(
   totalSales: (json['totalSales'] as num).toDouble(),
   totalCredit: (json['totalCredit'] as num).toDouble(),
   totalTransactions: (json['totalTransactions'] as num).toInt(),
+  performanceChange: (json['performanceChange'] as num).toDouble(),
   dailyPerformance: (json['dailyPerformance'] as List<dynamic>)
       .map((e) => DailyStat.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -23,6 +24,7 @@ Map<String, dynamic> _$StoreStatsToJson(_StoreStats instance) =>
       'totalSales': instance.totalSales,
       'totalCredit': instance.totalCredit,
       'totalTransactions': instance.totalTransactions,
+      'performanceChange': instance.performanceChange,
       'dailyPerformance': instance.dailyPerformance,
       'topProducts': instance.topProducts,
     };

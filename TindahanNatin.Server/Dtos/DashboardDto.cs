@@ -7,6 +7,7 @@ public record StoreStatsDto(
     decimal TotalSales,
     decimal TotalCredit,
     int TotalTransactions,
+    double PerformanceChange,
     List<DailyStatDto> DailyPerformance,
     List<TopProductDto> TopProducts
 );

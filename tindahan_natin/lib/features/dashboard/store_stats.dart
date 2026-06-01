@@ -9,6 +9,7 @@ abstract class StoreStats with _$StoreStats {
     required double totalSales,
     required double totalCredit,
     required int totalTransactions,
+    required double performanceChange,
     required List<DailyStat> dailyPerformance,
     required List<TopProduct> topProducts,
   }) = _StoreStats;
