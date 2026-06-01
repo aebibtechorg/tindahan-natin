@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0+15] - 2026-06-01
+
+### Added
+- Store performance metrics to dashboard
+- Announcements / notifications
+
 ## [1.0.0+14] - 2026-05-31
 
 ### Added
