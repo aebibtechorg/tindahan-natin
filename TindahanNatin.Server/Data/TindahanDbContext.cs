@@ -18,6 +18,7 @@ public class TindahanDbContext : DbContext
     public DbSet<ProductLocation> ProductLocations => Set<ProductLocation>();
     public DbSet<ListaEntry> ListaEntries => Set<ListaEntry>();
     public DbSet<ListaItem> ListaItems => Set<ListaItem>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -122,5 +123,13 @@ public class TindahanDbContext : DbContext
         modelBuilder.Entity<ListaItem>().Property(li => li.Id).HasColumnType("uuid");
         modelBuilder.Entity<ListaItem>().Property(li => li.ListaEntryId).HasColumnType("uuid");
         modelBuilder.Entity<ListaItem>().Property(li => li.ProductId).HasColumnType("uuid");
+
+        modelBuilder.Entity<Announcement>().Property(a => a.Id).HasColumnType("uuid");
+        modelBuilder.Entity<Announcement>().Property(a => a.CreatedAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Announcement>().Property(a => a.UpdatedAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Announcement>().Property(a => a.DeletedAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Announcement>().Property(a => a.StartsAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Announcement>().Property(a => a.EndsAt).HasColumnType("timestamp with time zone");
+        modelBuilder.Entity<Announcement>().HasQueryFilter(a => !a.IsDeleted && a.IsActive);
     }
 }

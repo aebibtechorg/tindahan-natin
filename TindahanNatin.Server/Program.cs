@@ -97,6 +97,7 @@ app.MapPublicEndpoints();
 app.MapCategoryEndpoints();
 app.MapListaEndpoints();
 app.MapDashboardEndpoints();
+app.MapAnnouncementEndpoints();
 
 app.MapHub<TindahanHub>("/hubs/tindahan");
 
