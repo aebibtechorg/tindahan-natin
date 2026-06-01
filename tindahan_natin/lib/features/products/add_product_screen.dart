@@ -27,6 +27,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _minStockThresholdController = TextEditingController(text: '5');
   final _barcodeController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _imageUrl;
@@ -40,6 +41,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
+    _minStockThresholdController.dispose();
     _barcodeController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -130,6 +132,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         'name': _nameController.text,
         'price': double.parse(_priceController.text),
         'quantity': int.parse(_quantityController.text),
+        'minStockThreshold': int.parse(_minStockThresholdController.text),
         'categoryId': _selectedCategoryId,
         'storeId': storeId,
         'imageUrl': _imageUrl,
@@ -265,6 +268,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     keyboardType: TextInputType.number,
                     validator: (value) => value == null || value.isEmpty
                         ? 'Please enter quantity'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _minStockThresholdController,
+                    decoration: const InputDecoration(
+                      labelText: 'Low Stock Alert Threshold',
+                      helperText: 'Alert me when stock reaches this level',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter alert threshold'
                         : null,
                   ),
                   const SizedBox(height: 16),

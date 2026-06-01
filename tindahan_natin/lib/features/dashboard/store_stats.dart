@@ -12,9 +12,23 @@ abstract class StoreStats with _$StoreStats {
     required double performanceChange,
     required List<DailyStat> dailyPerformance,
     required List<TopProduct> topProducts,
+    @Default([]) List<ProductAlert> alerts,
   }) = _StoreStats;
 
   factory StoreStats.fromJson(Map<String, dynamic> json) => _$StoreStatsFromJson(json);
+}
+
+@freezed
+abstract class ProductAlert with _$ProductAlert {
+  const factory ProductAlert({
+    required String productId,
+    required String productName,
+    required int currentQuantity,
+    required int threshold,
+    required String message,
+  }) = _ProductAlert;
+
+  factory ProductAlert.fromJson(Map<String, dynamic> json) => _$ProductAlertFromJson(json);
 }
 
 @freezed

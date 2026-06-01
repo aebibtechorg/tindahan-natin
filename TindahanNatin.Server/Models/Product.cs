@@ -9,6 +9,7 @@ public class Product : ISoftDelete, IAuditable
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public int Quantity { get; set; }
+    public int MinStockThreshold { get; set; } = 5; // Default to 5
     public Guid CategoryId { get; set; }
     public Guid? ShelfId { get; set; }
     public string? Description { get; set; }

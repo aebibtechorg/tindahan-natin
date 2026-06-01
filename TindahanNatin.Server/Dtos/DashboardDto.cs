@@ -9,7 +9,16 @@ public record StoreStatsDto(
     int TotalTransactions,
     double PerformanceChange,
     List<DailyStatDto> DailyPerformance,
-    List<TopProductDto> TopProducts
+    List<TopProductDto> TopProducts,
+    List<ProductAlertDto> Alerts
+);
+
+public record ProductAlertDto(
+    Guid ProductId,
+    string ProductName,
+    int CurrentQuantity,
+    int Threshold,
+    string Message
 );
 
 public record DailyStatDto(

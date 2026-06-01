@@ -28,6 +28,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _minStockThresholdController = TextEditingController();
   final _barcodeController = TextEditingController();
   final _descriptionController = TextEditingController();
   String? _imageUrl;
@@ -59,6 +60,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
     _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
+    _minStockThresholdController.dispose();
     _barcodeController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -72,6 +74,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
       _nameController.text = product.name;
       _priceController.text = product.price.toString();
       _quantityController.text = product.quantity.toString();
+      _minStockThresholdController.text = product.minStockThreshold.toString();
       _barcodeController.text = product.barcode ?? '';
       _descriptionController.text = product.description ?? '';
       _imageUrl = product.imageUrl;
@@ -181,6 +184,7 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
         'name': _nameController.text,
         'price': double.parse(_priceController.text),
         'quantity': int.parse(_quantityController.text),
+        'minStockThreshold': int.parse(_minStockThresholdController.text),
         'categoryId': selectedCategoryId,
         'storeId': storeId,
         'imageUrl': _imageUrl,
@@ -360,6 +364,18 @@ class _EditProductScreenState extends ConsumerState<EditProductScreen> {
                           keyboardType: TextInputType.number,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Please enter quantity'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _minStockThresholdController,
+                          decoration: const InputDecoration(
+                            labelText: 'Low Stock Alert Threshold',
+                            helperText: 'Alert me when stock reaches this level',
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please enter alert threshold'
                               : null,
                         ),
                         const SizedBox(height: 16),

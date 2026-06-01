@@ -73,13 +73,26 @@ public static class DashboardEndpoints
                 .Select(x => new TopProductDto(x.Id, x.Name, x.Qty, x.Rev))
                 .ToList();
 
+            // Alerts (Low Stock)
+            var alerts = await db.Products
+                .Where(p => p.StoreId == storeId && !p.IsDeleted && p.Quantity <= p.MinStockThreshold)
+                .Select(p => new ProductAlertDto(
+                    p.Id,
+                    p.Name,
+                    p.Quantity,
+                    p.MinStockThreshold,
+                    p.Quantity == 0 ? $"{p.Name} is out of stock!" : $"{p.Name} is running low ({p.Quantity} left)"
+                ))
+                .ToListAsync();
+
             return Results.Ok(new StoreStatsDto(
                 totalSales,
                 totalCredit,
                 totalTransactions,
                 performanceChange,
                 dailyStats,
-                topProducts
+                topProducts,
+                alerts
             ));
         });
     }

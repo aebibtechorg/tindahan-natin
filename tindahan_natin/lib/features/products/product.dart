@@ -10,6 +10,7 @@ abstract class Product with _$Product {
     required String name,
     required double price,
     required int quantity,
+    @Default(5) int minStockThreshold,
     required String categoryId,
     String? description,
     String? imageUrl,

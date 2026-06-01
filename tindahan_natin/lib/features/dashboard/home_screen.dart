@@ -174,6 +174,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const InlineAdWidget(), // Added back inline ad
                   const SizedBox(height: 32),
                   
+                  // Alerts Section
+                  if (stats.alerts.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Text(
+                          'Alerts',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${stats.alerts.length}',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ...stats.alerts.map((alert) => Card(
+                          color: Colors.red.withValues(alpha: 0.05),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
+                          ),
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Colors.red,
+                              child: Icon(Icons.warning_amber_rounded, color: Colors.white),
+                            ),
+                            title: Text(
+                              alert.productName,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(alert.message),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => context.push('/inventory/edit/${alert.productId}'),
+                            ),
+                          ),
+                        ).animate().fadeIn().slideX(begin: 0.1)),
+                    const SizedBox(height: 32),
+                  ],
+
                   // Daily Performance
                   if (stats.dailyPerformance.isNotEmpty) ...[
                     Text(
