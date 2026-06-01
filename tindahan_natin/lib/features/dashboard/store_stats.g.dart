@@ -10,12 +10,18 @@ _StoreStats _$StoreStatsFromJson(Map<String, dynamic> json) => _StoreStats(
   totalSales: (json['totalSales'] as num).toDouble(),
   totalCredit: (json['totalCredit'] as num).toDouble(),
   totalTransactions: (json['totalTransactions'] as num).toInt(),
+  performanceChange: (json['performanceChange'] as num).toDouble(),
   dailyPerformance: (json['dailyPerformance'] as List<dynamic>)
       .map((e) => DailyStat.fromJson(e as Map<String, dynamic>))
       .toList(),
   topProducts: (json['topProducts'] as List<dynamic>)
       .map((e) => TopProduct.fromJson(e as Map<String, dynamic>))
       .toList(),
+  alerts:
+      (json['alerts'] as List<dynamic>?)
+          ?.map((e) => ProductAlert.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$StoreStatsToJson(_StoreStats instance) =>
@@ -23,8 +29,28 @@ Map<String, dynamic> _$StoreStatsToJson(_StoreStats instance) =>
       'totalSales': instance.totalSales,
       'totalCredit': instance.totalCredit,
       'totalTransactions': instance.totalTransactions,
+      'performanceChange': instance.performanceChange,
       'dailyPerformance': instance.dailyPerformance,
       'topProducts': instance.topProducts,
+      'alerts': instance.alerts,
+    };
+
+_ProductAlert _$ProductAlertFromJson(Map<String, dynamic> json) =>
+    _ProductAlert(
+      productId: json['productId'] as String,
+      productName: json['productName'] as String,
+      currentQuantity: (json['currentQuantity'] as num).toInt(),
+      threshold: (json['threshold'] as num).toInt(),
+      message: json['message'] as String,
+    );
+
+Map<String, dynamic> _$ProductAlertToJson(_ProductAlert instance) =>
+    <String, dynamic>{
+      'productId': instance.productId,
+      'productName': instance.productName,
+      'currentQuantity': instance.currentQuantity,
+      'threshold': instance.threshold,
+      'message': instance.message,
     };
 
 _DailyStat _$DailyStatFromJson(Map<String, dynamic> json) => _DailyStat(

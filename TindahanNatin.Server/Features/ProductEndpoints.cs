@@ -44,7 +44,7 @@ public static class ProductEndpoints
                 var plainProducts = await plainQuery.ToListAsync();
 
                 return Results.Ok(plainProducts
-                    .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId, p.CreatedAt, p.UpdatedAt, p.IsDeleted, p.DeletedAt)));
+                    .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.MinStockThreshold, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId, p.CreatedAt, p.UpdatedAt, p.IsDeleted, p.DeletedAt)));
             }
 
             var productsQuery = productsBaseQuery.Where(p => p.StoreId == storeId);
@@ -71,7 +71,7 @@ public static class ProductEndpoints
 
             var products = await productsQuery.ToListAsync();
 
-            return Results.Ok(products.Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId, p.CreatedAt, p.UpdatedAt, p.IsDeleted, p.DeletedAt)));
+            return Results.Ok(products.Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.MinStockThreshold, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId, p.CreatedAt, p.UpdatedAt, p.IsDeleted, p.DeletedAt)));
         });
 
         group.MapGet("/{id}", async (Guid id, HttpContext context, TindahanDbContext db) =>
@@ -81,7 +81,7 @@ public static class ProductEndpoints
 
             return await db.OwnedProducts(userId).FirstOrDefaultAsync(p => p.Id == id) switch
             {
-                Product p => Results.Ok(new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId, p.CreatedAt, p.UpdatedAt, p.IsDeleted, p.DeletedAt)),
+                Product p => Results.Ok(new ProductDto(p.Id, p.Name, p.Price, p.Quantity, p.MinStockThreshold, p.CategoryId, p.ShelfId, p.Description, p.ImageUrl, p.Barcode, p.StoreId, p.CreatedAt, p.UpdatedAt, p.IsDeleted, p.DeletedAt)),
                 null => Results.NotFound()
             };
         });
@@ -100,6 +100,7 @@ public static class ProductEndpoints
                 Name = dto.Name,
                 Price = dto.Price,
                 Quantity = dto.Quantity,
+                MinStockThreshold = dto.MinStockThreshold,
                 CategoryId = dto.CategoryId,
                 ShelfId = dto.ShelfId,
                 Description = dto.Description,
@@ -113,7 +114,7 @@ public static class ProductEndpoints
 
             await hubContext.Clients.Group(dto.StoreId.ToString()).SendAsync("InventoryUpdated", dto.StoreId);
 
-            return Results.Created($"/api/products/{product.Id}", new ProductDto(product.Id, product.Name, product.Price, product.Quantity, product.CategoryId, product.ShelfId, product.Description, product.ImageUrl, product.Barcode, product.StoreId, product.CreatedAt, product.UpdatedAt, product.IsDeleted, product.DeletedAt));
+            return Results.Created($"/api/products/{product.Id}", new ProductDto(product.Id, product.Name, product.Price, product.Quantity, product.MinStockThreshold, product.CategoryId, product.ShelfId, product.Description, product.ImageUrl, product.Barcode, product.StoreId, product.CreatedAt, product.UpdatedAt, product.IsDeleted, product.DeletedAt));
         });
 
         group.MapPut("/{id}", async (Guid id, UpdateProductDto dto, HttpContext context, TindahanDbContext db, IHubContext<TindahanHub> hubContext) =>
@@ -129,6 +130,7 @@ public static class ProductEndpoints
             product.Name = dto.Name;
             product.Price = dto.Price;
             product.Quantity = dto.Quantity;
+            product.MinStockThreshold = dto.MinStockThreshold;
             product.CategoryId = dto.CategoryId;
             product.ShelfId = dto.ShelfId;
             product.Description = dto.Description;

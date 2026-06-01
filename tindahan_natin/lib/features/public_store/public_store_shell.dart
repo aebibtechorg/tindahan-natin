@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/realtime/signalr_service.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
 import 'package:tindahan_natin/features/lista/lista_service.dart';
+import 'package:tindahan_natin/features/notifications/widgets/announcement_banner.dart';
 import 'package:tindahan_natin/features/public_store/public_store_service.dart';
 
 class PublicStoreShell extends ConsumerStatefulWidget {
@@ -21,6 +23,14 @@ class PublicStoreShell extends ConsumerStatefulWidget {
 }
 
 class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(realtimeClientProvider.notifier).connectGlobal();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final storeInfoAsync = ref.watch(publicStoreInfoProvider(widget.slug));
@@ -49,7 +59,12 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
           ),
         ],
       ),
-      body: widget.navigationShell,
+      body: Column(
+        children: [
+          const AnnouncementBanner(),
+          Expanded(child: widget.navigationShell),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: widget.navigationShell.currentIndex,
         onDestinationSelected: (index) {
@@ -79,4 +94,3 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
     );
   }
 }
-

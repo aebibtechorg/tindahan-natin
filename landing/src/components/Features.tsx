@@ -4,7 +4,7 @@ import { Package, Map, Globe, ShieldCheck, Zap, Heart } from 'lucide-react';
 
 const features = [
   {
-    title: "Inventory Management",
+    title: "Product Management",
     description: "Keep track of your products, stock levels, and pricing in real-time with automated alerts.",
     icon: <Package size={24} className="text-primary" />,
     color: "rgba(30, 136, 229, 0.1)"

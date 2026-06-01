@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StoreStats {
 
- double get totalSales; double get totalCredit; int get totalTransactions; List<DailyStat> get dailyPerformance; List<TopProduct> get topProducts;
+ double get totalSales; double get totalCredit; int get totalTransactions; double get performanceChange; List<DailyStat> get dailyPerformance; List<TopProduct> get topProducts; List<ProductAlert> get alerts;
 /// Create a copy of StoreStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StoreStatsCopyWith<StoreStats> get copyWith => _$StoreStatsCopyWithImpl<StoreSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&const DeepCollectionEquality().equals(other.dailyPerformance, dailyPerformance)&&const DeepCollectionEquality().equals(other.topProducts, topProducts));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&(identical(other.performanceChange, performanceChange) || other.performanceChange == performanceChange)&&const DeepCollectionEquality().equals(other.dailyPerformance, dailyPerformance)&&const DeepCollectionEquality().equals(other.topProducts, topProducts)&&const DeepCollectionEquality().equals(other.alerts, alerts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,const DeepCollectionEquality().hash(dailyPerformance),const DeepCollectionEquality().hash(topProducts));
+int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,performanceChange,const DeepCollectionEquality().hash(dailyPerformance),const DeepCollectionEquality().hash(topProducts),const DeepCollectionEquality().hash(alerts));
 
 @override
 String toString() {
-  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, dailyPerformance: $dailyPerformance, topProducts: $topProducts)';
+  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, performanceChange: $performanceChange, dailyPerformance: $dailyPerformance, topProducts: $topProducts, alerts: $alerts)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StoreStatsCopyWith<$Res>  {
   factory $StoreStatsCopyWith(StoreStats value, $Res Function(StoreStats) _then) = _$StoreStatsCopyWithImpl;
 @useResult
 $Res call({
- double totalSales, double totalCredit, int totalTransactions, List<DailyStat> dailyPerformance, List<TopProduct> topProducts
+ double totalSales, double totalCredit, int totalTransactions, double performanceChange, List<DailyStat> dailyPerformance, List<TopProduct> topProducts, List<ProductAlert> alerts
 });
 
 
@@ -65,14 +65,16 @@ class _$StoreStatsCopyWithImpl<$Res>
 
 /// Create a copy of StoreStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? dailyPerformance = null,Object? topProducts = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? performanceChange = null,Object? dailyPerformance = null,Object? topProducts = null,Object? alerts = null,}) {
   return _then(_self.copyWith(
 totalSales: null == totalSales ? _self.totalSales : totalSales // ignore: cast_nullable_to_non_nullable
 as double,totalCredit: null == totalCredit ? _self.totalCredit : totalCredit // ignore: cast_nullable_to_non_nullable
 as double,totalTransactions: null == totalTransactions ? _self.totalTransactions : totalTransactions // ignore: cast_nullable_to_non_nullable
-as int,dailyPerformance: null == dailyPerformance ? _self.dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
+as int,performanceChange: null == performanceChange ? _self.performanceChange : performanceChange // ignore: cast_nullable_to_non_nullable
+as double,dailyPerformance: null == dailyPerformance ? _self.dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
 as List<DailyStat>,topProducts: null == topProducts ? _self.topProducts : topProducts // ignore: cast_nullable_to_non_nullable
-as List<TopProduct>,
+as List<TopProduct>,alerts: null == alerts ? _self.alerts : alerts // ignore: cast_nullable_to_non_nullable
+as List<ProductAlert>,
   ));
 }
 
@@ -157,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  double performanceChange,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts,  List<ProductAlert> alerts)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StoreStats() when $default != null:
-return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.dailyPerformance,_that.topProducts);case _:
+return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.performanceChange,_that.dailyPerformance,_that.topProducts,_that.alerts);case _:
   return orElse();
 
 }
@@ -178,10 +180,10 @@ return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double totalSales,  double totalCredit,  int totalTransactions,  double performanceChange,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts,  List<ProductAlert> alerts)  $default,) {final _that = this;
 switch (_that) {
 case _StoreStats():
-return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.dailyPerformance,_that.topProducts);case _:
+return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.performanceChange,_that.dailyPerformance,_that.topProducts,_that.alerts);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +200,10 @@ return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double totalSales,  double totalCredit,  int totalTransactions,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double totalSales,  double totalCredit,  int totalTransactions,  double performanceChange,  List<DailyStat> dailyPerformance,  List<TopProduct> topProducts,  List<ProductAlert> alerts)?  $default,) {final _that = this;
 switch (_that) {
 case _StoreStats() when $default != null:
-return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.dailyPerformance,_that.topProducts);case _:
+return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that.performanceChange,_that.dailyPerformance,_that.topProducts,_that.alerts);case _:
   return null;
 
 }
@@ -213,12 +215,13 @@ return $default(_that.totalSales,_that.totalCredit,_that.totalTransactions,_that
 @JsonSerializable()
 
 class _StoreStats implements StoreStats {
-  const _StoreStats({required this.totalSales, required this.totalCredit, required this.totalTransactions, required final  List<DailyStat> dailyPerformance, required final  List<TopProduct> topProducts}): _dailyPerformance = dailyPerformance,_topProducts = topProducts;
+  const _StoreStats({required this.totalSales, required this.totalCredit, required this.totalTransactions, required this.performanceChange, required final  List<DailyStat> dailyPerformance, required final  List<TopProduct> topProducts, final  List<ProductAlert> alerts = const []}): _dailyPerformance = dailyPerformance,_topProducts = topProducts,_alerts = alerts;
   factory _StoreStats.fromJson(Map<String, dynamic> json) => _$StoreStatsFromJson(json);
 
 @override final  double totalSales;
 @override final  double totalCredit;
 @override final  int totalTransactions;
+@override final  double performanceChange;
  final  List<DailyStat> _dailyPerformance;
 @override List<DailyStat> get dailyPerformance {
   if (_dailyPerformance is EqualUnmodifiableListView) return _dailyPerformance;
@@ -231,6 +234,13 @@ class _StoreStats implements StoreStats {
   if (_topProducts is EqualUnmodifiableListView) return _topProducts;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_topProducts);
+}
+
+ final  List<ProductAlert> _alerts;
+@override@JsonKey() List<ProductAlert> get alerts {
+  if (_alerts is EqualUnmodifiableListView) return _alerts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_alerts);
 }
 
 
@@ -247,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&const DeepCollectionEquality().equals(other._dailyPerformance, _dailyPerformance)&&const DeepCollectionEquality().equals(other._topProducts, _topProducts));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoreStats&&(identical(other.totalSales, totalSales) || other.totalSales == totalSales)&&(identical(other.totalCredit, totalCredit) || other.totalCredit == totalCredit)&&(identical(other.totalTransactions, totalTransactions) || other.totalTransactions == totalTransactions)&&(identical(other.performanceChange, performanceChange) || other.performanceChange == performanceChange)&&const DeepCollectionEquality().equals(other._dailyPerformance, _dailyPerformance)&&const DeepCollectionEquality().equals(other._topProducts, _topProducts)&&const DeepCollectionEquality().equals(other._alerts, _alerts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,const DeepCollectionEquality().hash(_dailyPerformance),const DeepCollectionEquality().hash(_topProducts));
+int get hashCode => Object.hash(runtimeType,totalSales,totalCredit,totalTransactions,performanceChange,const DeepCollectionEquality().hash(_dailyPerformance),const DeepCollectionEquality().hash(_topProducts),const DeepCollectionEquality().hash(_alerts));
 
 @override
 String toString() {
-  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, dailyPerformance: $dailyPerformance, topProducts: $topProducts)';
+  return 'StoreStats(totalSales: $totalSales, totalCredit: $totalCredit, totalTransactions: $totalTransactions, performanceChange: $performanceChange, dailyPerformance: $dailyPerformance, topProducts: $topProducts, alerts: $alerts)';
 }
 
 
@@ -267,7 +277,7 @@ abstract mixin class _$StoreStatsCopyWith<$Res> implements $StoreStatsCopyWith<$
   factory _$StoreStatsCopyWith(_StoreStats value, $Res Function(_StoreStats) _then) = __$StoreStatsCopyWithImpl;
 @override @useResult
 $Res call({
- double totalSales, double totalCredit, int totalTransactions, List<DailyStat> dailyPerformance, List<TopProduct> topProducts
+ double totalSales, double totalCredit, int totalTransactions, double performanceChange, List<DailyStat> dailyPerformance, List<TopProduct> topProducts, List<ProductAlert> alerts
 });
 
 
@@ -284,14 +294,291 @@ class __$StoreStatsCopyWithImpl<$Res>
 
 /// Create a copy of StoreStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? dailyPerformance = null,Object? topProducts = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? totalSales = null,Object? totalCredit = null,Object? totalTransactions = null,Object? performanceChange = null,Object? dailyPerformance = null,Object? topProducts = null,Object? alerts = null,}) {
   return _then(_StoreStats(
 totalSales: null == totalSales ? _self.totalSales : totalSales // ignore: cast_nullable_to_non_nullable
 as double,totalCredit: null == totalCredit ? _self.totalCredit : totalCredit // ignore: cast_nullable_to_non_nullable
 as double,totalTransactions: null == totalTransactions ? _self.totalTransactions : totalTransactions // ignore: cast_nullable_to_non_nullable
-as int,dailyPerformance: null == dailyPerformance ? _self._dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
+as int,performanceChange: null == performanceChange ? _self.performanceChange : performanceChange // ignore: cast_nullable_to_non_nullable
+as double,dailyPerformance: null == dailyPerformance ? _self._dailyPerformance : dailyPerformance // ignore: cast_nullable_to_non_nullable
 as List<DailyStat>,topProducts: null == topProducts ? _self._topProducts : topProducts // ignore: cast_nullable_to_non_nullable
-as List<TopProduct>,
+as List<TopProduct>,alerts: null == alerts ? _self._alerts : alerts // ignore: cast_nullable_to_non_nullable
+as List<ProductAlert>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ProductAlert {
+
+ String get productId; String get productName; int get currentQuantity; int get threshold; String get message;
+/// Create a copy of ProductAlert
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ProductAlertCopyWith<ProductAlert> get copyWith => _$ProductAlertCopyWithImpl<ProductAlert>(this as ProductAlert, _$identity);
+
+  /// Serializes this ProductAlert to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductAlert&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.currentQuantity, currentQuantity) || other.currentQuantity == currentQuantity)&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.message, message) || other.message == message));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,productId,productName,currentQuantity,threshold,message);
+
+@override
+String toString() {
+  return 'ProductAlert(productId: $productId, productName: $productName, currentQuantity: $currentQuantity, threshold: $threshold, message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ProductAlertCopyWith<$Res>  {
+  factory $ProductAlertCopyWith(ProductAlert value, $Res Function(ProductAlert) _then) = _$ProductAlertCopyWithImpl;
+@useResult
+$Res call({
+ String productId, String productName, int currentQuantity, int threshold, String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$ProductAlertCopyWithImpl<$Res>
+    implements $ProductAlertCopyWith<$Res> {
+  _$ProductAlertCopyWithImpl(this._self, this._then);
+
+  final ProductAlert _self;
+  final $Res Function(ProductAlert) _then;
+
+/// Create a copy of ProductAlert
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? productName = null,Object? currentQuantity = null,Object? threshold = null,Object? message = null,}) {
+  return _then(_self.copyWith(
+productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
+as String,productName: null == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
+as String,currentQuantity: null == currentQuantity ? _self.currentQuantity : currentQuantity // ignore: cast_nullable_to_non_nullable
+as int,threshold: null == threshold ? _self.threshold : threshold // ignore: cast_nullable_to_non_nullable
+as int,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ProductAlert].
+extension ProductAlertPatterns on ProductAlert {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ProductAlert value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ProductAlert() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ProductAlert value)  $default,){
+final _that = this;
+switch (_that) {
+case _ProductAlert():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ProductAlert value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ProductAlert() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  String productName,  int currentQuantity,  int threshold,  String message)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ProductAlert() when $default != null:
+return $default(_that.productId,_that.productName,_that.currentQuantity,_that.threshold,_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  String productName,  int currentQuantity,  int threshold,  String message)  $default,) {final _that = this;
+switch (_that) {
+case _ProductAlert():
+return $default(_that.productId,_that.productName,_that.currentQuantity,_that.threshold,_that.message);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  String productName,  int currentQuantity,  int threshold,  String message)?  $default,) {final _that = this;
+switch (_that) {
+case _ProductAlert() when $default != null:
+return $default(_that.productId,_that.productName,_that.currentQuantity,_that.threshold,_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ProductAlert implements ProductAlert {
+  const _ProductAlert({required this.productId, required this.productName, required this.currentQuantity, required this.threshold, required this.message});
+  factory _ProductAlert.fromJson(Map<String, dynamic> json) => _$ProductAlertFromJson(json);
+
+@override final  String productId;
+@override final  String productName;
+@override final  int currentQuantity;
+@override final  int threshold;
+@override final  String message;
+
+/// Create a copy of ProductAlert
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ProductAlertCopyWith<_ProductAlert> get copyWith => __$ProductAlertCopyWithImpl<_ProductAlert>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ProductAlertToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductAlert&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.currentQuantity, currentQuantity) || other.currentQuantity == currentQuantity)&&(identical(other.threshold, threshold) || other.threshold == threshold)&&(identical(other.message, message) || other.message == message));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,productId,productName,currentQuantity,threshold,message);
+
+@override
+String toString() {
+  return 'ProductAlert(productId: $productId, productName: $productName, currentQuantity: $currentQuantity, threshold: $threshold, message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ProductAlertCopyWith<$Res> implements $ProductAlertCopyWith<$Res> {
+  factory _$ProductAlertCopyWith(_ProductAlert value, $Res Function(_ProductAlert) _then) = __$ProductAlertCopyWithImpl;
+@override @useResult
+$Res call({
+ String productId, String productName, int currentQuantity, int threshold, String message
+});
+
+
+
+
+}
+/// @nodoc
+class __$ProductAlertCopyWithImpl<$Res>
+    implements _$ProductAlertCopyWith<$Res> {
+  __$ProductAlertCopyWithImpl(this._self, this._then);
+
+  final _ProductAlert _self;
+  final $Res Function(_ProductAlert) _then;
+
+/// Create a copy of ProductAlert
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? productName = null,Object? currentQuantity = null,Object? threshold = null,Object? message = null,}) {
+  return _then(_ProductAlert(
+productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
+as String,productName: null == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
+as String,currentQuantity: null == currentQuantity ? _self.currentQuantity : currentQuantity // ignore: cast_nullable_to_non_nullable
+as int,threshold: null == threshold ? _self.threshold : threshold // ignore: cast_nullable_to_non_nullable
+as int,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

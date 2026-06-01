@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tindahan_natin/core/realtime/signalr_service.dart';
+import 'package:tindahan_natin/features/notifications/widgets/announcement_banner.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
 
@@ -25,6 +27,11 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Initialize global realtime connection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(realtimeClientProvider.notifier).connectGlobal();
+    });
+
     final location = currentLocation;
     if (location.startsWith('/store')) {
       return child;
@@ -53,12 +60,19 @@ class AppShell extends ConsumerWidget {
           ),
         ],
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOutQuart,
-        switchOutCurve: Curves.easeInQuart,
-        child: child,
-        transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+      body: Column(
+        children: [
+          const AnnouncementBanner(),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOutQuart,
+              switchOutCurve: Curves.easeInQuart,
+              child: child,
+              transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
@@ -71,7 +85,6 @@ class AppShell extends ConsumerWidget {
           NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Products'),
           NavigationDestination(icon: Icon(Icons.category_outlined), selectedIcon: Icon(Icons.category), label: 'Categories'),
           NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
-          // NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
