@@ -30,5 +30,5 @@ String? buildPublicStoreUrl({
     return null;
   }
 
-  return '$normalizedBaseUrl/#/store/${Uri.encodeComponent(trimmedSlug)}';
+  return '$normalizedBaseUrl/store/${Uri.encodeComponent(trimmedSlug)}';
 }

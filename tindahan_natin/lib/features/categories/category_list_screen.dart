@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
+import 'package:tindahan_natin/features/categories/category.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 
@@ -23,7 +24,6 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   bool _isSearching = false;
 
   void _onSearchChanged(String value) {
-    // update UI immediately (e.g. clear icon visibility)
     setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -98,88 +98,70 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
               return RefreshIndicator(
                 onRefresh: () => ref.read(categoriesProvider(storeId).notifier).refresh(),
-                child: Builder(builder: (context) {
-                  if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 700;
+                    
+                    const adInterval = 10;
+                    final itemCount = categories.length + (categories.length / adInterval).floor();
 
-                  const adInterval = 10;
-                  final itemCount = categories.length + (categories.length / adInterval).floor();
+                    if (isWide) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(8),
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 400,
+                          mainAxisExtent: 72,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                        ),
+                        itemCount: itemCount,
+                        itemBuilder: (context, index) {
+                          final isAd = (index + 1) % (adInterval + 1) == 0;
+                          if (isAd) {
+                            return const Card(
+                              margin: EdgeInsets.zero,
+                              child: Center(child: InlineAdWidget()),
+                            );
+                          }
 
-                  return ListView.builder(
-                    itemCount: itemCount,
-                    itemBuilder: (context, index) {
-                      final isAd = (index + 1) % (adInterval + 1) == 0;
-                      if (isAd) {
-                        return const Column(
-                          children: [
-                            InlineAdWidget(),
-                            Divider(),
-                          ],
+                          final categoryIndex = index - (index / (adInterval + 1)).floor();
+                          final c = categories[categoryIndex];
+                          return Card(
+                            margin: EdgeInsets.zero,
+                            child: _CategoryTile(
+                              category: c,
+                              storeId: storeId,
+                            ),
+                          );
+                        },
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: itemCount,
+                      itemBuilder: (context, index) {
+                        final isAd = (index + 1) % (adInterval + 1) == 0;
+                        if (isAd) {
+                          return const Column(
+                            children: [
+                              InlineAdWidget(),
+                              Divider(),
+                            ],
+                          );
+                        }
+
+                        final categoryIndex = index - (index / (adInterval + 1)).floor();
+                        final c = categories[categoryIndex];
+                        return _CategoryTile(
+                          category: c,
+                          storeId: storeId,
                         );
-                      }
-
-                      final categoryIndex = index - (index / (adInterval + 1)).floor();
-                      final c = categories[categoryIndex];
-                      return ListTile(
-                      leading: const Icon(Icons.label),
-                      title: Text(c.name),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () async {
-                              final controller = TextEditingController(text: c.name);
-                              final result = await showDialog<String?>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Edit Category'),
-                                  content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name')),
-                                  actions: [
-                                    ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
-                                  ],
-                                ),
-                              );
-                              if (result != null && result.trim().isNotEmpty) {
-                                try {
-                                  await ref.read(categoriesProvider(storeId).notifier).updateCategory(c.id, result.trim());
-                                  if (mounted) SnackBarUtils.showSuccess(context, 'Category updated');
-                                } catch (e) {
-                                  if (mounted) SnackBarUtils.showError(context, e);
-                                }
-                              }
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () async {
-                              final confirmed = await showDialog<bool?>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete Category'),
-                                  content: Text('Delete category "${c.name}"? This cannot be undone.'),
-                                  actions: [
-                                    ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Delete')),
-                                  ],
-                                ),
-                              );
-                              if (confirmed == true) {
-                                try {
-                                  await ref.read(categoriesProvider(storeId).notifier).deleteCategory(c.id);
-                                  if (mounted) SnackBarUtils.showSuccess(context, 'Category deleted');
-                                } catch (e) {
-                                  if (mounted) SnackBarUtils.showError(context, e);
-                                }
-                              }
-                            },
-                          ),
-                        ],
-                      ),
+                      },
                     );
                   },
-                );
-              }),
-            );
-          },
+                ),
+              );
+            },
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => AppErrorWidget(
               error: e,
@@ -194,8 +176,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text('Add Category'),
-                  content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name')),
+                  content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name'), autofocus: true),
                   actions: [
+                    // TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
                     ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
                   ],
                 ),
@@ -214,7 +197,93 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         );
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) => Scaffold(body: Center(child: Text('Error loading store: $e'))),
+      error: (e, s) => Scaffold(
+        body: AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(myStoreProvider),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryTile extends ConsumerWidget {
+  final Category category;
+  final String storeId;
+
+  const _CategoryTile({required this.category, required this.storeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      leading: const Icon(Icons.label),
+      title: Text(category.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final controller = TextEditingController(text: category.name);
+              final result = await showDialog<String?>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Edit Category'),
+                  content: TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    autofocus: true,
+                  ),
+                  actions: [
+                    // TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                    ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
+                  ],
+                ),
+              );
+              if (result != null && result.trim().isNotEmpty) {
+                try {
+                  await ref.read(categoriesProvider(storeId).notifier).updateCategory(category.id, result.trim());
+                  if (context.mounted) SnackBarUtils.showSuccess(context, 'Category updated');
+                } catch (e) {
+                  if (context.mounted) SnackBarUtils.showError(context, e);
+                }
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              final confirmed = await showDialog<bool?>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Delete Category'),
+                  content: Text('Delete category "${category.name}"? This cannot be undone.'),
+                  actions: [
+                    // TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        foregroundColor: Theme.of(context).colorScheme.onError,
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                try {
+                  await ref.read(categoriesProvider(storeId).notifier).deleteCategory(category.id);
+                  if (context.mounted) SnackBarUtils.showSuccess(context, 'Category deleted');
+                } catch (e) {
+                  if (context.mounted) SnackBarUtils.showError(context, e);
+                }
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

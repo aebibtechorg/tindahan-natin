@@ -31,66 +31,106 @@ class _PublicStoreShellState extends ConsumerState<PublicStoreShell> {
     });
   }
 
+  void _onDestinationSelected(int index) {
+    widget.navigationShell.goBranch(
+      index,
+      initialLocation: index == widget.navigationShell.currentIndex,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final storeInfoAsync = ref.watch(publicStoreInfoProvider(widget.slug));
     final authState = ref.watch(authStateProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: authState.value != null,
-        title: storeInfoAsync.when(
-          data: (info) {
-            final Store store = info['store'];
-            return Text(store.name);
-          },
-          loading: () => const Text('Loading...'),
-          error: (_, _) => const Text('Tindahan Natin'),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(publicStoreInfoProvider(widget.slug));
-              ref.invalidate(publicProductSearchProvider);
-              ref.invalidate(publicListaHistoryProvider);
-            },
-            tooltip: 'Refresh',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+
+        return Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: authState.value != null,
+            title: storeInfoAsync.when(
+              data: (info) {
+                final Store store = info['store'];
+                return Text(store.name);
+              },
+              loading: () => const Text('Loading...'),
+              error: (_, _) => const Text('Tindahan Natin'),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  ref.invalidate(publicStoreInfoProvider(widget.slug));
+                  ref.invalidate(publicProductSearchProvider);
+                  ref.invalidate(publicListaHistoryProvider);
+                },
+                tooltip: 'Refresh',
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          const AnnouncementBanner(),
-          Expanded(child: widget.navigationShell),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: widget.navigationShell.currentIndex,
-        onDestinationSelected: (index) {
-          widget.navigationShell.goBranch(
-            index,
-            initialLocation: index == widget.navigationShell.currentIndex,
-          );
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
-            label: 'Products',
+          body: Row(
+            children: [
+              if (isWide)
+                NavigationRail(
+                  extended: true,
+                  selectedIndex: widget.navigationShell.currentIndex,
+                  onDestinationSelected: _onDestinationSelected,
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.storefront_outlined),
+                      selectedIcon: Icon(Icons.storefront),
+                      label: Text('Products'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.map_outlined),
+                      selectedIcon: Icon(Icons.map),
+                      label: Text('Map'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.event_note_outlined),
+                      selectedIcon: Icon(Icons.event_note),
+                      label: Text('Lista'),
+                    ),
+                  ],
+                ),
+              if (isWide) const VerticalDivider(thickness: 1, width: 1),
+              Expanded(
+                child: Column(
+                  children: [
+                    const AnnouncementBanner(),
+                    Expanded(child: widget.navigationShell),
+                  ],
+                ),
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_note_outlined),
-            selectedIcon: Icon(Icons.event_note),
-            label: 'Lista',
-          ),
-        ],
-      ),
+          bottomNavigationBar: isWide
+              ? null
+              : NavigationBar(
+                  selectedIndex: widget.navigationShell.currentIndex,
+                  onDestinationSelected: _onDestinationSelected,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.storefront_outlined),
+                      selectedIcon: Icon(Icons.storefront),
+                      label: 'Products',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.map_outlined),
+                      selectedIcon: Icon(Icons.map),
+                      label: 'Map',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.event_note_outlined),
+                      selectedIcon: Icon(Icons.event_note),
+                      label: 'Lista',
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }

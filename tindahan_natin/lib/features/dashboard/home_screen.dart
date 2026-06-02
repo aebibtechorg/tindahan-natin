@@ -125,59 +125,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }
 
           return statsAsync.when(
-            data: (stats) => SingleChildScrollView(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Welcome back, ${store.name}!',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ).animate().fadeIn().slideX(begin: -0.1),
-                  const SizedBox(height: 24),
-                  
-                  // Summary Cards
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 4,
-                    crossAxisSpacing: 0,
-                    childAspectRatio: 1.0,
-                    children: [
-                      _StatCard(
-                        title: 'Total Sales',
-                        value: '₱${stats.totalSales.toStringAsFixed(2)}',
-                        icon: Icons.payments_outlined,
-                        color: Colors.green,
-                      ),
-                      _StatCard(
-                        title: 'Total Credit',
-                        value: '₱${stats.totalCredit.toStringAsFixed(2)}',
-                        icon: Icons.event_note,
-                        color: Colors.orange,
-                      ),
-                      _StatCard(
-                        title: 'Transactions',
-                        value: '${stats.totalTransactions}',
-                        icon: Icons.receipt_long_outlined,
-                        color: Colors.blue,
-                      ),
-                      _StatCard(
-                        title: 'Performance',
-                        value: '${stats.performanceChange >= 0 ? '+' : ''}${stats.performanceChange.toStringAsFixed(1)}%',
-                        icon: stats.performanceChange >= 0 ? Icons.trending_up : Icons.trending_down,
-                        color: stats.performanceChange >= 0 ? Colors.purple : Colors.red,
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9)),
-                  
-                  const SizedBox(height: 24),
-                  const InlineAdWidget(), // Added back inline ad
-                  const SizedBox(height: 32),
-                  
-                  // Alerts Section
-                  if (stats.alerts.isNotEmpty) ...[
+            data: (stats) => LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth >= 900;
+                final crossAxisCount = constraints.maxWidth > 1200 ? 4 : (constraints.maxWidth > 600 ? 3 : 2);
+                
+                final summaryCards = GridView.count(
+                  crossAxisCount: crossAxisCount,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 4,
+                  crossAxisSpacing: 0,
+                  childAspectRatio: isWide ? 1.5 : 1.0,
+                  children: [
+                    _StatCard(
+                      title: 'Total Sales',
+                      value: '₱${stats.totalSales.toStringAsFixed(2)}',
+                      icon: Icons.payments_outlined,
+                      color: Colors.green,
+                    ),
+                    _StatCard(
+                      title: 'Total Credit',
+                      value: '₱${stats.totalCredit.toStringAsFixed(2)}',
+                      icon: Icons.event_note,
+                      color: Colors.orange,
+                    ),
+                    _StatCard(
+                      title: 'Transactions',
+                      value: '${stats.totalTransactions}',
+                      icon: Icons.receipt_long_outlined,
+                      color: Colors.blue,
+                    ),
+                    _StatCard(
+                      title: 'Performance',
+                      value: '${stats.performanceChange >= 0 ? '+' : ''}${stats.performanceChange.toStringAsFixed(1)}%',
+                      icon: stats.performanceChange >= 0 ? Icons.trending_up : Icons.trending_down,
+                      color: stats.performanceChange >= 0 ? Colors.purple : Colors.red,
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9));
+
+                final alertsSection = stats.alerts.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Row(
                       children: [
                         Text(
@@ -204,7 +194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 16),
                     ...stats.alerts.map((alert) => Card(
                           color: Colors.red.withValues(alpha: 0.05),
-                          margin: const EdgeInsets.only(bottom: 8),
+                          margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                             side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
@@ -227,9 +217,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ).animate().fadeIn().slideX(begin: 0.1)),
                     const SizedBox(height: 32),
                   ],
+                );
 
-                  // Daily Performance
-                  if (stats.dailyPerformance.isNotEmpty) ...[
+                final dailyPerformanceSection = stats.dailyPerformance.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
                       'Daily Sales (Last 7 Days)',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -279,78 +271,139 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 32),
                   ],
+                );
 
-                  // Action Menu
-                  Text(
-                    'Quick Actions',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _QuickAction(
-                          label: 'Products',
-                          icon: Icons.inventory_2_outlined,
-                          onTap: () => context.push('/inventory'),
-                        ),
-                        _QuickAction(
-                          label: 'Map',
-                          icon: Icons.map_outlined,
-                          onTap: () => context.push('/map'),
-                        ),
-                        _QuickAction(
-                          label: 'History',
-                          icon: Icons.history,
-                          onTap: () => context.push('/lista-history'),
-                        ),
-                        _QuickAction(
-                          label: 'Public View',
-                          icon: Icons.storefront,
-                          onTap: () => context.push('/store/${store.slug}'),
-                        ),
-                        if (PublicWebConfig.hasBaseUrl)
-                          _QuickAction(
-                            label: 'Share',
-                            icon: Icons.share_outlined,
-                            onTap: () => _shareStore(store),
-                          ),
-                      ],
+                final quickActionsSection = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quick Actions',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Top Products
-                  Text(
-                    'Top Products',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  if (stats.topProducts.isEmpty)
-                    const Center(child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('No sales data yet.'),
-                    ))
-                  else
-                    ...stats.topProducts.map((p) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                          child: Text(p.productName[0]),
-                        ),
-                        title: Text(p.productName),
-                        subtitle: Text('${p.quantitySold} units sold'),
-                        trailing: Text(
-                          '₱${p.totalRevenue.toStringAsFixed(2)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                    const SizedBox(height: 16),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _QuickAction(
+                            label: 'Products',
+                            icon: Icons.inventory_2_outlined,
+                            onTap: () => context.push('/inventory'),
+                          ),
+                          _QuickAction(
+                            label: 'Map',
+                            icon: Icons.map_outlined,
+                            onTap: () => context.push('/map'),
+                          ),
+                          _QuickAction(
+                            label: 'History',
+                            icon: Icons.history,
+                            onTap: () => context.push('/lista-history'),
+                          ),
+                          _QuickAction(
+                            label: 'Public View',
+                            icon: Icons.storefront,
+                            onTap: () => context.push('/store/${store.slug}'),
+                          ),
+                          if (PublicWebConfig.hasBaseUrl)
+                            _QuickAction(
+                              label: 'Share',
+                              icon: Icons.share_outlined,
+                              onTap: () => _shareStore(store),
+                            ),
+                        ],
                       ),
-                    )),
-                ],
-              ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final topProductsSection = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Top Products',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    if (stats.topProducts.isEmpty)
+                      const Center(child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text('No sales data yet.'),
+                      ))
+                    else
+                      ...stats.topProducts.map((p) => Card(
+                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                            child: Text(p.productName[0]),
+                          ),
+                          title: Text(p.productName),
+                          subtitle: Text('${p.quantitySold} units sold'),
+                          trailing: Text(
+                            '₱${p.totalRevenue.toStringAsFixed(2)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      )),
+                  ],
+                );
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome back, ${store.name}!',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ).animate().fadeIn().slideX(begin: -0.1),
+                      const SizedBox(height: 24),
+                      
+                      summaryCards,
+                      
+                      const SizedBox(height: 24),
+                      const InlineAdWidget(),
+                      const SizedBox(height: 32),
+
+                      if (isWide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  dailyPerformanceSection,
+                                  topProductsSection,
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 32),
+                            Expanded(
+                              flex: 1,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  alertsSection,
+                                  quickActionsSection,
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        alertsSection,
+                        dailyPerformanceSection,
+                        quickActionsSection,
+                        topProductsSection,
+                      ],
+                    ],
+                  ),
+                );
+              },
             ),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, s) => AppErrorWidget(

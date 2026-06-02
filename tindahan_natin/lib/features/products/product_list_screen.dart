@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
+import 'package:tindahan_natin/features/products/product.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
 import 'package:tindahan_natin/features/categories/category.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
@@ -32,7 +33,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   final FocusNode _searchFocus = FocusNode();
 
   void _onSearchChanged(String value) {
-    // update UI immediately (e.g. clear icon visibility)
     setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -56,7 +56,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
 
     return myStoreAsync.when(
       data: (store) {
-        if (store == null) return const Center(child: Text('No store found'));
+        if (store == null) return const Scaffold(body: Center(child: Text('No store found')));
         final storeId = store.id;
 
         // Connect to SignalR for real-time updates
@@ -97,11 +97,6 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                   )
                 : const Text('Products'),
             actions: [
-              // IconButton(
-              //   icon: const Icon(Icons.category),
-              //   tooltip: 'Categories',
-              //   onPressed: () => context.push('/categories'),
-              // ),
               IconButton(
                 icon: Icon(_isSearching ? Icons.close : Icons.search),
                 onPressed: () {
@@ -113,16 +108,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       _query = '';
                     } else {
                       _isSearching = true;
-                      // Focus the search field after frame
                       WidgetsBinding.instance.addPostFrameCallback((_) => _searchFocus.requestFocus());
                     }
                   });
                 },
               ),
-              // IconButton(
-              //   icon: const Icon(Icons.refresh),
-              //   onPressed: () => ref.read(productsProvider(storeId).notifier).refresh(),
-              // ),
             ],
           ),
           body: displayAsync.when(
@@ -134,112 +124,88 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final catErr = categoriesAsync.whenOrNull(error: (e, s) => e);
-              final shelfErr = shelvesAsync.whenOrNull(error: (e, s) => e);
-              if (catErr != null || shelfErr != null) {
-                final errorMessage = catErr ?? shelfErr ?? 'Error loading resources';
-                return Center(child: Text(errorMessage.toString()));
-              }
-
               return RefreshIndicator(
                 onRefresh: () => ref.read(productsProvider(storeId).notifier).refresh(),
-                child: Builder(builder: (ctx) {
-                  if (products.isEmpty) return const Center(child: Text('No products yet.'));
-                  
-                  const adInterval = 10;
-                  final itemCount = products.length + (products.length / adInterval).floor();
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 700;
+                    
+                    if (products.isEmpty) return const Center(child: Text('No products yet.'));
+                    
+                    const adInterval = 10;
+                    final itemCount = products.length + (products.length / adInterval).floor();
 
-                  return ListView.builder(
-                    itemCount: itemCount,
-                    itemBuilder: (context, index) {
-                      final isAd = (index + 1) % (adInterval + 1) == 0;
-                      if (isAd) {
-                        return const Column(
-                          children: [
-                            InlineAdWidget(),
-                            Divider(),
-                          ],
-                        );
-                      }
-
-                      final productIndex = index - (index / (adInterval + 1)).floor();
-                      final product = products[productIndex];
-                      final cat = categoriesData.firstWhere(
-                        (c) => c.id == product.categoryId,
-                        orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
-                      );
-                      final categoryName = cat.name;
-
-                      final shelf = shelvesData.firstWhere(
-                        (s) => s.id == (product.shelfId ?? ''),
-                        orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
-                      );
-                      final shelfName = shelf.name;
-
-                      return Dismissible(
-                        key: Key('product_${product.id}'),
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                    if (isWide) {
+                      return GridView.builder(
+                        padding: const EdgeInsets.all(8),
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 450,
+                          mainAxisExtent: 100,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
                         ),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Confirm Delete'),
-                                content: Text('Are you sure you want to delete ${product.name}?\nThis action cannot be undone.'),
-                                actions: [
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Theme.of(context).colorScheme.error,
-                                      foregroundColor: Theme.of(context).colorScheme.onError,
-                                    ),
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
-                              );
-                            },
+                        itemCount: itemCount,
+                        itemBuilder: (context, index) {
+                          final isAd = (index + 1) % (adInterval + 1) == 0;
+                          if (isAd) {
+                            return const Card(
+                              margin: EdgeInsets.zero,
+                              child: Center(child: InlineAdWidget()),
+                            );
+                          }
+
+                          final productIndex = index - (index / (adInterval + 1)).floor();
+                          final product = products[productIndex];
+                          return _ProductTile(
+                            product: product,
+                            categoryName: categoriesData.firstWhere(
+                              (c) => c.id == product.categoryId,
+                              orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
+                            ).name,
+                            shelfName: shelvesData.firstWhere(
+                              (s) => s.id == (product.shelfId ?? ''),
+                              orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
+                            ).name,
+                            index: index,
+                            onTap: () => context.push('/inventory/edit/${product.id}'),
                           );
                         },
-                        onDismissed: (direction) {
-                          ref.read(productsProvider(storeId).notifier).deleteProduct(product.id);
-                        },
-                        child: ListTile(
-                          leading: product.imageUrl != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: CachedNetworkImage(
-                                    imageUrl: product.imageUrl!.startsWith('http')
-                                        ? product.imageUrl!
-                                        : '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                                  ),
-                                )
-                              : const Icon(Icons.shopping_bag, size: 40),
-                          title: Text(product.name),
-                          subtitle: Text('₱${product.price} • $categoryName • $shelfName • Stock: ${product.quantity}'),
-                          trailing: product.quantity < 5
-                              ? const Chip(label: Text('Low Stock', style: TextStyle(fontSize: 10, color: Colors.white)), backgroundColor: Colors.red)
-                              : const Icon(Icons.chevron_right),
-                          onTap: () {
-                            context.push('/inventory/edit/${product.id}');
-                          },
-                        ).animate()
-                          .fadeIn(duration: const Duration(milliseconds: 300), delay: Duration(milliseconds: 30 * index))
-                          .slideY(begin: 0.02, duration: const Duration(milliseconds: 300), curve: Curves.easeOut),
                       );
-                    },
-                  );
-                }),
+                    }
+
+                    return ListView.builder(
+                      itemCount: itemCount,
+                      itemBuilder: (context, index) {
+                        final isAd = (index + 1) % (adInterval + 1) == 0;
+                        if (isAd) {
+                          return const Column(
+                            children: [
+                              InlineAdWidget(),
+                              Divider(),
+                            ],
+                          );
+                        }
+
+                        final productIndex = index - (index / (adInterval + 1)).floor();
+                        final product = products[productIndex];
+                        return _ProductTile(
+                          product: product,
+                          categoryName: categoriesData.firstWhere(
+                            (c) => c.id == product.categoryId,
+                            orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
+                          ).name,
+                          shelfName: shelvesData.firstWhere(
+                            (s) => s.id == (product.shelfId ?? ''),
+                            orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
+                          ).name,
+                          index: index,
+                          onTap: () => context.push('/inventory/edit/${product.id}'),
+                          onDelete: () => ref.read(productsProvider(storeId).notifier).deleteProduct(product.id),
+                        );
+                      },
+                    );
+                  },
+                ),
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -265,7 +231,106 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         );
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, s) => Scaffold(body: Center(child: Text('Error loading store: $e'))),
+      error: (e, s) => Scaffold(
+        body: AppErrorWidget(
+          error: e,
+          stackTrace: s,
+          onRetry: () => ref.invalidate(myStoreProvider),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductTile extends ConsumerWidget {
+  final Product product;
+  final String categoryName;
+  final String shelfName;
+  final int index;
+  final VoidCallback onTap;
+  final VoidCallback? onDelete;
+
+  const _ProductTile({
+    required this.product,
+    required this.categoryName,
+    required this.shelfName,
+    required this.index,
+    required this.onTap,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tile = ListTile(
+      leading: product.imageUrl != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: CachedNetworkImage(
+                imageUrl: product.imageUrl!.startsWith('http')
+                    ? product.imageUrl!
+                    : '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(color: Colors.grey[200]),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
+              ),
+            )
+          : const Icon(Icons.shopping_bag, size: 40),
+      title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        '₱${product.price} • $categoryName • $shelfName • Stock: ${product.quantity}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: product.quantity < product.minStockThreshold
+          ? const Chip(
+              label: Text('Low Stock', style: TextStyle(fontSize: 10, color: Colors.white)),
+              backgroundColor: Colors.red,
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: onTap,
+    ).animate()
+      .fadeIn(duration: const Duration(milliseconds: 300), delay: Duration(milliseconds: 30 * index))
+      .slideY(begin: 0.02, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+
+    if (onDelete == null) return Card(margin: EdgeInsets.zero, child: tile);
+
+    return Dismissible(
+      key: Key('product_${product.id}'),
+      background: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Confirm Delete'),
+              content: Text('Are you sure you want to delete ${product.name}?\nThis action cannot be undone.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      onDismissed: (direction) => onDelete?.call(),
+      child: tile,
     );
   }
 }
