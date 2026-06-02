@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0+16] - 2026-06-02
+
+### Fixed
+- Layout for Android 15 and above
+
 ## [1.0.0+15] - 2026-06-01
 
 ### Added
