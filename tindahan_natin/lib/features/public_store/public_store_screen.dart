@@ -191,17 +191,75 @@ class _PublicProductTile extends ConsumerWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: product.shelfId != null
-          ? SizedBox(
-              width: 48,
-              child: IconButton(
-                onPressed: () => onOpenMap?.call(product.shelfId),
-                tooltip: 'Find on map',
-                icon: const Icon(Icons.place_outlined),
-              ),
-            )
-          : null,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: () => _showProductDetails(context, ref, product),
+            tooltip: 'Product info',
+            icon: const Icon(Icons.info_outline),
+          ),
+          if (product.shelfId != null)
+            IconButton(
+              onPressed: () => onOpenMap?.call(product.shelfId),
+              tooltip: 'Find on map',
+              icon: const Icon(Icons.place_outlined),
+            ),
+        ],
+      ),
       onTap: () => onOpenMap?.call(product.shelfId),
+    );
+  }
+
+  void _showProductDetails(BuildContext context, WidgetRef ref, PublicProduct product) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(product.name),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (product.imageUrl != null)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        product.imageUrl!.contains('api')
+                            ? '${ref.read(apiBaseUrlProvider)}${product.imageUrl}'
+                            : product.imageUrl!,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              Text('Price: ₱${product.price}', style: Theme.of(context).textTheme.titleMedium),
+              if (product.quantity != null)
+                Text('In stock: ${product.quantity}', style: Theme.of(context).textTheme.bodyMedium),
+              if (product.shelfName != null)
+                Text('Location: ${product.shelfName}', style: Theme.of(context).textTheme.bodyMedium),
+              if (product.barcode != null && product.barcode!.isNotEmpty)
+                Text('Barcode: ${product.barcode}', style: Theme.of(context).textTheme.bodyMedium),
+              if (product.description != null && product.description!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text('Description:', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 4),
+                Text(product.description!),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 }

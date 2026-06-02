@@ -15,6 +15,9 @@ class PublicProduct {
     this.imageUrl,
     this.shelfId,
     this.shelfName,
+    this.description,
+    this.quantity,
+    this.barcode,
   });
 
   final String id;
@@ -23,6 +26,9 @@ class PublicProduct {
   final String? imageUrl;
   final String? shelfId;
   final String? shelfName;
+  final String? description;
+  final int? quantity;
+  final String? barcode;
 
   factory PublicProduct.fromJson(Map<String, dynamic> json) {
     return PublicProduct(
@@ -32,6 +38,9 @@ class PublicProduct {
       imageUrl: json['imageUrl'] as String?,
       shelfId: json['shelfId'] as String?,
       shelfName: json['shelfName'] as String?,
+      description: json['description'] as String?,
+      quantity: json['quantity'] as int?,
+      barcode: json['barcode'] as String?,
     );
   }
 }
