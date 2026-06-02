@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_manager.dart';
+import 'package:tindahan_natin/core/network/connectivity_provider.dart';
+import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
 import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/features/store_map/map_service.dart';
@@ -32,17 +33,19 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final Map<String, Shelf> _bulkMoveStartShelves = {};
   bool _initialViewConfigured = false;
   Size _viewportSize = Size.zero;
-  final InterstitialAdManager _interstitialAdManager = InterstitialAdManager();
 
   @override
   void initState() {
     super.initState();
-    _interstitialAdManager.showAd();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(isOnlineProvider)) {
+        ref.read(interstitialAdProvider).showAdIfReady();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _interstitialAdManager.dispose();
     super.dispose();
   }
 

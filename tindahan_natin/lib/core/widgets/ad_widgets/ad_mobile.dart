@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:tindahan_natin/core/config/ad_config/ad_helper.dart';
+import 'package:tindahan_natin/core/network/connectivity_provider.dart';
 
-class InlineAdWidget extends StatefulWidget {
+class InlineAdWidget extends ConsumerStatefulWidget {
   const InlineAdWidget({super.key});
 
   @override
-  State<InlineAdWidget> createState() => _InlineAdWidgetState();
+  ConsumerState<InlineAdWidget> createState() => _InlineAdWidgetState();
 }
 
-class _InlineAdWidgetState extends State<InlineAdWidget> {
+class _InlineAdWidgetState extends ConsumerState<InlineAdWidget> {
   NativeAd? _nativeAd;
   bool _isLoaded = false;
 
@@ -67,7 +69,8 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isLoaded || _nativeAd == null) {
+    final isOnline = ref.watch(isOnlineProvider);
+    if (!isOnline || !_isLoaded || _nativeAd == null) {
       return const SizedBox.shrink();
     }
 

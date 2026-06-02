@@ -1,16 +1,18 @@
 import 'dart:ui_web' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/config/ad_config/ad_helper.dart';
+import 'package:tindahan_natin/core/network/connectivity_provider.dart';
 import 'package:web/web.dart' as web;
 
-class InlineAdWidget extends StatefulWidget {
+class InlineAdWidget extends ConsumerStatefulWidget {
   const InlineAdWidget({super.key});
 
   @override
-  State<InlineAdWidget> createState() => _InlineAdWidgetState();
+  ConsumerState<InlineAdWidget> createState() => _InlineAdWidgetState();
 }
 
-class _InlineAdWidgetState extends State<InlineAdWidget> {
+class _InlineAdWidgetState extends ConsumerState<InlineAdWidget> {
   late String _viewType;
   static int _instanceCount = 0;
 
@@ -79,6 +81,11 @@ class _InlineAdWidgetState extends State<InlineAdWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isOnline = ref.watch(isOnlineProvider);
+    if (!isOnline) {
+      return const SizedBox.shrink();
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth.isFinite && constraints.maxWidth > 0

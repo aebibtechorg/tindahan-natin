@@ -27,7 +27,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     // Show interstitial ad on home screen access with frequency capping
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(interstitialAdProvider).showAdIfReady();
+      if (ref.read(isOnlineProvider)) {
+        ref.read(interstitialAdProvider).showAdIfReady();
+      }
     });
   }
 
