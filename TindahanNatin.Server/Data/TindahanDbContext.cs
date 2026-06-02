@@ -61,6 +61,8 @@ public class TindahanDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.HasPostgresExtension("pg_trgm");
+
         modelBuilder.Entity<User>().Property(u => u.Id).HasColumnType("uuid");
 
         modelBuilder.Entity<Store>().Property(s => s.Id).HasColumnType("uuid");
@@ -82,6 +84,11 @@ public class TindahanDbContext : DbContext
         modelBuilder.Entity<Product>().Property(p => p.UpdatedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<Product>().Property(p => p.DeletedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
+
+        modelBuilder.Entity<Product>()
+            .HasIndex(p => p.Name)
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops");
 
         // Configure generated tsvector columns for PostgreSQL full-text search
         modelBuilder.Entity<Product>()
