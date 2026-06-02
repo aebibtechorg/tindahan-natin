@@ -76,6 +76,11 @@ public class TindahanDbContext : DbContext
         modelBuilder.Entity<Category>().Property(c => c.DeletedAt).HasColumnType("timestamp with time zone");
         modelBuilder.Entity<Category>().HasQueryFilter(c => !c.IsDeleted);
 
+        modelBuilder.Entity<Category>()
+            .HasIndex(c => c.Name)
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops");
+
         modelBuilder.Entity<Product>().Property(p => p.Id).HasColumnType("uuid");
         modelBuilder.Entity<Product>().Property(p => p.CategoryId).HasColumnType("uuid");
         modelBuilder.Entity<Product>().Property(p => p.ShelfId).HasColumnType("uuid");

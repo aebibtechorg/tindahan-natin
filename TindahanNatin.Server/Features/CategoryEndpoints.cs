@@ -40,7 +40,10 @@ public static class CategoryEndpoints
             var pattern = $"%{q.Trim()}%";
 
             var categoriesQuery = categoriesBaseQuery
-                .Where(c => c.StoreId == storeId && ((c.SearchVector != null && c.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q))) || EF.Functions.ILike(c.Name, pattern)))
+                .Where(c => c.StoreId == storeId && (
+                    (c.SearchVector != null && c.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q))) || 
+                    EF.Functions.ILike(c.Name, pattern) ||
+                    EF.Functions.TrigramsAreSimilar(c.Name, q)))
                 .AsQueryable();
 
             if (updatedSince.HasValue)
