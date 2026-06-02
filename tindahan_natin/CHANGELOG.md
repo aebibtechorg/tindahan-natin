@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0+18] - 2026-06-02
+
+### Added
+- Sidebar for tablet/desktop devices
+- Remove `#` from the public store web links
+
 ## [1.0.0+17] - 2026-06-02
 
 ### Fixed
