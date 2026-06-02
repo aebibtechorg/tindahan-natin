@@ -22,7 +22,6 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
   String _query = '';
 
   void _onSearchChanged(String value) {
-    // update UI immediately for suffix icon visibility
     setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -85,54 +84,63 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
             data: (products) {
               if (products.isEmpty) return const Center(child: Text('No products found.'));
 
-              const adInterval = 10;
-              final itemCount = products.length + (products.length / adInterval).floor();
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 700;
+                  const adInterval = 10;
+                  final itemCount = products.length + (products.length / adInterval).floor();
 
-              return ListView.builder(
-                itemCount: itemCount,
-                itemBuilder: (context, index) {
-                  final isAd = (index + 1) % (adInterval + 1) == 0;
-                  if (isAd) {
-                    return const SizedBox(
-                      width: double.infinity,
-                      child: InlineAdWidget(),
+                  if (isWide) {
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 400,
+                        mainAxisExtent: 80,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                      ),
+                      itemCount: itemCount,
+                      itemBuilder: (context, index) {
+                        final isAd = (index + 1) % (adInterval + 1) == 0;
+                        if (isAd) {
+                          return const Card(
+                            margin: EdgeInsets.zero,
+                            child: Center(child: InlineAdWidget()),
+                          );
+                        }
+
+                        final productIndex = index - (index / (adInterval + 1)).floor();
+                        final product = products[productIndex];
+                        return Card(
+                          margin: EdgeInsets.zero,
+                          child: _PublicProductTile(
+                            product: product,
+                            onOpenMap: widget.onOpenMap,
+                          ),
+                        );
+                      },
                     );
                   }
 
-                  final productIndex = index - (index / (adInterval + 1)).floor();
-                  final product = products[productIndex];
+                  return ListView.builder(
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      final isAd = (index + 1) % (adInterval + 1) == 0;
+                      if (isAd) {
+                        return const SizedBox(
+                          width: double.infinity,
+                          child: InlineAdWidget(),
+                        );
+                      }
 
-                  return ListTile(
-                    leading: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: product.imageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                product.imageUrl!.contains('api') ? '${ref.read(apiBaseUrlProvider)}${product.imageUrl}' : product.imageUrl!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : const Icon(Icons.shopping_bag),
-                    ),
-                    title: Text(product.name),
-                    subtitle: Text(
-                      product.shelfName == null
-                          ? '₱${product.price} • Shelf unavailable'
-                          : '₱${product.price} • Shelf: ${product.shelfName}',
-                    ),
-                    trailing: product.shelfId != null
-                        ? SizedBox(
-                            width: 48,
-                            child: IconButton(
-                              onPressed: () => widget.onOpenMap?.call(product.shelfId),
-                              tooltip: 'Find on map',
-                              icon: const Icon(Icons.place_outlined),
-                            ),
-                          )
-                        : null,
-                    onTap: () => widget.onOpenMap?.call(product.shelfId),
+                      final productIndex = index - (index / (adInterval + 1)).floor();
+                      final product = products[productIndex];
+
+                      return _PublicProductTile(
+                        product: product,
+                        onOpenMap: widget.onOpenMap,
+                      );
+                    },
                   );
                 },
               );
@@ -141,11 +149,59 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
             error: (e, s) => AppErrorWidget(
               error: e,
               stackTrace: s,
+              compact: true,
               onRetry: () => ref.invalidate(publicProductSearchProvider),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PublicProductTile extends ConsumerWidget {
+  final PublicProduct product;
+  final ValueChanged<String?>? onOpenMap;
+
+  const _PublicProductTile({required this.product, this.onOpenMap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      leading: SizedBox(
+        width: 40,
+        height: 40,
+        child: product.imageUrl != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  product.imageUrl!.contains('api')
+                      ? '${ref.read(apiBaseUrlProvider)}${product.imageUrl}'
+                      : product.imageUrl!,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : const Icon(Icons.shopping_bag),
+      ),
+      title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        product.shelfName == null
+            ? '₱${product.price} • Shelf unavailable'
+            : '₱${product.price} • Shelf: ${product.shelfName}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: product.shelfId != null
+          ? SizedBox(
+              width: 48,
+              child: IconButton(
+                onPressed: () => onOpenMap?.call(product.shelfId),
+                tooltip: 'Find on map',
+                icon: const Icon(Icons.place_outlined),
+              ),
+            )
+          : null,
+      onTap: () => onOpenMap?.call(product.shelfId),
     );
   }
 }
