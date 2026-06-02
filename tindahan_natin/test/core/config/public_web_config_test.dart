@@ -16,7 +16,7 @@ void main() {
           slug: 'my-store',
           baseUrlOverride: 'https://public.tindahan.test///',
         ),
-        'https://public.tindahan.test/#/store/my-store',
+        'https://public.tindahan.test/store/my-store',
       );
     });
 
@@ -26,7 +26,7 @@ void main() {
           slug: 'sari sari/one',
           baseUrlOverride: 'https://public.tindahan.test',
         ),
-        'https://public.tindahan.test/#/store/sari%20sari%2Fone',
+        'https://public.tindahan.test/store/sari%20sari%2Fone',
       );
     });
   });

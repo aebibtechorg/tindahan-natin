@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tindahan_natin/core/config/ad_initializer.dart';
 import 'package:tindahan_natin/core/config/app_logger.dart';
+import 'package:tindahan_natin/core/config/url_strategy.dart';
 import 'package:tindahan_natin/core/routing/app_router.dart';
 import 'package:tindahan_natin/core/sync/sync_coordinator.dart';
 import 'package:tindahan_natin/core/theme/app_theme.dart';
 
 void main() async {
+  setUrlStrategy();
   try {
     AppLogger.initialize();
     debugPrint('Starting Tindahan Natin...');
