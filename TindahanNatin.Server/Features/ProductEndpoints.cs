@@ -67,7 +67,8 @@ public static class ProductEndpoints
                 (p.SearchVector != null && p.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("simple", q))) ||
                 EF.Functions.ILike(p.Name, pattern) ||
                 EF.Functions.ILike(p.Description ?? string.Empty, pattern) ||
-                EF.Functions.ILike(p.Barcode ?? string.Empty, pattern));
+                EF.Functions.ILike(p.Barcode ?? string.Empty, pattern) ||
+                EF.Functions.TrigramsAreSimilar(p.Name, q));
 
             var products = await productsQuery.ToListAsync();
 
