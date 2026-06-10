@@ -74,13 +74,13 @@ const Hero = () => {
             >
               <GooglePlayLogo /> Get it on Google Play
             </motion.button>
-            <motion.button 
+            {/* <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="btn-secondary"
             >
               View Demo
-            </motion.button>
+            </motion.button> */}
           </div>
         </motion.div>
 
