@@ -17,6 +17,7 @@ import 'package:tindahan_natin/features/store_map/shelf.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
+import 'package:tindahan_natin/shared/widgets/empty_state_widget.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({super.key});
@@ -135,7 +136,23 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 700;
                     
-                    if (products.isEmpty) return const Center(child: Text('No products yet.'));
+                    if (products.isEmpty) {
+                      return EmptyStateWidget(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'Your Store is Empty',
+                        description: 'Add your first product to start tracking your inventory.',
+                        actionLabel: 'Add Product',
+                        onActionPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddProductScreen(),
+                              fullscreenDialog: true,
+                            ),
+                          );
+                        },
+                      );
+                    }
                     
                     const adInterval = 10;
                     final itemCount = products.length + (products.length / adInterval).floor();

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/network/connectivity_provider.dart';
+import 'package:tindahan_natin/core/storage/local_storage.dart';
 import 'package:tindahan_natin/core/widgets/ad_widgets/interstitial_ad_provider.dart';
 import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
 import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
@@ -33,10 +34,12 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   final Map<String, Shelf> _bulkMoveStartShelves = {};
   bool _initialViewConfigured = false;
   Size _viewportSize = Size.zero;
+  bool _showTutorial = true;
 
   @override
   void initState() {
     super.initState();
+    _showTutorial = !ref.read(localStorageProvider).isMapTutorialDismissed();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ref.read(isOnlineProvider)) {
         ref.read(interstitialAdProvider).showAdIfReady();
@@ -336,80 +339,169 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                   _viewportSize = constraints.biggest;
                   _configureInitialView(constraints.biggest);
 
-                  return InteractiveViewer(
-                    clipBehavior: Clip.none,
-                    constrained: false,
-                    transformationController: _transformationController,
-                    boundaryMargin: EdgeInsets.all(_canvasSize * 2),
-                    minScale: 0.05,
-                    maxScale: 4.0,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            if (_selectedShelfIds.isNotEmpty) {
-                              setState(_selectedShelfIds.clear);
-                            }
-                          },
-                          child: Container(
-                            key: _containerKey,
-                            width: _canvasSize,
-                            height: _canvasSize,
-                            color: Colors.transparent,
-                          ),
-                        ),
-                        ...displayedShelves.map(
-                          (shelf) => DraggableShelf(
-                            key: ValueKey(shelf.id),
-                            shelf: shelf,
-                            storeId: storeId,
-                            canvasOrigin: _canvasOrigin,
-                            transformationController: _transformationController,
-                            containerKey: _containerKey,
-                            selected: _selectedShelfIds.contains(shelf.id),
-                            selectedShelfIds: _selectedShelfIds,
-                            onSelect: (id) {
-                              setState(() {
-                                if (_multiSelectMode) {
-                                  if (_selectedShelfIds.contains(id)) {
-                                    _selectedShelfIds.remove(id);
-                                  } else {
-                                    _selectedShelfIds.add(id);
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: InteractiveViewer(
+                          clipBehavior: Clip.none,
+                          constrained: false,
+                          transformationController: _transformationController,
+                          boundaryMargin: EdgeInsets.all(_canvasSize * 2),
+                          minScale: 0.05,
+                          maxScale: 4.0,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () {
+                                  if (_selectedShelfIds.isNotEmpty) {
+                                    setState(_selectedShelfIds.clear);
                                   }
-                                } else {
-                                  _selectedShelfIds
-                                    ..clear()
-                                    ..add(id);
-                                }
-                              });
-                            },
-                            onDoubleTap: () => _showEditShelfDialog(
-                              context,
-                              ref,
-                              shelf,
-                              storeId,
-                            ),
-                            snapToGrid: _snapToGrid,
-                            gridSize: _gridSize,
-                            onOptimisticUpdate: (updated) => setState(
-                              () => _optimisticShelves[updated.id] = updated,
-                            ),
-                            onBulkMoveStart: (ids) =>
-                                _startBulkShelfMove(displayedShelves, ids),
-                            onBulkOptimisticUpdate: (ids, delta) =>
-                                _applyBulkShelfMove(
-                                  displayedShelves,
-                                  ids,
-                                  delta,
+                                },
+                                child: Container(
+                                  key: _containerKey,
+                                  width: _canvasSize,
+                                  height: _canvasSize,
+                                  color: Colors.transparent,
                                 ),
-                            onBulkCommit: (ids) =>
-                                _commitBulkShelfMove(displayedShelves, ids, storeId),
+                              ),
+                              ...displayedShelves.map(
+                                (shelf) => DraggableShelf(
+                                  key: ValueKey(shelf.id),
+                                  shelf: shelf,
+                                  storeId: storeId,
+                                  canvasOrigin: _canvasOrigin,
+                                  transformationController: _transformationController,
+                                  containerKey: _containerKey,
+                                  selected: _selectedShelfIds.contains(shelf.id),
+                                  selectedShelfIds: _selectedShelfIds,
+                                  onSelect: (id) {
+                                    setState(() {
+                                      if (_multiSelectMode) {
+                                        if (_selectedShelfIds.contains(id)) {
+                                          _selectedShelfIds.remove(id);
+                                        } else {
+                                          _selectedShelfIds.add(id);
+                                        }
+                                      } else {
+                                        _selectedShelfIds
+                                          ..clear()
+                                          ..add(id);
+                                      }
+                                    });
+                                  },
+                                  onDoubleTap: () => _showEditShelfDialog(
+                                    context,
+                                    ref,
+                                    shelf,
+                                    storeId,
+                                  ),
+                                  snapToGrid: _snapToGrid,
+                                  gridSize: _gridSize,
+                                  onOptimisticUpdate: (updated) => setState(
+                                    () => _optimisticShelves[updated.id] = updated,
+                                  ),
+                                  onBulkMoveStart: (ids) =>
+                                      _startBulkShelfMove(displayedShelves, ids),
+                                  onBulkOptimisticUpdate: (ids, delta) =>
+                                      _applyBulkShelfMove(
+                                        displayedShelves,
+                                        ids,
+                                        delta,
+                                      ),
+                                  onBulkCommit: (ids) =>
+                                      _commitBulkShelfMove(displayedShelves, ids, storeId),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      if (_showTutorial)
+                        Positioned(
+                          top: 16,
+                          left: 16,
+                          right: 16,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.help_outline,
+                                            color: Theme.of(context).colorScheme.primary,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'How to use the Map',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.close, size: 18),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () {
+                                          setState(() {
+                                            _showTutorial = false;
+                                          });
+                                          ref.read(localStorageProvider).setMapTutorialDismissed(true);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildTutorialItem(
+                                    context,
+                                    icon: Icons.add,
+                                    text: 'Tap "+" in the AppBar to add a new shelf.',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _buildTutorialItem(
+                                    context,
+                                    icon: Icons.back_hand,
+                                    text: 'Drag shelves to place them. Pinch to zoom/pan.',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _buildTutorialItem(
+                                    context,
+                                    icon: Icons.touch_app,
+                                    text: 'Double-tap a shelf to rename it or link products.',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   );
                 },
               );
@@ -827,6 +919,30 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildTutorialItem(BuildContext context, {required IconData icon, required String text}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

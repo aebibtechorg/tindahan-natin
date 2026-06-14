@@ -9,6 +9,7 @@ import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/features/categories/category.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
+import 'package:tindahan_natin/shared/widgets/empty_state_widget.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
   const CategoryListScreen({super.key});
@@ -94,7 +95,15 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           ),
           body: displayAsync.when(
             data: (categories) {
-              if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
+              if (categories.isEmpty) {
+                return EmptyStateWidget(
+                  icon: Icons.category_outlined,
+                  title: 'No Categories Yet',
+                  description: 'Create categories to organize and manage your products easily.',
+                  actionLabel: 'Add Category',
+                  onActionPressed: () => _showAddCategoryDialog(storeId),
+                );
+              }
 
               return RefreshIndicator(
                 onRefresh: () => ref.read(categoriesProvider(storeId).notifier).refresh(),
@@ -185,28 +194,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              final controller = TextEditingController();
-              final result = await showDialog<String?>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Add Category'),
-                  content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name'), autofocus: true),
-                  actions: [
-                    // TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                    ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
-                  ],
-                ),
-              );
-              if (result != null && result.trim().isNotEmpty) {
-                try {
-                  await ref.read(categoriesProvider(storeId).notifier).addCategory(result.trim());
-                  if (mounted) SnackBarUtils.showSuccess(context, 'Category created');
-                } catch (e) {
-                  if (mounted) SnackBarUtils.showError(context, e);
-                }
-              }
-            },
+            onPressed: () => _showAddCategoryDialog(storeId),
             child: const Icon(Icons.add),
           ),
         );
@@ -220,6 +208,35 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showAddCategoryDialog(String storeId) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Category'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Name'),
+          autofocus: true,
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.trim().isNotEmpty) {
+      try {
+        await ref.read(categoriesProvider(storeId).notifier).addCategory(result.trim());
+        if (mounted) SnackBarUtils.showSuccess(context, 'Category created');
+      } catch (e) {
+        if (mounted) SnackBarUtils.showError(context, e);
+      }
+    }
   }
 }
 
