@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0+19] - 2026-06-14
+### Added
+- Onboarding
+- Store Setup Checklist
+- Look and feel improvements
+
 ## [1.0.0+18] - 2026-06-02
 
 ### Added

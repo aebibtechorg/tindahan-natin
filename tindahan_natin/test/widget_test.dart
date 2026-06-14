@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:tindahan_natin/core/theme/app_theme.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
+
   test('AppTheme defines lightTheme with light brightness', () {
     final theme = AppTheme.lightTheme;
     expect(theme.brightness, Brightness.light);
