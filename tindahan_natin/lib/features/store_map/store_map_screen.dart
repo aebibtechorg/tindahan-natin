@@ -10,6 +10,7 @@ import 'package:tindahan_natin/features/store_map/map_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/store_map/shelf.dart';
 import 'package:tindahan_natin/features/products/product_service.dart';
+import 'package:tindahan_natin/features/products/product.dart';
 import 'package:tindahan_natin/features/store_map/store_shelf_tile.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
@@ -600,17 +601,12 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
   ) {
     final controller = TextEditingController(text: shelf.name);
     double rotation = shelf.rotation;
-    final Map<String, ProductLocation> localProductLocationOverrides = {};
-    final Set<String> localDeletedProductLocationIds = {};
 
     showDialog(
       context: context,
       builder: (context) => Consumer(
         builder: (context, dialogRef, _) {
           final productsAsync = dialogRef.watch(productsProvider(storeId));
-          final productLocationsAsync = dialogRef.watch(
-            productLocationsProvider(storeId),
-          );
 
           return StatefulBuilder(
             builder: (context, setDialogState) {
@@ -654,215 +650,97 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
-                              'Product Locations',
+                              'Products on Shelf',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            TextButton.icon(
-                              onPressed: () async {
-                                final products = productsAsync.asData?.value;
-                                if (productsAsync.isLoading) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Products are still loading',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return;
-                                }
-                                if (productsAsync.hasError) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Failed to load products: ${productsAsync.error}',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return;
-                                }
-                                if (products == null || products.isEmpty) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('No products available'),
-                                      ),
-                                    );
-                                  }
-                                  return;
-                                }
-
-                                final selected =
-                                    await showDialog<Map<String, dynamic>?>(
+                            productsAsync.when(
+                              data: (productsList) {
+                                final shelvesList = dialogRef.watch(shelvesProvider(storeId)).asData?.value ?? [];
+                                return TextButton.icon(
+                                  onPressed: () async {
+                                    final selectedProduct = await showDialog<Product>(
                                       context: context,
-                                      builder: (ctx) => SimpleDialog(
-                                        title: const Text('Select Product'),
-                                        children: products
-                                            .map(
-                                              (prod) => SimpleDialogOption(
-                                                onPressed: () =>
-                                                    Navigator.pop(ctx, {
-                                                      'id': prod.id,
-                                                      'name': prod.name,
-                                                    }),
-                                                child: Text(prod.name),
-                                              ),
-                                            )
-                                            .toList(),
+                                      builder: (ctx) => _AddProductToShelfDialog(
+                                        storeId: storeId,
+                                        shelfId: shelf.id,
+                                        allProducts: productsList,
+                                        shelves: shelvesList,
                                       ),
                                     );
 
-                                if (selected != null) {
-                                  final tempLocId =
-                                      'tmp-loc-${DateTime.now().microsecondsSinceEpoch}';
-                                  final tempLoc = ProductLocation(
-                                    id: tempLocId,
-                                    productId: selected['id'],
-                                    shelfId: shelf.id,
-                                    position: 'default',
-                                  );
-                                  setDialogState(
-                                    () =>
-                                        localProductLocationOverrides[tempLocId] =
-                                            tempLoc,
-                                  );
-                                  try {
-                                    final created = await ref
-                                        .read(mapServiceProvider)
-                                        .createProductLocation({
-                                          'productId': selected['id'],
-                                          'shelfId': shelf.id,
-                                          'position': 'default',
-                                        });
-                                    setDialogState(() {
-                                      localProductLocationOverrides.remove(
-                                        tempLocId,
-                                      );
-                                      localProductLocationOverrides[created
-                                              .id] =
-                                          created;
-                                    });
-                                  } catch (e) {
-                                    setDialogState(
-                                      () => localProductLocationOverrides
-                                          .remove(tempLocId),
-                                    );
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Add location failed: $e',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                }
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add'),
-                            ),
-                          ],
-                        ),
-                        productLocationsAsync.when(
-                          data: (locations) {
-                            final serverById = {
-                              for (var l in locations) l.id: l,
-                            };
-                            final merged = <ProductLocation>[];
-                            for (final l in locations.where(
-                              (l) => l.shelfId == shelf.id,
-                            )) {
-                              if (localDeletedProductLocationIds.contains(l.id)) {
-                                continue;
-                              }
-                              merged.add(
-                                localProductLocationOverrides[l.id] ?? l,
-                              );
-                            }
-                            for (final l
-                                in localProductLocationOverrides.values) {
-                              if (!serverById.containsKey(l.id) &&
-                                  l.shelfId == shelf.id &&
-                                  !localDeletedProductLocationIds.contains(
-                                    l.id,
-                                  )) {
-                                merged.add(l);
-                              }
-                            }
-                            if (merged.isEmpty) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text('No product locations.'),
-                              );
-                            }
-                            return Column(
-                              children: merged.map((loc) {
-                                String productName = loc.productId;
-                                final productsList =
-                                    productsAsync.asData?.value;
-                                if (productsList != null) {
-                                  final matches = productsList.where(
-                                    (p) => p.id == loc.productId,
-                                  );
-                                  if (matches.isNotEmpty) {
-                                    productName = matches.first.name;
-                                  }
-                                }
-                                return ListTile(
-                                  title: Text(productName),
-                                  subtitle: Text('Position: ${loc.position}'),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () async {
-                                      if (loc.id.startsWith('tmp-')) {
-                                        setDialogState(
-                                          () => localProductLocationOverrides
-                                              .remove(loc.id),
-                                        );
-                                        return;
-                                      }
-                                      setDialogState(
-                                        () => localDeletedProductLocationIds
-                                            .add(loc.id),
-                                      );
+                                    if (selectedProduct != null) {
+                                      final updatedData = {
+                                        ...selectedProduct.toJson(),
+                                        'shelfId': shelf.id,
+                                      };
                                       try {
                                         await ref
-                                            .read(mapServiceProvider)
-                                            .deleteProductLocation(loc.id, storeId: storeId);
-                                        setDialogState(
-                                          () => localDeletedProductLocationIds
-                                              .remove(loc.id),
-                                        );
-                                        ref.invalidate(
-                                          productLocationsProvider(storeId),
-                                        );
+                                            .read(productsProvider(storeId).notifier)
+                                            .updateProduct(selectedProduct.id, updatedData);
                                       } catch (e) {
-                                        setDialogState(
-                                          () => localDeletedProductLocationIds
-                                              .remove(loc.id),
-                                        );
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Delete location failed: $e',
-                                              ),
-                                            ),
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Add product to shelf failed: $e')),
                                           );
                                         }
                                       }
-                                    },
-                                  ),
+                                    }
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Add'),
                                 );
-                              }).toList(),
+                              },
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        productsAsync.when(
+                          data: (productsList) {
+                            final assigned = productsList.where((p) => p.shelfId == shelf.id).toList();
+                            if (assigned.isEmpty) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text('No products on this shelf.'),
+                              );
+                            }
+                            return Container(
+                              constraints: const BoxConstraints(maxHeight: 200),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Theme.of(context).dividerColor),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: assigned.length,
+                                itemBuilder: (context, index) {
+                                  final product = assigned[index];
+                                  return ListTile(
+                                    title: Text(product.name),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () async {
+                                        final updatedData = {
+                                          ...product.toJson(),
+                                          'shelfId': null,
+                                        };
+                                        try {
+                                          await ref
+                                              .read(productsProvider(storeId).notifier)
+                                              .updateProduct(product.id, updatedData);
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Remove product from shelf failed: $e')),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                             );
                           },
                           loading: () => const Padding(
@@ -871,7 +749,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                           ),
                           error: (e, s) => Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Text('Error loading product locations: $e'),
+                            child: Text('Error loading products: $e'),
                           ),
                         ),
                       ],
@@ -941,6 +819,131 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
               height: 1.3,
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  @visibleForTesting
+  void showEditShelfDialogPublicForTesting(Shelf shelf) {
+    _showEditShelfDialog(context, ref, shelf, shelf.storeId);
+  }
+}
+
+class _AddProductToShelfDialog extends StatefulWidget {
+  final String storeId;
+  final String shelfId;
+  final List<Product> allProducts;
+  final List<Shelf> shelves;
+
+  const _AddProductToShelfDialog({
+    required this.storeId,
+    required this.shelfId,
+    required this.allProducts,
+    required this.shelves,
+  });
+
+  @override
+  State<_AddProductToShelfDialog> createState() => _AddProductToShelfDialogState();
+}
+
+class _AddProductToShelfDialogState extends State<_AddProductToShelfDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredProducts = widget.allProducts.where((product) {
+      if (_searchQuery.isEmpty) return true;
+      return product.name.toLowerCase().contains(_searchQuery) ||
+          (product.description?.toLowerCase().contains(_searchQuery) ?? false) ||
+          (product.barcode?.toLowerCase().contains(_searchQuery) ?? false);
+    }).toList();
+
+    return AlertDialog(
+      title: const Text('Add Product to Shelf'),
+      content: SizedBox(
+        width: 400,
+        height: 450,
+        child: Column(
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Search products...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: filteredProducts.isEmpty
+                  ? const Center(child: Text('No products found.'))
+                  : Scrollbar(
+                      child: ListView.builder(
+                        itemCount: filteredProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = filteredProducts[index];
+                          
+                          // Check if assigned to any shelf using product.shelfId
+                          final isAssigned = product.shelfId != null;
+                          String? shelfName;
+                          if (isAssigned) {
+                            Shelf? otherShelf;
+                            for (final s in widget.shelves) {
+                              if (s.id == product.shelfId) {
+                                otherShelf = s;
+                                break;
+                              }
+                            }
+                            shelfName = otherShelf?.name ?? 'Other Shelf';
+                          }
+
+                          return ListTile(
+                            title: Text(
+                              product.name,
+                              style: isAssigned
+                                  ? TextStyle(color: Theme.of(context).disabledColor)
+                                  : null,
+                            ),
+                            subtitle: isAssigned
+                                ? Text(
+                                    'Already on: $shelfName',
+                                    style: TextStyle(color: Theme.of(context).disabledColor),
+                                  )
+                                : null,
+                            enabled: !isAssigned,
+                            onTap: () {
+                              Navigator.pop(context, product);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
         ),
       ],
     );

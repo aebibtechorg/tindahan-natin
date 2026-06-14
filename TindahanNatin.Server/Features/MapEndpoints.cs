@@ -121,6 +121,13 @@ public static class MapEndpoints
                 Position = dto.Position
             };
             db.ProductLocations.Add(location);
+
+            var product = await db.Products.FindAsync(dto.ProductId);
+            if (product != null)
+            {
+                product.ShelfId = dto.ShelfId;
+            }
+
             await db.SaveChangesAsync();
             return Results.Created($"/api/map/locations/{location.Id}", new ProductLocationDto(location.Id, location.ProductId, location.ShelfId, location.Position, location.CreatedAt, location.UpdatedAt, location.IsDeleted, location.DeletedAt));
         });
@@ -134,6 +141,12 @@ public static class MapEndpoints
             if (location is null) return Results.NotFound();
 
             db.ProductLocations.Remove(location);
+
+            var product = await db.Products.FindAsync(location.ProductId);
+            if (product != null)
+            {
+                product.ShelfId = null;
+            }
 
             await db.SaveChangesAsync();
             return Results.NoContent();
