@@ -49,7 +49,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search for products (e.g. Tomi)',
+              hintText: 'Search for products',
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),

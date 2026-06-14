@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/widgets/app_error_widget.dart';
@@ -58,10 +59,21 @@ class _CenteredPublicMap extends ConsumerStatefulWidget {
 class _CenteredPublicMapState extends ConsumerState<_CenteredPublicMap> {
   final TransformationController _transformationController = TransformationController();
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
   String _query = '';
   String? _localHighlightShelfId;
   bool _initialViewConfigured = false;
   Size _viewportSize = Size.zero;
+
+  void _onSearchChanged(String value) {
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        _query = value.trim();
+      });
+    });
+  }
 
   @override
   void initState() {
@@ -84,6 +96,7 @@ class _CenteredPublicMapState extends ConsumerState<_CenteredPublicMap> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _transformationController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -187,36 +200,38 @@ class _CenteredPublicMapState extends ConsumerState<_CenteredPublicMap> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Card(
+                  Material(
                     elevation: 4,
                     shadowColor: Colors.black26,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Search products to find their shelf...',
-                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'Search for products',
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
+                                  _onSearchChanged('');
                                   setState(() {
                                     _query = '';
                                     _localHighlightShelfId = null;
                                   });
                                 },
                               )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
+                            : IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: () {
+                                  setState(() {
+                                    _query = _searchController.text;
+                                  });
+                                },
+                              ),
                       ),
-                      onChanged: (val) {
+                      onChanged: _onSearchChanged,
+                      onSubmitted: (val) {
+                        _debounce?.cancel();
                         setState(() {
                           _query = val;
                         });
