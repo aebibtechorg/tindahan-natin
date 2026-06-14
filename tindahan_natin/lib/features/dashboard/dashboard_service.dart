@@ -42,7 +42,20 @@ class DashboardService {
           debugPrint('Error parsing cached stats: $e');
         }
       }
-      rethrow;
+      // If no cache is present, return default empty stats so the dashboard still loads
+      return const StoreStats(
+        totalSales: 0.0,
+        totalCredit: 0.0,
+        totalTransactions: 0,
+        performanceChange: 0.0,
+        dailyPerformance: [],
+        topProducts: [],
+        alerts: [],
+        totalInventoryValue: 0.0,
+        mostActiveCategories: [],
+        recentTransactions: [],
+        weeklyPerformance: [],
+      );
     }
   }
 }

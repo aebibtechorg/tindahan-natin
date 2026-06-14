@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
 import 'package:tindahan_natin/features/products/product.dart';
+import 'package:tindahan_natin/features/store_map/map_service.dart';
 import 'package:uuid/uuid.dart';
 
 part 'product_service.g.dart';
@@ -63,6 +64,28 @@ class ProductService {
     }
   }
 
+  Future<void> _updateProductLocationCache({
+    required String? storeId,
+    required String productId,
+    required String? shelfId,
+  }) async {
+    if (storeId == null) return;
+    final locationsKey = 'locations_$storeId';
+    try {
+      final cachedList = _local.getCachedRecords(locationsKey) ?? [];
+      final updatedList = cachedList.where((l) => l['productId']?.toString() != productId).toList();
+      if (shelfId != null && shelfId.isNotEmpty) {
+        updatedList.add({
+          'id': 'loc-sync-$productId',
+          'productId': productId,
+          'shelfId': shelfId,
+          'position': 'default',
+        });
+      }
+      await _local.cacheRecords(locationsKey, updatedList);
+    } catch (_) {}
+  }
+
   Future<Product> createProduct(Map<String, dynamic> data) async {
     debugPrint('Creating product with data: $data');
     final requestData = Map<String, dynamic>.from(data);
@@ -85,6 +108,11 @@ class ProductService {
       if (storeId != null) {
         await _local.upsertCachedProduct(storeId, created.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), created.toJson());
+        await _updateProductLocationCache(
+          storeId: storeId,
+          productId: created.id,
+          shelfId: created.shelfId,
+        );
       }
       return created;
     } catch (error) {
@@ -92,6 +120,11 @@ class ProductService {
       if (storeId != null) {
         await _local.upsertCachedProduct(storeId, draft.toJson());
         await _local.upsertCachedRecord(_cacheKey(storeId), draft.toJson());
+        await _updateProductLocationCache(
+          storeId: storeId,
+          productId: draft.id,
+          shelfId: draft.shelfId,
+        );
       }
       await _local.queueMutation({
         'resource': 'products',
@@ -146,6 +179,11 @@ class ProductService {
     if (sId != null) {
       await _local.upsertCachedProduct(sId, optimisticMap);
       await _local.upsertCachedRecord(_cacheKey(sId), optimisticMap);
+      await _updateProductLocationCache(
+        storeId: sId,
+        productId: id,
+        shelfId: data['shelfId']?.toString(),
+      );
     }
 
     try {
@@ -169,6 +207,11 @@ class ProductService {
     if (sId != null) {
       await _local.removeCachedProduct(sId, id);
       await _local.removeCachedRecord(_cacheKey(sId), id);
+      await _updateProductLocationCache(
+        storeId: sId,
+        productId: id,
+        shelfId: null,
+      );
     }
 
     try {
@@ -215,6 +258,10 @@ class ProductService {
       result = await _lookupOFFSchema(lookupDio, barcode, 'world.openproductsfacts.org');
       if (result != null) return result;
 
+      // 4. Try Brocade.io
+      result = await _lookupBrocade(lookupDio, barcode);
+      if (result != null) return result;
+
       // 5. Try Google Books (ISBN)
       if (barcode.startsWith('978') || barcode.startsWith('979') || barcode.length == 10) {
         result = await _lookupGoogleBooks(lookupDio, barcode);
@@ -224,6 +271,28 @@ class ProductService {
       debugPrint('Multi-source lookup failed: $e');
     } finally {
       lookupDio.close();
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _lookupBrocade(Dio dio, String barcode) async {
+    try {
+      final response = await dio.get('https://www.brocade.io/api/items/$barcode');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data is Map) {
+          final name = data['name']?.toString() ?? data['brand']?.toString();
+          if (name != null && name.isNotEmpty) {
+            return {
+              'name': name,
+              'description': data['description']?.toString() ?? '',
+              'imageUrl': null,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Brocade lookup failed: $e');
     }
     return null;
   }
@@ -317,8 +386,10 @@ class Products extends _$Products {
       state = AsyncData(
         (state.value ?? []).map((p) => p.id == id ? created : p).toList()
       );
+      ref.invalidate(productLocationsProvider(storeId));
     } catch (e) {
       // Keep the optimistic one since it's queued
+      ref.invalidate(productLocationsProvider(storeId));
     }
   }
 
@@ -339,8 +410,10 @@ class Products extends _$Products {
     
     try {
       await ref.read(productServiceProvider).updateProduct(id, data, storeId: storeId);
+      ref.invalidate(productLocationsProvider(storeId));
     } catch (e) {
       // Keep optimistic since it's queued
+      ref.invalidate(productLocationsProvider(storeId));
     }
   }
 
@@ -350,8 +423,10 @@ class Products extends _$Products {
     
     try {
       await ref.read(productServiceProvider).deleteProduct(id, storeId: storeId);
+      ref.invalidate(productLocationsProvider(storeId));
     } catch (e) {
       // Keep it deleted since it's queued
+      ref.invalidate(productLocationsProvider(storeId));
     }
   }
 }

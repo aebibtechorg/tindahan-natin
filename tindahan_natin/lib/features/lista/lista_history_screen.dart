@@ -98,6 +98,8 @@ class ListaHistoryScreen extends ConsumerWidget {
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: ExpansionTile(
+                      shape: const Border(),
+                      collapsedShape: const Border(),
                       leading: Icon(
                         entry.isCredit ? Icons.event_note : Icons.receipt_long,
                         color: entry.isCredit ? Colors.orange : Colors.green,

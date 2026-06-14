@@ -49,7 +49,7 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search for products (e.g. Tomi)',
+              hintText: 'Search for products',
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
@@ -91,35 +91,50 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                   final itemCount = products.length + (products.length / adInterval).floor();
 
                   if (isWide) {
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(8),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 400,
-                        mainAxisExtent: 80,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                      ),
-                      itemCount: itemCount,
-                      itemBuilder: (context, index) {
-                        final isAd = (index + 1) % (adInterval + 1) == 0;
-                        if (isAd) {
-                          return const Card(
-                            margin: EdgeInsets.zero,
-                            child: Center(child: InlineAdWidget()),
-                          );
-                        }
-
-                        final productIndex = index - (index / (adInterval + 1)).floor();
-                        final product = products[productIndex];
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          child: _PublicProductTile(
-                            product: product,
-                            onOpenMap: widget.onOpenMap,
+                    final slivers = <Widget>[];
+                    for (int i = 0; i < products.length; i += adInterval) {
+                      final chunk = products.sublist(
+                        i,
+                        i + adInterval > products.length ? products.length : i + adInterval,
+                      );
+                      slivers.add(
+                        SliverPadding(
+                          padding: const EdgeInsets.all(8),
+                          sliver: SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 400,
+                              mainAxisExtent: 80,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final product = chunk[index];
+                                return Card(
+                                  margin: EdgeInsets.zero,
+                                  child: _PublicProductTile(
+                                    product: product,
+                                    onOpenMap: widget.onOpenMap,
+                                  ),
+                                );
+                              },
+                              childCount: chunk.length,
+                            ),
+                          ),
+                        ),
+                      );
+                      if (i + adInterval < products.length) {
+                        slivers.add(
+                          const SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
+                              child: InlineAdWidget(),
+                            ),
                           ),
                         );
-                      },
-                    );
+                      }
+                    }
+                    return CustomScrollView(slivers: slivers);
                   }
 
                   return ListView.builder(
@@ -136,9 +151,12 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                       final productIndex = index - (index / (adInterval + 1)).floor();
                       final product = products[productIndex];
 
-                      return _PublicProductTile(
-                        product: product,
-                        onOpenMap: widget.onOpenMap,
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        child: _PublicProductTile(
+                          product: product,
+                          onOpenMap: widget.onOpenMap,
+                        ),
                       );
                     },
                   );
@@ -168,6 +186,7 @@ class _PublicProductTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: SizedBox(
         width: 40,
         height: 40,
@@ -181,9 +200,24 @@ class _PublicProductTile extends ConsumerWidget {
                   fit: BoxFit.cover,
                 ),
               )
-            : const Icon(Icons.shopping_bag),
+            : Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.shopping_bag_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+              ),
       ),
-      title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        product.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(
         product.shelfName == null
             ? '₱${product.price} • Shelf unavailable'

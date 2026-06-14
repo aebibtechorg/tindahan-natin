@@ -17,6 +17,7 @@ import 'package:tindahan_natin/features/store_map/shelf.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/realtime/signalr_service.dart';
+import 'package:tindahan_natin/shared/widgets/empty_state_widget.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
   const ProductListScreen({super.key});
@@ -98,6 +99,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 : const Text('Products'),
             actions: [
               IconButton(
+                icon: const Icon(Icons.category),
+                tooltip: 'Manage Categories',
+                onPressed: () => context.push('/categories'),
+              ),
+              IconButton(
                 icon: Icon(_isSearching ? Icons.close : Icons.search),
                 onPressed: () {
                   setState(() {
@@ -130,47 +136,78 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 700;
                     
-                    if (products.isEmpty) return const Center(child: Text('No products yet.'));
+                    if (products.isEmpty) {
+                      return EmptyStateWidget(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'Your Store is Empty',
+                        description: 'Add your first product to start tracking your inventory.',
+                        actionLabel: 'Add Product',
+                        onActionPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddProductScreen(),
+                              fullscreenDialog: true,
+                            ),
+                          );
+                        },
+                      );
+                    }
                     
                     const adInterval = 10;
                     final itemCount = products.length + (products.length / adInterval).floor();
 
                     if (isWide) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 450,
-                          mainAxisExtent: 100,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                        itemCount: itemCount,
-                        itemBuilder: (context, index) {
-                          final isAd = (index + 1) % (adInterval + 1) == 0;
-                          if (isAd) {
-                            return const Card(
-                              margin: EdgeInsets.zero,
-                              child: Center(child: InlineAdWidget()),
-                            );
-                          }
-
-                          final productIndex = index - (index / (adInterval + 1)).floor();
-                          final product = products[productIndex];
-                          return _ProductTile(
-                            product: product,
-                            categoryName: categoriesData.firstWhere(
-                              (c) => c.id == product.categoryId,
-                              orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
-                            ).name,
-                            shelfName: shelvesData.firstWhere(
-                              (s) => s.id == (product.shelfId ?? ''),
-                              orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
-                            ).name,
-                            index: index,
-                            onTap: () => context.push('/inventory/edit/${product.id}'),
+                      final slivers = <Widget>[];
+                      for (int i = 0; i < products.length; i += adInterval) {
+                        final chunk = products.sublist(
+                          i,
+                          i + adInterval > products.length ? products.length : i + adInterval,
+                        );
+                        slivers.add(
+                          SliverPadding(
+                            padding: const EdgeInsets.all(8),
+                            sliver: SliverGrid(
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 450,
+                                mainAxisExtent: 100,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final product = chunk[index];
+                                  return _ProductTile(
+                                    product: product,
+                                    categoryName: categoriesData.firstWhere(
+                                      (c) => c.id == product.categoryId,
+                                      orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
+                                    ).name,
+                                    shelfName: shelvesData.firstWhere(
+                                      (s) => s.id == (product.shelfId ?? ''),
+                                      orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
+                                    ).name,
+                                    index: i + index,
+                                    onTap: () => context.push('/inventory/edit/${product.id}'),
+                                  );
+                                },
+                                childCount: chunk.length,
+                              ),
+                            ),
+                          ),
+                        );
+                        if (i + adInterval < products.length) {
+                          slivers.add(
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: InlineAdWidget(),
+                              ),
+                            ),
                           );
-                        },
-                      );
+                        }
+                      }
+                      return CustomScrollView(slivers: slivers);
                     }
 
                     return ListView.builder(
@@ -262,33 +299,65 @@ class _ProductTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tile = ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: product.imageUrl != null
           ? ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(8),
               child: CachedNetworkImage(
                 imageUrl: product.imageUrl!.startsWith('http')
                     ? product.imageUrl!
                     : '${ref.read(apiBaseUrlProvider)}${product.imageUrl}',
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(color: Colors.grey[200]),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+                errorWidget: (context, url, error) => Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 20),
+                ),
               ),
             )
-          : const Icon(Icons.shopping_bag, size: 40),
-      title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          : Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.shopping_bag_outlined,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
+            ),
+      title: Text(
+        product.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(
         '₱${product.price} • $categoryName • $shelfName • Stock: ${product.quantity}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       trailing: product.quantity < product.minStockThreshold
-          ? const Chip(
-              label: Text('Low Stock', style: TextStyle(fontSize: 10, color: Colors.white)),
-              backgroundColor: Colors.red,
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+              ),
+              child: const Text(
+                'Low Stock',
+                style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold),
+              ),
             )
           : const Icon(Icons.chevron_right),
       onTap: onTap,
@@ -296,12 +365,23 @@ class _ProductTile extends ConsumerWidget {
       .fadeIn(duration: const Duration(milliseconds: 300), delay: Duration(milliseconds: 30 * index))
       .slideY(begin: 0.02, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
 
-    if (onDelete == null) return Card(margin: EdgeInsets.zero, child: tile);
+    final productCard = Card(
+      margin: onDelete != null
+          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 6)
+          : EdgeInsets.zero,
+      child: tile,
+    );
+
+    if (onDelete == null) return productCard;
 
     return Dismissible(
       key: Key('product_${product.id}'),
       background: Container(
-        color: Colors.red,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(16),
+        ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         child: const Icon(Icons.delete, color: Colors.white),
@@ -315,7 +395,6 @@ class _ProductTile extends ConsumerWidget {
               title: const Text('Confirm Delete'),
               content: Text('Are you sure you want to delete ${product.name}?\nThis action cannot be undone.'),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.error,
@@ -330,7 +409,7 @@ class _ProductTile extends ConsumerWidget {
         );
       },
       onDismissed: (direction) => onDelete?.call(),
-      child: tile,
+      child: productCard,
     );
   }
 }

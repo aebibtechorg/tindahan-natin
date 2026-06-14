@@ -75,7 +75,7 @@ class _InlineAdWidgetState extends ConsumerState<InlineAdWidget> {
     }
 
     return Container(
-      height: 320,
+      height: 340,
       alignment: Alignment.center,
       child: AdWidget(ad: _nativeAd!),
     );

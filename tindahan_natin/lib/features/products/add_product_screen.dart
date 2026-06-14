@@ -238,7 +238,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Product Name',
+                      labelText: 'Product Name *',
                     ),
                     validator: (value) => value == null || value.isEmpty
                         ? 'Please enter a name'
@@ -255,7 +255,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _priceController,
-                    decoration: const InputDecoration(labelText: 'Price'),
+                    decoration: const InputDecoration(labelText: 'Price *'),
                     keyboardType: TextInputType.number,
                     validator: (value) => value == null || value.isEmpty
                         ? 'Please enter a price'
@@ -264,7 +264,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _quantityController,
-                    decoration: const InputDecoration(labelText: 'Quantity'),
+                    decoration: const InputDecoration(labelText: 'Quantity *'),
                     keyboardType: TextInputType.number,
                     validator: (value) => value == null || value.isEmpty
                         ? 'Please enter quantity'
@@ -294,7 +294,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                             child: DropdownButtonFormField<String>(
                               initialValue: _selectedCategoryId,
                               decoration: const InputDecoration(
-                                labelText: 'Category',
+                                labelText: 'Category *',
                               ),
                               items: categories
                                   .map(
@@ -424,6 +424,29 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                       );
                     },
                   ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _isUploading ? null : _submit,
+                      child: _isUploading
+                          ? const CircularProgressIndicator()
+                          : const Text(
+                              'Save Product',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

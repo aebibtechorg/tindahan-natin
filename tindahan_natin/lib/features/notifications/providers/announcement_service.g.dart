@@ -34,7 +34,7 @@ final class AnnouncementServiceProvider
 }
 
 String _$announcementServiceHash() =>
-    r'5ac55babbab7b86f491cc659e245b4dbf0aa19db';
+    r'1b9d7f6ac7fa588f5eb456b337489177b768c797';
 
 abstract class _$AnnouncementService
     extends $AsyncNotifier<List<Announcement>> {

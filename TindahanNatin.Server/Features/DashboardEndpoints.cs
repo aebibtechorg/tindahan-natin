@@ -85,6 +85,61 @@ public static class DashboardEndpoints
                 ))
                 .ToListAsync();
 
+            var totalInventoryValue = await db.Products
+                .Where(p => p.StoreId == storeId && !p.IsDeleted)
+                .SumAsync(p => (decimal?)p.Price * p.Quantity) ?? 0m;
+
+            var categories = await db.Categories
+                .Where(c => c.StoreId == storeId && !c.IsDeleted)
+                .ToListAsync();
+            var categoryDict = categories.ToDictionary(c => c.Id, c => c.Name);
+
+            var products = await db.Products
+                .Where(p => p.StoreId == storeId)
+                .IgnoreQueryFilters()
+                .ToListAsync();
+            var productCategoryMap = products.ToDictionary(p => p.Id, p => p.CategoryId);
+
+            var mostActiveCategories = entries
+                .SelectMany(e => e.Items)
+                .GroupBy(i => productCategoryMap.TryGetValue(i.ProductId, out var catId) ? catId : Guid.Empty)
+                .Where(g => g.Key != Guid.Empty && categoryDict.ContainsKey(g.Key))
+                .Select(g => new ActiveCategoryDto(
+                    g.Key,
+                    categoryDict[g.Key],
+                    g.Sum(i => i.Quantity),
+                    g.Sum(i => i.Price * i.Quantity)
+                ))
+                .OrderByDescending(x => x.Revenue)
+                .Take(5)
+                .ToList();
+
+            var recentTransactions = entries
+                .OrderByDescending(e => e.CreatedAt)
+                .Take(5)
+                .Select(e => new RecentTransactionDto(
+                    e.Id,
+                    e.StaffName,
+                    e.CustomerName,
+                    e.IsCredit,
+                    e.TotalAmount,
+                    e.CreatedAt,
+                    e.Items.Count
+                ))
+                .ToList();
+
+            var weeklyPerformance = Enumerable.Range(0, 4)
+                .Select(i => {
+                    var endDate = DateTime.UtcNow.Date.AddDays(-i * 7);
+                    var startDate = endDate.AddDays(-7);
+                    var amount = entries
+                        .Where(e => !e.IsCredit && e.CreatedAt.Date >= startDate && e.CreatedAt.Date < endDate)
+                        .Sum(e => e.TotalAmount);
+                    return new WeeklyStatDto(startDate, endDate, amount);
+                })
+                .Reverse()
+                .ToList();
+
             return Results.Ok(new StoreStatsDto(
                 totalSales,
                 totalCredit,
@@ -92,7 +147,11 @@ public static class DashboardEndpoints
                 performanceChange,
                 dailyStats,
                 topProducts,
-                alerts
+                alerts,
+                totalInventoryValue,
+                mostActiveCategories,
+                recentTransactions,
+                weeklyPerformance
             ));
         });
     }

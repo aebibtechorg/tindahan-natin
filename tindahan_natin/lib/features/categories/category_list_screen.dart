@@ -9,6 +9,7 @@ import 'package:tindahan_natin/shared/utils/snackbar_utils.dart';
 import 'package:tindahan_natin/features/categories/category.dart';
 import 'package:tindahan_natin/features/categories/category_service.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
+import 'package:tindahan_natin/shared/widgets/empty_state_widget.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
   const CategoryListScreen({super.key});
@@ -94,7 +95,15 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           ),
           body: displayAsync.when(
             data: (categories) {
-              if (categories.isEmpty) return const Center(child: Text('No categories yet.'));
+              if (categories.isEmpty) {
+                return EmptyStateWidget(
+                  icon: Icons.category_outlined,
+                  title: 'No Categories Yet',
+                  description: 'Create categories to organize and manage your products easily.',
+                  actionLabel: 'Add Category',
+                  onActionPressed: () => _showAddCategoryDialog(storeId),
+                );
+              }
 
               return RefreshIndicator(
                 onRefresh: () => ref.read(categoriesProvider(storeId).notifier).refresh(),
@@ -106,35 +115,50 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                     final itemCount = categories.length + (categories.length / adInterval).floor();
 
                     if (isWide) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 400,
-                          mainAxisExtent: 72,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                        itemCount: itemCount,
-                        itemBuilder: (context, index) {
-                          final isAd = (index + 1) % (adInterval + 1) == 0;
-                          if (isAd) {
-                            return const Card(
-                              margin: EdgeInsets.zero,
-                              child: Center(child: InlineAdWidget()),
-                            );
-                          }
-
-                          final categoryIndex = index - (index / (adInterval + 1)).floor();
-                          final c = categories[categoryIndex];
-                          return Card(
-                            margin: EdgeInsets.zero,
-                            child: _CategoryTile(
-                              category: c,
-                              storeId: storeId,
+                      final slivers = <Widget>[];
+                      for (int i = 0; i < categories.length; i += adInterval) {
+                        final chunk = categories.sublist(
+                          i,
+                          i + adInterval > categories.length ? categories.length : i + adInterval,
+                        );
+                        slivers.add(
+                          SliverPadding(
+                            padding: const EdgeInsets.all(8),
+                            sliver: SliverGrid(
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 400,
+                                mainAxisExtent: 72,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final c = chunk[index];
+                                  return Card(
+                                    margin: EdgeInsets.zero,
+                                    child: _CategoryTile(
+                                      category: c,
+                                      storeId: storeId,
+                                    ),
+                                  );
+                                },
+                                childCount: chunk.length,
+                              ),
+                            ),
+                          ),
+                        );
+                        if (i + adInterval < categories.length) {
+                          slivers.add(
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: InlineAdWidget(),
+                              ),
                             ),
                           );
-                        },
-                      );
+                        }
+                      }
+                      return CustomScrollView(slivers: slivers);
                     }
 
                     return ListView.builder(
@@ -152,9 +176,12 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
                         final categoryIndex = index - (index / (adInterval + 1)).floor();
                         final c = categories[categoryIndex];
-                        return _CategoryTile(
-                          category: c,
-                          storeId: storeId,
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          child: _CategoryTile(
+                            category: c,
+                            storeId: storeId,
+                          ),
                         );
                       },
                     );
@@ -170,28 +197,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              final controller = TextEditingController();
-              final result = await showDialog<String?>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Add Category'),
-                  content: TextField(controller: controller, decoration: const InputDecoration(labelText: 'Name'), autofocus: true),
-                  actions: [
-                    // TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                    ElevatedButton(onPressed: () => Navigator.of(ctx).pop(controller.text), child: const Text('Save')),
-                  ],
-                ),
-              );
-              if (result != null && result.trim().isNotEmpty) {
-                try {
-                  await ref.read(categoriesProvider(storeId).notifier).addCategory(result.trim());
-                  if (mounted) SnackBarUtils.showSuccess(context, 'Category created');
-                } catch (e) {
-                  if (mounted) SnackBarUtils.showError(context, e);
-                }
-              }
-            },
+            onPressed: () => _showAddCategoryDialog(storeId),
             child: const Icon(Icons.add),
           ),
         );
@@ -206,6 +212,35 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
       ),
     );
   }
+
+  Future<void> _showAddCategoryDialog(String storeId) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Category'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Name'),
+          autofocus: true,
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.trim().isNotEmpty) {
+      try {
+        await ref.read(categoriesProvider(storeId).notifier).addCategory(result.trim());
+        if (mounted) SnackBarUtils.showSuccess(context, 'Category created');
+      } catch (e) {
+        if (mounted) SnackBarUtils.showError(context, e);
+      }
+    }
+  }
 }
 
 class _CategoryTile extends ConsumerWidget {
@@ -217,8 +252,26 @@ class _CategoryTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
-      leading: const Icon(Icons.label),
-      title: Text(category.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.label_outlined,
+          color: Theme.of(context).colorScheme.primary,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        category.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

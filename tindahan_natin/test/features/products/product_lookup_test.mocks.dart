@@ -934,6 +934,57 @@ class MockLocalStorage extends _i1.Mock implements _i10.LocalStorage {
           as _i8.Future<void>);
 
   @override
+  _i8.Future<void> setOnboardingCompleted(bool? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#setOnboardingCompleted, [value]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  bool isOnboardingCompleted() =>
+      (super.noSuchMethod(
+            Invocation.method(#isOnboardingCompleted, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i8.Future<void> setMapTutorialDismissed(bool? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#setMapTutorialDismissed, [value]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  bool isMapTutorialDismissed() =>
+      (super.noSuchMethod(
+            Invocation.method(#isMapTutorialDismissed, []),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
+  _i8.Future<void> setStoreShared(String? storeId, bool? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#setStoreShared, [storeId, value]),
+            returnValue: _i8.Future<void>.value(),
+            returnValueForMissingStub: _i8.Future<void>.value(),
+          )
+          as _i8.Future<void>);
+
+  @override
+  bool isStoreShared(String? storeId) =>
+      (super.noSuchMethod(
+            Invocation.method(#isStoreShared, [storeId]),
+            returnValue: false,
+          )
+          as bool);
+
+  @override
   _i8.Future<void> clearCache() =>
       (super.noSuchMethod(
             Invocation.method(#clearCache, []),

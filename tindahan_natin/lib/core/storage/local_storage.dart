@@ -158,6 +158,30 @@ class LocalStorage {
     await _pendingMutationsBox.delete(mutationId);
   }
 
+  Future<void> setOnboardingCompleted(bool value) async {
+    await _entityBox.put('onboarding_completed', value);
+  }
+
+  bool isOnboardingCompleted() {
+    return _entityBox.get('onboarding_completed', defaultValue: false) as bool;
+  }
+
+  Future<void> setMapTutorialDismissed(bool value) async {
+    await _entityBox.put('map_tutorial_dismissed', value);
+  }
+
+  bool isMapTutorialDismissed() {
+    return _entityBox.get('map_tutorial_dismissed', defaultValue: false) as bool;
+  }
+
+  Future<void> setStoreShared(String storeId, bool value) async {
+    await _entityBox.put('store_shared_$storeId', value);
+  }
+
+  bool isStoreShared(String storeId) {
+    return _entityBox.get('store_shared_$storeId', defaultValue: false) as bool;
+  }
+
   Future<void> clearCache() async {
     await _productsBox.clear();
     await _entityBox.clear();

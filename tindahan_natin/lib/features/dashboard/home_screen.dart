@@ -13,6 +13,10 @@ import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
+import 'package:tindahan_natin/features/products/product_service.dart';
+import 'package:tindahan_natin/features/categories/category_service.dart';
+import 'package:tindahan_natin/features/store_map/map_service.dart';
+import 'package:tindahan_natin/core/storage/local_storage.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -128,15 +132,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             data: (stats) => LayoutBuilder(
               builder: (context, constraints) {
                 final isWide = constraints.maxWidth >= 900;
-                final crossAxisCount = constraints.maxWidth > 1200 ? 4 : (constraints.maxWidth > 600 ? 3 : 2);
+                final crossAxisCount = constraints.maxWidth > 1200 ? 5 : (constraints.maxWidth > 700 ? 3 : 2);
                 
                 final summaryCards = GridView.count(
                   crossAxisCount: crossAxisCount,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 4,
-                  crossAxisSpacing: 0,
-                  childAspectRatio: isWide ? 1.5 : 1.0,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: isWide ? 1.45 : 1.15,
                   children: [
                     _StatCard(
                       title: 'Total Sales',
@@ -162,6 +166,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       icon: stats.performanceChange >= 0 ? Icons.trending_up : Icons.trending_down,
                       color: stats.performanceChange >= 0 ? Colors.purple : Colors.red,
                     ),
+                    _StatCard(
+                      title: 'Inventory Value',
+                      value: '₱${stats.totalInventoryValue.toStringAsFixed(2)}',
+                      icon: Icons.inventory_2_outlined,
+                      color: Colors.teal,
+                    ),
                   ],
                 ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9));
 
@@ -171,17 +181,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Row(
                       children: [
                         Text(
-                          'Alerts',
+                          'Low Stock Alerts',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.red,
+                                color: Colors.red[700],
                               ),
                         ),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Colors.red[700],
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -192,29 +202,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ...stats.alerts.map((alert) => Card(
-                          color: Colors.red.withValues(alpha: 0.05),
-                          margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
-                          ),
+                    ...stats.alerts.map((alert) {
+                      final progress = alert.threshold > 0 ? (alert.currentQuantity / alert.threshold).clamp(0.0, 1.0) : 0.0;
+                      final progressColor = alert.currentQuantity == 0 ? Colors.red : Colors.orange;
+                      
+                      return Card(
+                        color: progressColor.withValues(alpha: 0.03),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: progressColor.withValues(alpha: 0.15)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.red,
-                              child: Icon(Icons.warning_amber_rounded, color: Colors.white),
+                            leading: CircleAvatar(
+                              backgroundColor: progressColor.withValues(alpha: 0.1),
+                              child: Icon(
+                                alert.currentQuantity == 0 ? Icons.error_outline : Icons.warning_amber_rounded,
+                                color: progressColor,
+                              ),
                             ),
                             title: Text(
                               alert.productName,
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            subtitle: Text(alert.message),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Text(alert.message),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    backgroundColor: progressColor.withValues(alpha: 0.1),
+                                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                                    minHeight: 4,
+                                  ),
+                                ),
+                              ],
+                            ),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined),
                               onPressed: () => context.push('/inventory/edit/${alert.productId}'),
                             ),
                           ),
-                        ).animate().fadeIn().slideX(begin: 0.1)),
+                        ),
+                      ).animate().fadeIn().slideX(begin: 0.1);
+                    }),
                     const SizedBox(height: 32),
                   ],
                 );
@@ -269,6 +306,220 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         }).toList(),
                       ),
                     ),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final weeklyPerformanceSection = stats.weeklyPerformance.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Weekly Sales Trend',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 140,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: stats.weeklyPerformance.map((wp) {
+                          final maxAmount = stats.weeklyPerformance
+                              .map((e) => e.amount)
+                              .fold(0.0, (prev, element) => element > prev ? element : prev);
+                          final heightFactor = maxAmount > 0 ? wp.amount / maxAmount : 0.0;
+                          
+                          final startMonth = wp.startDate.month;
+                          final startDay = wp.startDate.day;
+                          final endMonth = wp.endDate.month;
+                          final endDay = wp.endDate.day;
+                          final dateRangeStr = '$startMonth/$startDay-$endMonth/$endDay';
+                          
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  FittedBox(
+                                    child: Text(
+                                      '₱${wp.amount.toInt()}',
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    height: (heightFactor * 70).clamp(4, 70),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          Theme.of(context).colorScheme.primary,
+                                          Theme.of(context).colorScheme.secondary,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    dateRangeStr,
+                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final recentTransactionsSection = stats.recentTransactions.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Recent Transactions',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/lista-history'),
+                          child: const Text('View All'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...stats.recentTransactions.map((tx) {
+                      final isCredit = tx.isCredit;
+                      final typeLabel = isCredit ? 'Credit' : 'Sale';
+                      final typeColor = isCredit ? Colors.orange : Colors.green;
+                      final dateStr = '${tx.createdAt.month}/${tx.createdAt.day} ${tx.createdAt.hour.toString().padLeft(2, '0')}:${tx.createdAt.minute.toString().padLeft(2, '0')}';
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: typeColor.withValues(alpha: 0.1),
+                            child: Icon(
+                              isCredit ? Icons.event_note : Icons.payments_outlined,
+                              color: typeColor,
+                            ),
+                          ),
+                          title: Row(
+                            children: [
+                              Text(
+                                tx.customerName?.isNotEmpty == true ? tx.customerName! : 'Walk-in Customer',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: typeColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: typeColor.withValues(alpha: 0.2)),
+                                ),
+                                child: Text(
+                                  typeLabel,
+                                  style: TextStyle(
+                                    color: typeColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Text(
+                            '$dateStr • ${tx.itemsCount} ${tx.itemsCount == 1 ? 'item' : 'items'} • by ${tx.staffName}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          trailing: Text(
+                            '₱${tx.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          onTap: () => context.push('/lista-history'),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final activeCategoriesSection = stats.mostActiveCategories.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Most Active Categories',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    ...stats.mostActiveCategories.map((c) {
+                      final maxRevenue = stats.mostActiveCategories
+                          .map((e) => e.revenue)
+                          .fold(0.0, (prev, val) => val > prev ? val : prev);
+                      final progress = maxRevenue > 0 ? c.revenue / maxRevenue : 0.0;
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    c.categoryName,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  Text(
+                                    '₱${c.revenue.toStringAsFixed(2)}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${c.itemsSold} items sold',
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                  minHeight: 6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                     const SizedBox(height: 32),
                   ],
                 );
@@ -333,7 +584,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ))
                     else
                       ...stats.topProducts.map((p) => Card(
-                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
@@ -360,7 +611,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ).animate().fadeIn().slideX(begin: -0.1),
                       const SizedBox(height: 24),
-                      
+                      _StoreSetupChecklist(store: store),
+                      const SizedBox(height: 24),
                       summaryCards,
                       
                       const SizedBox(height: 24),
@@ -376,7 +628,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  weeklyPerformanceSection,
                                   dailyPerformanceSection,
+                                  recentTransactionsSection,
                                   topProductsSection,
                                 ],
                               ),
@@ -388,6 +642,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   alertsSection,
+                                  activeCategoriesSection,
                                   quickActionsSection,
                                 ],
                               ),
@@ -396,9 +651,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         )
                       else ...[
                         alertsSection,
+                        weeklyPerformanceSection,
                         dailyPerformanceSection,
-                        quickActionsSection,
+                        recentTransactionsSection,
+                        activeCategoriesSection,
                         topProductsSection,
+                        quickActionsSection,
                       ],
                     ],
                   ),
@@ -441,27 +699,41 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      margin: EdgeInsets.zero,
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 28),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
             const SizedBox(height: 12),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
                 value,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               title,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -508,4 +780,237 @@ class _QuickAction extends StatelessWidget {
       ),
     );
   }
+}
+
+class _StoreSetupChecklist extends ConsumerStatefulWidget {
+  final Store store;
+  const _StoreSetupChecklist({required this.store});
+
+  @override
+  ConsumerState<_StoreSetupChecklist> createState() => _StoreSetupChecklistState();
+}
+
+class _StoreSetupChecklistState extends ConsumerState<_StoreSetupChecklist> {
+  bool _isExpanded = true;
+
+  Future<void> _shareStore(Store store) async {
+    final shareUrl = buildPublicStoreUrl(slug: store.slug);
+    if (shareUrl == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Public store sharing is not configured')),
+      );
+      return;
+    }
+
+    final shareText = store.name.trim().isEmpty
+        ? shareUrl
+        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
+
+    await SharePlus.instance.share(ShareParams(text: shareText));
+    await ref.read(localStorageProvider).setStoreShared(store.id, true);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storeId = widget.store.id;
+    final categoriesAsync = ref.watch(categoriesProvider(storeId));
+    final productsAsync = ref.watch(productsProvider(storeId));
+    final shelvesAsync = ref.watch(shelvesProvider(storeId));
+
+    if (categoriesAsync.isLoading || productsAsync.isLoading || shelvesAsync.isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    final categories = categoriesAsync.value ?? [];
+    final products = productsAsync.value ?? [];
+    final shelves = shelvesAsync.value ?? [];
+
+    final hasStoreName = widget.store.name.isNotEmpty &&
+        widget.store.name.toLowerCase() != 'new store' &&
+        widget.store.name.toLowerCase() != 'my store';
+    final hasCategory = categories.isNotEmpty;
+    final hasProduct = products.isNotEmpty;
+    final hasShelf = shelves.isNotEmpty;
+    final hasShelfAssignment = products.any((p) => p.shelfId != null && p.shelfId!.isNotEmpty);
+    final hasLowStockAlert = products.any((p) => p.minStockThreshold > 0);
+    final hasShared = ref.watch(localStorageProvider).isStoreShared(storeId);
+
+    final checklistItems = [
+      _ChecklistItem(
+        title: 'Name your store',
+        subtitle: 'Change your store\'s generic name to a custom one.',
+        isCompleted: hasStoreName,
+        onTap: () => context.push('/settings/store'),
+      ),
+      _ChecklistItem(
+        title: 'Create store shelves',
+        subtitle: 'Draw and place visual shelves on your map.',
+        isCompleted: hasShelf,
+        onTap: () => context.go('/map'),
+      ),
+      _ChecklistItem(
+        title: 'Create a category',
+        subtitle: 'Group your items for better organization.',
+        isCompleted: hasCategory,
+        onTap: () => context.push('/categories'),
+      ),
+      _ChecklistItem(
+        title: 'Add your first product',
+        subtitle: 'Add details, price, and barcode for an item.',
+        isCompleted: hasProduct,
+        onTap: () => context.push('/inventory'),
+      ),
+      _ChecklistItem(
+        title: 'Assign products to shelves',
+        subtitle: 'Put products on shelves to easily locate them.',
+        isCompleted: hasShelfAssignment,
+        onTap: () => context.go('/map'),
+      ),
+      _ChecklistItem(
+        title: 'Set a low stock threshold',
+        subtitle: 'Get alerts when item quantity runs low.',
+        isCompleted: hasLowStockAlert,
+        onTap: () => context.go('/inventory'),
+      ),
+      _ChecklistItem(
+        title: 'Share your store map',
+        subtitle: 'Invite others or let customers view your shelves.',
+        isCompleted: hasShared,
+        onTap: () => _shareStore(widget.store),
+      ),
+    ];
+
+    final completedCount = checklistItems.where((item) => item.isCompleted).length;
+    final progressPercentage = completedCount / checklistItems.length;
+
+    if (progressPercentage == 1.0) {
+      return Card(
+        elevation: 2,
+        color: Colors.green.withValues(alpha: 0.05),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.green.withValues(alpha: 0.2)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                backgroundColor: Colors.green,
+                child: Icon(Icons.celebration, color: Colors.white),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Store Fully Configured!',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('🎉 Great job! Your store is fully set up and ready for tracking.'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).animate().fadeIn().scale();
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 24),
+      elevation: 0,
+      child: Column(
+        children: [
+          ListTile(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            leading: SizedBox(
+              width: 40,
+              height: 40,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progressPercentage,
+                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                    strokeWidth: 4,
+                  ),
+                  Text(
+                    '${(progressPercentage * 100).round()}%',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            title: Text(
+              'Store Setup Checklist',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              '$completedCount of ${checklistItems.length} steps completed',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
+            ),
+            trailing: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+          ),
+          if (_isExpanded) ...[
+            const Divider(height: 1),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: checklistItems.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = checklistItems[index];
+                return ListTile(
+                  leading: Icon(
+                    item.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: item.isCompleted ? Colors.green : Colors.grey,
+                  ),
+                  title: Text(
+                    item.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+                      color: item.isCompleted ? Colors.grey : null,
+                    ),
+                  ),
+                  subtitle: Text(item.subtitle),
+                  trailing: item.isCompleted
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onPressed: item.onTap,
+                        ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+}
+
+class _ChecklistItem {
+  final String title;
+  final String subtitle;
+  final bool isCompleted;
+  final VoidCallback onTap;
+
+  _ChecklistItem({
+    required this.title,
+    required this.subtitle,
+    required this.isCompleted,
+    required this.onTap,
+  });
 }

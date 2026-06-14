@@ -125,6 +125,24 @@ class MapService {
     }
   }
 
+  Future<void> _updateProductShelfInCache({
+    required String? storeId,
+    required String? productId,
+    required String? shelfId,
+  }) async {
+    if (storeId == null || productId == null) return;
+    try {
+      final cached = _local.findCachedRecordByIdWithPrefix('products_', productId);
+      if (cached != null) {
+        final updated = {
+          ...cached,
+          'shelfId': shelfId,
+        };
+        await _local.upsertCachedProduct(storeId, updated);
+      }
+    } catch (_) {}
+  }
+
   Future<ProductLocation> createProductLocation(Map<String, dynamic> data) async {
     final requestData = Map<String, dynamic>.from(data);
     requestData['id'] ??= _uuid.v4();
@@ -138,11 +156,21 @@ class MapService {
       final created = ProductLocation.fromJson(Map<String, dynamic>.from(response.data as Map));
       if (storeId != null) {
         await _local.upsertCachedRecord(_locationsKey(storeId), created.toJson());
+        await _updateProductShelfInCache(
+          storeId: storeId,
+          productId: created.productId,
+          shelfId: created.shelfId,
+        );
       }
       return created;
     } catch (error) {
       if (storeId != null) {
         await _local.upsertCachedRecord(_locationsKey(storeId), draft.toJson());
+        await _updateProductShelfInCache(
+          storeId: storeId,
+          productId: draft.productId,
+          shelfId: draft.shelfId,
+        );
       }
       await _local.queueMutation({
         'resource': 'productLocations',
@@ -157,6 +185,8 @@ class MapService {
 
   Future<void> deleteProductLocation(String id, {String? storeId}) async {
     final sId = storeId ?? _local.findCachedRecordByIdWithPrefix('locations_', id)?['storeId']?.toString();
+    final locationRecord = _local.findCachedRecordByIdWithPrefix('locations_', id);
+    final productId = locationRecord?['productId']?.toString();
 
     try {
       await _dio.delete('/map/locations/$id');
@@ -172,6 +202,13 @@ class MapService {
 
     if (sId != null) {
       await _local.removeCachedRecord(_locationsKey(sId), id);
+      if (productId != null) {
+        await _updateProductShelfInCache(
+          storeId: sId,
+          productId: productId,
+          shelfId: null,
+        );
+      }
     }
   }
 }
