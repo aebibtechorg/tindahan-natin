@@ -51,6 +51,10 @@ class DashboardService {
         dailyPerformance: [],
         topProducts: [],
         alerts: [],
+        totalInventoryValue: 0.0,
+        mostActiveCategories: [],
+        recentTransactions: [],
+        weeklyPerformance: [],
       );
     }
   }

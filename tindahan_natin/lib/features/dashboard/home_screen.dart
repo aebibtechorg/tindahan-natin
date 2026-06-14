@@ -132,7 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             data: (stats) => LayoutBuilder(
               builder: (context, constraints) {
                 final isWide = constraints.maxWidth >= 900;
-                final crossAxisCount = constraints.maxWidth > 1200 ? 4 : (constraints.maxWidth > 600 ? 3 : 2);
+                final crossAxisCount = constraints.maxWidth > 1200 ? 5 : (constraints.maxWidth > 700 ? 3 : 2);
                 
                 final summaryCards = GridView.count(
                   crossAxisCount: crossAxisCount,
@@ -140,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 4,
                   crossAxisSpacing: 0,
-                  childAspectRatio: isWide ? 1.5 : 1.0,
+                  childAspectRatio: isWide ? 1.4 : 1.0,
                   children: [
                     _StatCard(
                       title: 'Total Sales',
@@ -166,6 +166,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       icon: stats.performanceChange >= 0 ? Icons.trending_up : Icons.trending_down,
                       color: stats.performanceChange >= 0 ? Colors.purple : Colors.red,
                     ),
+                    _StatCard(
+                      title: 'Inventory Value',
+                      value: '₱${stats.totalInventoryValue.toStringAsFixed(2)}',
+                      icon: Icons.inventory_2_outlined,
+                      color: Colors.teal,
+                    ),
                   ],
                 ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9));
 
@@ -175,17 +181,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Row(
                       children: [
                         Text(
-                          'Alerts',
+                          'Low Stock Alerts',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.red,
+                                color: Colors.red[700],
                               ),
                         ),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Colors.red[700],
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -196,29 +202,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ...stats.alerts.map((alert) => Card(
-                          color: Colors.red.withValues(alpha: 0.05),
-                          margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
-                          ),
+                    ...stats.alerts.map((alert) {
+                      final progress = alert.threshold > 0 ? (alert.currentQuantity / alert.threshold).clamp(0.0, 1.0) : 0.0;
+                      final progressColor = alert.currentQuantity == 0 ? Colors.red : Colors.orange;
+                      
+                      return Card(
+                        color: progressColor.withValues(alpha: 0.03),
+                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: progressColor.withValues(alpha: 0.15)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.red,
-                              child: Icon(Icons.warning_amber_rounded, color: Colors.white),
+                            leading: CircleAvatar(
+                              backgroundColor: progressColor.withValues(alpha: 0.1),
+                              child: Icon(
+                                alert.currentQuantity == 0 ? Icons.error_outline : Icons.warning_amber_rounded,
+                                color: progressColor,
+                              ),
                             ),
                             title: Text(
                               alert.productName,
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            subtitle: Text(alert.message),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Text(alert.message),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    backgroundColor: progressColor.withValues(alpha: 0.1),
+                                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                                    minHeight: 4,
+                                  ),
+                                ),
+                              ],
+                            ),
                             trailing: IconButton(
                               icon: const Icon(Icons.edit_outlined),
                               onPressed: () => context.push('/inventory/edit/${alert.productId}'),
                             ),
                           ),
-                        ).animate().fadeIn().slideX(begin: 0.1)),
+                        ),
+                      ).animate().fadeIn().slideX(begin: 0.1);
+                    }),
                     const SizedBox(height: 32),
                   ],
                 );
@@ -273,6 +306,220 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         }).toList(),
                       ),
                     ),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final weeklyPerformanceSection = stats.weeklyPerformance.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Weekly Sales Trend',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 140,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: stats.weeklyPerformance.map((wp) {
+                          final maxAmount = stats.weeklyPerformance
+                              .map((e) => e.amount)
+                              .fold(0.0, (prev, element) => element > prev ? element : prev);
+                          final heightFactor = maxAmount > 0 ? wp.amount / maxAmount : 0.0;
+                          
+                          final startMonth = wp.startDate.month;
+                          final startDay = wp.startDate.day;
+                          final endMonth = wp.endDate.month;
+                          final endDay = wp.endDate.day;
+                          final dateRangeStr = '$startMonth/$startDay-$endMonth/$endDay';
+                          
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  FittedBox(
+                                    child: Text(
+                                      '₱${wp.amount.toInt()}',
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    height: (heightFactor * 70).clamp(4, 70),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          Theme.of(context).colorScheme.primary,
+                                          Theme.of(context).colorScheme.secondary,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    dateRangeStr,
+                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final recentTransactionsSection = stats.recentTransactions.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Recent Transactions',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/lista-history'),
+                          child: const Text('View All'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...stats.recentTransactions.map((tx) {
+                      final isCredit = tx.isCredit;
+                      final typeLabel = isCredit ? 'Credit' : 'Sale';
+                      final typeColor = isCredit ? Colors.orange : Colors.green;
+                      final dateStr = '${tx.createdAt.month}/${tx.createdAt.day} ${tx.createdAt.hour.toString().padLeft(2, '0')}:${tx.createdAt.minute.toString().padLeft(2, '0')}';
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: typeColor.withValues(alpha: 0.1),
+                            child: Icon(
+                              isCredit ? Icons.event_note : Icons.payments_outlined,
+                              color: typeColor,
+                            ),
+                          ),
+                          title: Row(
+                            children: [
+                              Text(
+                                tx.customerName?.isNotEmpty == true ? tx.customerName! : 'Walk-in Customer',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: typeColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: typeColor.withValues(alpha: 0.2)),
+                                ),
+                                child: Text(
+                                  typeLabel,
+                                  style: TextStyle(
+                                    color: typeColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Text(
+                            '$dateStr • ${tx.itemsCount} ${tx.itemsCount == 1 ? 'item' : 'items'} • by ${tx.staffName}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          trailing: Text(
+                            '₱${tx.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          onTap: () => context.push('/lista-history'),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 32),
+                  ],
+                );
+
+                final activeCategoriesSection = stats.mostActiveCategories.isEmpty ? const SizedBox.shrink() : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Most Active Categories',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    ...stats.mostActiveCategories.map((c) {
+                      final maxRevenue = stats.mostActiveCategories
+                          .map((e) => e.revenue)
+                          .fold(0.0, (prev, val) => val > prev ? val : prev);
+                      final progress = maxRevenue > 0 ? c.revenue / maxRevenue : 0.0;
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    c.categoryName,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  Text(
+                                    '₱${c.revenue.toStringAsFixed(2)}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${c.itemsSold} items sold',
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                                  minHeight: 6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                     const SizedBox(height: 32),
                   ],
                 );
@@ -381,7 +628,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  weeklyPerformanceSection,
                                   dailyPerformanceSection,
+                                  recentTransactionsSection,
                                   topProductsSection,
                                 ],
                               ),
@@ -393,6 +642,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   alertsSection,
+                                  activeCategoriesSection,
                                   quickActionsSection,
                                 ],
                               ),
@@ -401,9 +651,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         )
                       else ...[
                         alertsSection,
+                        weeklyPerformanceSection,
                         dailyPerformanceSection,
-                        quickActionsSection,
+                        recentTransactionsSection,
+                        activeCategoriesSection,
                         topProductsSection,
+                        quickActionsSection,
                       ],
                     ],
                   ),

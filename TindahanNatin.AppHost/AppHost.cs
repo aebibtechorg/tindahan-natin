@@ -62,7 +62,7 @@ flutterWeb.WithEnvironment("AUTH0_DOMAIN", builder.Configuration["Auth0:Domain"]
 flutterWeb.WithEnvironment("AUTH0_CLIENT_ID", builder.Configuration["Auth0:ClientId"] ?? builder.Configuration["AUTH0_CLIENT_ID"]);
 flutterWeb.WithEnvironment("AUTH0_AUDIENCE", builder.Configuration["Auth0:Audience"] ?? builder.Configuration["AUTH0_AUDIENCE"]);
 flutterWeb.WithUrlForEndpoint("http", c => {
-    c.Url = "/#/store";
+    c.Url = "/store";
 });
 
 builder.Build().Run();

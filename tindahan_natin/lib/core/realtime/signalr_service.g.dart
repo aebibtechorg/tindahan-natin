@@ -41,7 +41,7 @@ final class RealtimeClientProvider
   }
 }
 
-String _$realtimeClientHash() => r'80ae1fca838e7702e3483ad8ca0cf263b6caabb4';
+String _$realtimeClientHash() => r'0bf11f8e3324b1869b048e2fed939188e9521069';
 
 abstract class _$RealtimeClient extends $Notifier<void> {
   void build();
