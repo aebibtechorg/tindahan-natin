@@ -8,6 +8,7 @@ import 'package:tindahan_natin/core/widgets/inline_ad_widget.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -43,9 +44,7 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('Store Settings'),
             subtitle: const Text('Manage your store name and account'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const StoreSettingsScreen()),
-            ),
+            onTap: () => context.push('/settings/store'),
           ),
           if (PublicWebConfig.hasBaseUrl)
             myStoreAsync.when(

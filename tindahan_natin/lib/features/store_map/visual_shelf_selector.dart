@@ -24,6 +24,7 @@ class _VisualShelfSelectorState extends ConsumerState<VisualShelfSelector> {
   final double _canvasSize = 100000.0;
   String? _selectedShelfId;
   bool _initialViewConfigured = false;
+  bool _configuredForShelves = false;
 
   @override
   void initState() {
@@ -34,11 +35,23 @@ class _VisualShelfSelectorState extends ConsumerState<VisualShelfSelector> {
   double get _canvasOrigin => _canvasSize / 2;
 
   void _configureInitialView(Size viewportSize, List<Shelf> shelves) {
-    if (_initialViewConfigured || viewportSize.isEmpty) {
+    if (viewportSize.isEmpty) {
       return;
     }
 
-    _initialViewConfigured = true;
+    if (_initialViewConfigured) {
+      if (shelves.isEmpty || _configuredForShelves) {
+        return;
+      }
+    }
+
+    if (shelves.isNotEmpty) {
+      _initialViewConfigured = true;
+      _configuredForShelves = true;
+    } else {
+      _initialViewConfigured = true;
+      _configuredForShelves = false;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;

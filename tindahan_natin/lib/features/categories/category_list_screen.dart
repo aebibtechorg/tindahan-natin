@@ -106,35 +106,50 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                     final itemCount = categories.length + (categories.length / adInterval).floor();
 
                     if (isWide) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 400,
-                          mainAxisExtent: 72,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                        itemCount: itemCount,
-                        itemBuilder: (context, index) {
-                          final isAd = (index + 1) % (adInterval + 1) == 0;
-                          if (isAd) {
-                            return const Card(
-                              margin: EdgeInsets.zero,
-                              child: Center(child: InlineAdWidget()),
-                            );
-                          }
-
-                          final categoryIndex = index - (index / (adInterval + 1)).floor();
-                          final c = categories[categoryIndex];
-                          return Card(
-                            margin: EdgeInsets.zero,
-                            child: _CategoryTile(
-                              category: c,
-                              storeId: storeId,
+                      final slivers = <Widget>[];
+                      for (int i = 0; i < categories.length; i += adInterval) {
+                        final chunk = categories.sublist(
+                          i,
+                          i + adInterval > categories.length ? categories.length : i + adInterval,
+                        );
+                        slivers.add(
+                          SliverPadding(
+                            padding: const EdgeInsets.all(8),
+                            sliver: SliverGrid(
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 400,
+                                mainAxisExtent: 72,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final c = chunk[index];
+                                  return Card(
+                                    margin: EdgeInsets.zero,
+                                    child: _CategoryTile(
+                                      category: c,
+                                      storeId: storeId,
+                                    ),
+                                  );
+                                },
+                                childCount: chunk.length,
+                              ),
+                            ),
+                          ),
+                        );
+                        if (i + adInterval < categories.length) {
+                          slivers.add(
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: InlineAdWidget(),
+                              ),
                             ),
                           );
-                        },
-                      );
+                        }
+                      }
+                      return CustomScrollView(slivers: slivers);
                     }
 
                     return ListView.builder(

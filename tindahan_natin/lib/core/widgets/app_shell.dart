@@ -15,18 +15,29 @@ class AppShell extends ConsumerWidget {
   final String currentLocation;
   const AppShell({super.key, required this.child, required this.currentLocation});
 
-  static final _routes = ['/', '/inventory', '/categories', '/map'];
-
   int _locationToIndex(String location) {
-    if (location.startsWith('/inventory')) return 1;
-    if (location.startsWith('/categories')) return 2;
-    if (location.startsWith('/map')) return 3;
+    if (location.startsWith('/map')) return 1;
+    if (location.startsWith('/inventory')) return 2;
+    if (location.startsWith('/store')) return 3;
     return 0;
   }
 
-  void _onDestinationSelected(BuildContext context, int index) {
-    final target = _routes[index];
-    if (currentLocation != target) context.go(target);
+  void _onDestinationSelected(BuildContext context, WidgetRef ref, int index) async {
+    if (index == 0) {
+      if (currentLocation != '/') context.go('/');
+    } else if (index == 1) {
+      if (currentLocation != '/map') context.go('/map');
+    } else if (index == 2) {
+      if (currentLocation != '/inventory') context.go('/inventory');
+    } else if (index == 3) {
+      final myStore = await ref.read(myStoreProvider.future);
+      if (myStore != null) {
+        final target = '/store/${myStore.slug}/products';
+        if (currentLocation != target) context.go(target);
+      } else {
+        if (currentLocation != '/store') context.go('/store');
+      }
+    }
   }
 
   @override
@@ -74,7 +85,7 @@ class AppShell extends ConsumerWidget {
                 NavigationRail(
                   extended: true,
                   selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) => _onDestinationSelected(context, index),
+                  onDestinationSelected: (index) => _onDestinationSelected(context, ref, index),
                   destinations: const [
                     NavigationRailDestination(
                       icon: Icon(Icons.home_outlined),
@@ -82,19 +93,19 @@ class AppShell extends ConsumerWidget {
                       label: Text('Home'),
                     ),
                     NavigationRailDestination(
+                      icon: Icon(Icons.map_outlined),
+                      selectedIcon: Icon(Icons.map),
+                      label: Text('Map'),
+                    ),
+                    NavigationRailDestination(
                       icon: Icon(Icons.inventory_2_outlined),
                       selectedIcon: Icon(Icons.inventory_2),
                       label: Text('Products'),
                     ),
                     NavigationRailDestination(
-                      icon: Icon(Icons.category_outlined),
-                      selectedIcon: Icon(Icons.category),
-                      label: Text('Categories'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.map_outlined),
-                      selectedIcon: Icon(Icons.map),
-                      label: Text('Map'),
+                      icon: Icon(Icons.visibility_outlined),
+                      selectedIcon: Icon(Icons.visibility),
+                      label: Text('Public View'),
                     ),
                   ],
                 ),
@@ -121,12 +132,12 @@ class AppShell extends ConsumerWidget {
               ? null
               : NavigationBar(
                   selectedIndex: selectedIndex,
-                  onDestinationSelected: (index) => _onDestinationSelected(context, index),
+                  onDestinationSelected: (index) => _onDestinationSelected(context, ref, index),
                   destinations: const [
                     NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-                    NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Products'),
-                    NavigationDestination(icon: Icon(Icons.category_outlined), selectedIcon: Icon(Icons.category), label: 'Categories'),
                     NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Map'),
+                    NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Products'),
+                    NavigationDestination(icon: Icon(Icons.visibility_outlined), selectedIcon: Icon(Icons.visibility), label: 'Public View'),
                   ],
                 ),
         );

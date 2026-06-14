@@ -18,6 +18,8 @@ import 'package:tindahan_natin/features/lista/public_lista_screen.dart';
 import 'package:tindahan_natin/features/lista/add_lista_entry_screen.dart';
 import 'package:tindahan_natin/features/lista/lista_history_screen.dart';
 import 'package:tindahan_natin/core/widgets/app_shell.dart';
+import 'package:tindahan_natin/features/onboarding/onboarding_screen.dart';
+import 'package:tindahan_natin/core/storage/local_storage.dart';
 
 part 'app_router.g.dart';
 
@@ -134,12 +136,22 @@ GoRouter appRouter(Ref ref) {
           GoRoute(
             path: '/settings',
             builder: (context, state) => const SettingsScreen(),
+            routes: [
+              GoRoute(
+                path: 'store',
+                builder: (context, state) => const StoreSettingsScreen(),
+              ),
+            ],
           ),
         ],
       ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
     ],
     redirect: (context, state) {
@@ -155,6 +167,14 @@ GoRouter appRouter(Ref ref) {
 
       if (!loggedIn && !loggingIn) return '/login';
       if (loggedIn && loggingIn) return '/';
+
+      // Check onboarding completion
+      if (loggedIn) {
+        final onboardingCompleted = ref.read(localStorageProvider).isOnboardingCompleted();
+        if (!onboardingCompleted && matchedLocation != '/onboarding') {
+          return '/onboarding';
+        }
+      }
 
       return null;
     },

@@ -98,6 +98,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 : const Text('Products'),
             actions: [
               IconButton(
+                icon: const Icon(Icons.category),
+                tooltip: 'Manage Categories',
+                onPressed: () => context.push('/categories'),
+              ),
+              IconButton(
                 icon: Icon(_isSearching ? Icons.close : Icons.search),
                 onPressed: () {
                   setState(() {
@@ -136,41 +141,56 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                     final itemCount = products.length + (products.length / adInterval).floor();
 
                     if (isWide) {
-                      return GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 450,
-                          mainAxisExtent: 100,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                        itemCount: itemCount,
-                        itemBuilder: (context, index) {
-                          final isAd = (index + 1) % (adInterval + 1) == 0;
-                          if (isAd) {
-                            return const Card(
-                              margin: EdgeInsets.zero,
-                              child: Center(child: InlineAdWidget()),
-                            );
-                          }
-
-                          final productIndex = index - (index / (adInterval + 1)).floor();
-                          final product = products[productIndex];
-                          return _ProductTile(
-                            product: product,
-                            categoryName: categoriesData.firstWhere(
-                              (c) => c.id == product.categoryId,
-                              orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
-                            ).name,
-                            shelfName: shelvesData.firstWhere(
-                              (s) => s.id == (product.shelfId ?? ''),
-                              orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
-                            ).name,
-                            index: index,
-                            onTap: () => context.push('/inventory/edit/${product.id}'),
+                      final slivers = <Widget>[];
+                      for (int i = 0; i < products.length; i += adInterval) {
+                        final chunk = products.sublist(
+                          i,
+                          i + adInterval > products.length ? products.length : i + adInterval,
+                        );
+                        slivers.add(
+                          SliverPadding(
+                            padding: const EdgeInsets.all(8),
+                            sliver: SliverGrid(
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 450,
+                                mainAxisExtent: 100,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final product = chunk[index];
+                                  return _ProductTile(
+                                    product: product,
+                                    categoryName: categoriesData.firstWhere(
+                                      (c) => c.id == product.categoryId,
+                                      orElse: () => Category(id: '', name: 'Uncategorized', storeId: ''),
+                                    ).name,
+                                    shelfName: shelvesData.firstWhere(
+                                      (s) => s.id == (product.shelfId ?? ''),
+                                      orElse: () => Shelf(id: '', name: 'Unassigned', storeId: ''),
+                                    ).name,
+                                    index: i + index,
+                                    onTap: () => context.push('/inventory/edit/${product.id}'),
+                                  );
+                                },
+                                childCount: chunk.length,
+                              ),
+                            ),
+                          ),
+                        );
+                        if (i + adInterval < products.length) {
+                          slivers.add(
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: InlineAdWidget(),
+                              ),
+                            ),
                           );
-                        },
-                      );
+                        }
+                      }
+                      return CustomScrollView(slivers: slivers);
                     }
 
                     return ListView.builder(

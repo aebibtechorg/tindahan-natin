@@ -215,6 +215,10 @@ class ProductService {
       result = await _lookupOFFSchema(lookupDio, barcode, 'world.openproductsfacts.org');
       if (result != null) return result;
 
+      // 4. Try Brocade.io
+      result = await _lookupBrocade(lookupDio, barcode);
+      if (result != null) return result;
+
       // 5. Try Google Books (ISBN)
       if (barcode.startsWith('978') || barcode.startsWith('979') || barcode.length == 10) {
         result = await _lookupGoogleBooks(lookupDio, barcode);
@@ -224,6 +228,28 @@ class ProductService {
       debugPrint('Multi-source lookup failed: $e');
     } finally {
       lookupDio.close();
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> _lookupBrocade(Dio dio, String barcode) async {
+    try {
+      final response = await dio.get('https://www.brocade.io/api/items/$barcode');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data is Map) {
+          final name = data['name']?.toString() ?? data['brand']?.toString();
+          if (name != null && name.isNotEmpty) {
+            return {
+              'name': name,
+              'description': data['description']?.toString() ?? '',
+              'imageUrl': null,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Brocade lookup failed: $e');
     }
     return null;
   }

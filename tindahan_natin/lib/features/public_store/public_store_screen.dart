@@ -91,35 +91,50 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                   final itemCount = products.length + (products.length / adInterval).floor();
 
                   if (isWide) {
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(8),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 400,
-                        mainAxisExtent: 80,
-                        mainAxisSpacing: 8,
-                        crossAxisSpacing: 8,
-                      ),
-                      itemCount: itemCount,
-                      itemBuilder: (context, index) {
-                        final isAd = (index + 1) % (adInterval + 1) == 0;
-                        if (isAd) {
-                          return const Card(
-                            margin: EdgeInsets.zero,
-                            child: Center(child: InlineAdWidget()),
-                          );
-                        }
-
-                        final productIndex = index - (index / (adInterval + 1)).floor();
-                        final product = products[productIndex];
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          child: _PublicProductTile(
-                            product: product,
-                            onOpenMap: widget.onOpenMap,
+                    final slivers = <Widget>[];
+                    for (int i = 0; i < products.length; i += adInterval) {
+                      final chunk = products.sublist(
+                        i,
+                        i + adInterval > products.length ? products.length : i + adInterval,
+                      );
+                      slivers.add(
+                        SliverPadding(
+                          padding: const EdgeInsets.all(8),
+                          sliver: SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 400,
+                              mainAxisExtent: 80,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final product = chunk[index];
+                                return Card(
+                                  margin: EdgeInsets.zero,
+                                  child: _PublicProductTile(
+                                    product: product,
+                                    onOpenMap: widget.onOpenMap,
+                                  ),
+                                );
+                              },
+                              childCount: chunk.length,
+                            ),
+                          ),
+                        ),
+                      );
+                      if (i + adInterval < products.length) {
+                        slivers.add(
+                          const SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
+                              child: InlineAdWidget(),
+                            ),
                           ),
                         );
-                      },
-                    );
+                      }
+                    }
+                    return CustomScrollView(slivers: slivers);
                   }
 
                   return ListView.builder(

@@ -13,6 +13,10 @@ import 'package:tindahan_natin/features/dashboard/dashboard_service.dart';
 import 'package:tindahan_natin/features/dashboard/store.dart';
 import 'package:tindahan_natin/features/settings/store_service.dart';
 import 'package:tindahan_natin/shared/widgets/app_logo.dart';
+import 'package:tindahan_natin/features/products/product_service.dart';
+import 'package:tindahan_natin/features/categories/category_service.dart';
+import 'package:tindahan_natin/features/store_map/map_service.dart';
+import 'package:tindahan_natin/core/storage/local_storage.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -360,7 +364,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                       ).animate().fadeIn().slideX(begin: -0.1),
                       const SizedBox(height: 24),
-                      
+                      _StoreSetupChecklist(store: store),
+                      const SizedBox(height: 24),
                       summaryCards,
                       
                       const SizedBox(height: 24),
@@ -508,4 +513,238 @@ class _QuickAction extends StatelessWidget {
       ),
     );
   }
+}
+
+class _StoreSetupChecklist extends ConsumerStatefulWidget {
+  final Store store;
+  const _StoreSetupChecklist({required this.store});
+
+  @override
+  ConsumerState<_StoreSetupChecklist> createState() => _StoreSetupChecklistState();
+}
+
+class _StoreSetupChecklistState extends ConsumerState<_StoreSetupChecklist> {
+  bool _isExpanded = true;
+
+  Future<void> _shareStore(Store store) async {
+    final shareUrl = buildPublicStoreUrl(slug: store.slug);
+    if (shareUrl == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Public store sharing is not configured')),
+      );
+      return;
+    }
+
+    final shareText = store.name.trim().isEmpty
+        ? shareUrl
+        : 'Check out ${store.name} on Tindahan Natin \n$shareUrl';
+
+    await SharePlus.instance.share(ShareParams(text: shareText));
+    await ref.read(localStorageProvider).setStoreShared(store.id, true);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final storeId = widget.store.id;
+    final categoriesAsync = ref.watch(categoriesProvider(storeId));
+    final productsAsync = ref.watch(productsProvider(storeId));
+    final shelvesAsync = ref.watch(shelvesProvider(storeId));
+
+    if (categoriesAsync.isLoading || productsAsync.isLoading || shelvesAsync.isLoading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    final categories = categoriesAsync.value ?? [];
+    final products = productsAsync.value ?? [];
+    final shelves = shelvesAsync.value ?? [];
+
+    final hasStoreName = widget.store.name.isNotEmpty &&
+        widget.store.name.toLowerCase() != 'new store' &&
+        widget.store.name.toLowerCase() != 'my store';
+    final hasCategory = categories.isNotEmpty;
+    final hasProduct = products.isNotEmpty;
+    final hasShelf = shelves.isNotEmpty;
+    final hasShelfAssignment = products.any((p) => p.shelfId != null && p.shelfId!.isNotEmpty);
+    final hasLowStockAlert = products.any((p) => p.minStockThreshold > 0);
+    final hasShared = ref.watch(localStorageProvider).isStoreShared(storeId);
+
+    final checklistItems = [
+      _ChecklistItem(
+        title: 'Name your store',
+        subtitle: 'Change your store\'s generic name to a custom one.',
+        isCompleted: hasStoreName,
+        onTap: () => context.push('/settings/store'),
+      ),
+      _ChecklistItem(
+        title: 'Create store shelves',
+        subtitle: 'Draw and place visual shelves on your map.',
+        isCompleted: hasShelf,
+        onTap: () => context.go('/map'),
+      ),
+      _ChecklistItem(
+        title: 'Create a category',
+        subtitle: 'Group your items for better organization.',
+        isCompleted: hasCategory,
+        onTap: () => context.push('/categories'),
+      ),
+      _ChecklistItem(
+        title: 'Add your first product',
+        subtitle: 'Add details, price, and barcode for an item.',
+        isCompleted: hasProduct,
+        onTap: () => context.push('/inventory'),
+      ),
+      _ChecklistItem(
+        title: 'Assign products to shelves',
+        subtitle: 'Put products on shelves to easily locate them.',
+        isCompleted: hasShelfAssignment,
+        onTap: () => context.go('/map'),
+      ),
+      _ChecklistItem(
+        title: 'Set a low stock threshold',
+        subtitle: 'Get alerts when item quantity runs low.',
+        isCompleted: hasLowStockAlert,
+        onTap: () => context.go('/inventory'),
+      ),
+      _ChecklistItem(
+        title: 'Share your store map',
+        subtitle: 'Invite others or let customers view your shelves.',
+        isCompleted: hasShared,
+        onTap: () => _shareStore(widget.store),
+      ),
+    ];
+
+    final completedCount = checklistItems.where((item) => item.isCompleted).length;
+    final progressPercentage = completedCount / checklistItems.length;
+
+    if (progressPercentage == 1.0) {
+      return Card(
+        elevation: 2,
+        color: Colors.green.withValues(alpha: 0.05),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.green.withValues(alpha: 0.2)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                backgroundColor: Colors.green,
+                child: Icon(Icons.celebration, color: Colors.white),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Store Fully Configured!',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('🎉 Great job! Your store is fully set up and ready for tracking.'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).animate().fadeIn().scale();
+    }
+
+    return Card(
+      elevation: 3,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            leading: SizedBox(
+              width: 40,
+              height: 40,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: progressPercentage,
+                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                    strokeWidth: 4,
+                  ),
+                  Text(
+                    '${(progressPercentage * 100).round()}%',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            title: Text(
+              'Store Setup Checklist',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              '$completedCount of ${checklistItems.length} steps completed',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
+            ),
+            trailing: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+          ),
+          if (_isExpanded) ...[
+            const Divider(height: 1),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: checklistItems.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = checklistItems[index];
+                return ListTile(
+                  leading: Icon(
+                    item.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                    color: item.isCompleted ? Colors.green : Colors.grey,
+                  ),
+                  title: Text(
+                    item.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+                      color: item.isCompleted ? Colors.grey : null,
+                    ),
+                  ),
+                  subtitle: Text(item.subtitle),
+                  trailing: item.isCompleted
+                      ? null
+                      : IconButton(
+                          icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                          onPressed: item.onTap,
+                        ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
+  }
+}
+
+class _ChecklistItem {
+  final String title;
+  final String subtitle;
+  final bool isCompleted;
+  final VoidCallback onTap;
+
+  _ChecklistItem({
+    required this.title,
+    required this.subtitle,
+    required this.isCompleted,
+    required this.onTap,
+  });
 }
