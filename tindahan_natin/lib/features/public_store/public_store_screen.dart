@@ -151,9 +151,12 @@ class _PublicStoreScreenState extends ConsumerState<PublicStoreScreen> {
                       final productIndex = index - (index / (adInterval + 1)).floor();
                       final product = products[productIndex];
 
-                      return _PublicProductTile(
-                        product: product,
-                        onOpenMap: widget.onOpenMap,
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        child: _PublicProductTile(
+                          product: product,
+                          onOpenMap: widget.onOpenMap,
+                        ),
                       );
                     },
                   );
@@ -183,6 +186,7 @@ class _PublicProductTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: SizedBox(
         width: 40,
         height: 40,
@@ -196,9 +200,24 @@ class _PublicProductTile extends ConsumerWidget {
                   fit: BoxFit.cover,
                 ),
               )
-            : const Icon(Icons.shopping_bag),
+            : Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.shopping_bag_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
+              ),
       ),
-      title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        product.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(
         product.shelfName == null
             ? '₱${product.price} • Shelf unavailable'

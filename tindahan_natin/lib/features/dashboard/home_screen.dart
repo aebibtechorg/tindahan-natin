@@ -138,9 +138,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisCount: crossAxisCount,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 4,
-                  crossAxisSpacing: 0,
-                  childAspectRatio: isWide ? 1.4 : 1.0,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: isWide ? 1.45 : 1.15,
                   children: [
                     _StatCard(
                       title: 'Total Sales',
@@ -208,7 +208,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       
                       return Card(
                         color: progressColor.withValues(alpha: 0.03),
-                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        margin: const EdgeInsets.only(bottom: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(color: progressColor.withValues(alpha: 0.15)),
@@ -408,7 +408,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final dateStr = '${tx.createdAt.month}/${tx.createdAt.day} ${tx.createdAt.hour.toString().padLeft(2, '0')}:${tx.createdAt.minute.toString().padLeft(2, '0')}';
                       
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: typeColor.withValues(alpha: 0.1),
@@ -476,7 +476,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final progress = maxRevenue > 0 ? c.revenue / maxRevenue : 0.0;
                       
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                           child: Column(
@@ -584,7 +584,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ))
                     else
                       ...stats.topProducts.map((p) => Card(
-                        margin: const EdgeInsets.only(bottom: 8, left: 0, right: 0),
+                        margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
@@ -699,27 +699,41 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      margin: EdgeInsets.zero,
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 28),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
             const SizedBox(height: 12),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
                 value,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
               ),
             ),
             const SizedBox(height: 4),
             Text(
               title,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -913,9 +927,8 @@ class _StoreSetupChecklistState extends ConsumerState<_StoreSetupChecklist> {
     }
 
     return Card(
-      elevation: 3,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 24),
+      elevation: 0,
       child: Column(
         children: [
           ListTile(

@@ -176,9 +176,12 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
                         final categoryIndex = index - (index / (adInterval + 1)).floor();
                         final c = categories[categoryIndex];
-                        return _CategoryTile(
-                          category: c,
-                          storeId: storeId,
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          child: _CategoryTile(
+                            category: c,
+                            storeId: storeId,
+                          ),
                         );
                       },
                     );
@@ -249,8 +252,26 @@ class _CategoryTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
-      leading: const Icon(Icons.label),
-      title: Text(category.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.label_outlined,
+          color: Theme.of(context).colorScheme.primary,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        category.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

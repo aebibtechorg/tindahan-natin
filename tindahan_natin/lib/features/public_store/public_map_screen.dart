@@ -200,52 +200,42 @@ class _CenteredPublicMapState extends ConsumerState<_CenteredPublicMap> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Material(
-                    elevation: 4,
-                    shadowColor: Colors.black26,
-                    borderRadius: BorderRadius.circular(12),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search for products',
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _onSearchChanged('');
-                                  setState(() {
-                                    _query = '';
-                                    _localHighlightShelfId = null;
-                                  });
-                                },
-                              )
-                            : IconButton(
-                                icon: const Icon(Icons.search),
-                                onPressed: () {
-                                  setState(() {
-                                    _query = _searchController.text;
-                                  });
-                                },
-                              ),
-                      ),
-                      onChanged: _onSearchChanged,
-                      onSubmitted: (val) {
-                        _debounce?.cancel();
-                        setState(() {
-                          _query = val;
-                        });
-                      },
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search for products',
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                                setState(() {
+                                  _query = '';
+                                  _localHighlightShelfId = null;
+                                });
+                              },
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () {
+                                setState(() {
+                                  _query = _searchController.text;
+                                });
+                              },
+                            ),
                     ),
+                    onChanged: _onSearchChanged,
+                    onSubmitted: (val) {
+                      _debounce?.cancel();
+                      setState(() {
+                        _query = val;
+                      });
+                    },
                   ),
                   if (searchAsync != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Card(
-                      elevation: 4,
-                      shadowColor: Colors.black26,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                       child: searchAsync.when(
                         data: (products) {
                           if (products.isEmpty) {
