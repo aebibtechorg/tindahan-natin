@@ -62,7 +62,7 @@ class _InlineAdWidgetState extends ConsumerState<InlineAdWidget> {
 </head>
 <body>
   <ins class="adsbygoogle"
-       style="display:block;width:100%;height:100px;"
+       style="display:block;width:100%;height:100%;"
        data-ad-client="$client"
        data-ad-slot="$slot"
        data-ad-format="horizontal"
@@ -94,7 +94,7 @@ class _InlineAdWidgetState extends ConsumerState<InlineAdWidget> {
 
         return SizedBox(
           width: width,
-          height: 116, // 100px for ad + 16px padding
+          height: 136, // 120px for ad + 16px padding
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: HtmlElementView(viewType: _viewType),
