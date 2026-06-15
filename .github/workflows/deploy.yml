@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, staging ]
     paths:
       - 'TindahanNatin.Server/**'
       - 'terraform/**'
@@ -24,6 +24,36 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+
+    - name: Set Environment Variables
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          echo "ENV_NAME=prod" >> $GITHUB_ENV
+          echo "REPO_NAME=tindahannatin-server" >> $GITHUB_ENV
+          echo 'DB_CONN=${{ secrets.PROD_POSTGRES_CONNECTION_STRING || secrets.POSTGRES_CONNECTION_STRING }}' >> $GITHUB_ENV
+          echo 'REDIS_CONN=${{ secrets.PROD_REDIS_CONNECTION_STRING || secrets.REDIS_CONNECTION_STRING }}' >> $GITHUB_ENV
+          echo 'SIGNALR_CONN=${{ secrets.PROD_SIGNALR_CONNECTION_STRING || secrets.SIGNALR_CONNECTION_STRING }}' >> $GITHUB_ENV
+          echo 'R2_BUCKET=${{ secrets.PROD_R2_BUCKET_NAME || secrets.R2_BUCKET_NAME }}' >> $GITHUB_ENV
+          echo 'AUTH0_DOM=${{ secrets.PROD_AUTH0_DOMAIN || secrets.AUTH0_DOMAIN }}' >> $GITHUB_ENV
+          echo 'AUTH0_AUD=${{ secrets.PROD_AUTH0_AUDIENCE || secrets.AUTH0_AUDIENCE }}' >> $GITHUB_ENV
+          echo 'AUTH0_MGT_ID=${{ secrets.PROD_AUTH0_MANAGEMENT_CLIENT_ID || secrets.AUTH0_MANAGEMENT_CLIENT_ID }}' >> $GITHUB_ENV
+          echo 'AUTH0_MGT_SEC=${{ secrets.PROD_AUTH0_MANAGEMENT_CLIENT_SECRET || secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}' >> $GITHUB_ENV
+          echo 'AUTH0_CLIENT_ID=${{ secrets.PROD_AUTH0_CLIENT_ID || secrets.AUTH0_CLIENT_ID }}' >> $GITHUB_ENV
+          echo 'CORS_ORIGINS=${{ secrets.PROD_CORS_ALLOWED_ORIGINS || secrets.CORS_ALLOWED_ORIGINS }}' >> $GITHUB_ENV
+        else
+          echo "ENV_NAME=staging" >> $GITHUB_ENV
+          echo "REPO_NAME=tindahannatin-server-staging" >> $GITHUB_ENV
+          echo 'DB_CONN=${{ secrets.STAGING_POSTGRES_CONNECTION_STRING || secrets.POSTGRES_CONNECTION_STRING }}' >> $GITHUB_ENV
+          echo 'REDIS_CONN=${{ secrets.STAGING_REDIS_CONNECTION_STRING || secrets.REDIS_CONNECTION_STRING }}' >> $GITHUB_ENV
+          echo 'SIGNALR_CONN=${{ secrets.STAGING_SIGNALR_CONNECTION_STRING || secrets.SIGNALR_CONNECTION_STRING }}' >> $GITHUB_ENV
+          echo 'R2_BUCKET=${{ secrets.STAGING_R2_BUCKET_NAME || secrets.R2_BUCKET_NAME }}' >> $GITHUB_ENV
+          echo 'AUTH0_DOM=${{ secrets.STAGING_AUTH0_DOMAIN || secrets.AUTH0_DOMAIN }}' >> $GITHUB_ENV
+          echo 'AUTH0_AUD=${{ secrets.STAGING_AUTH0_AUDIENCE || secrets.AUTH0_AUDIENCE }}' >> $GITHUB_ENV
+          echo 'AUTH0_MGT_ID=${{ secrets.STAGING_AUTH0_MANAGEMENT_CLIENT_ID || secrets.AUTH0_MANAGEMENT_CLIENT_ID }}' >> $GITHUB_ENV
+          echo 'AUTH0_MGT_SEC=${{ secrets.STAGING_AUTH0_MANAGEMENT_CLIENT_SECRET || secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}' >> $GITHUB_ENV
+          echo 'AUTH0_CLIENT_ID=${{ secrets.STAGING_AUTH0_CLIENT_ID || secrets.AUTH0_CLIENT_ID }}' >> $GITHUB_ENV
+          echo 'CORS_ORIGINS=${{ secrets.STAGING_CORS_ALLOWED_ORIGINS || secrets.CORS_ALLOWED_ORIGINS }}' >> $GITHUB_ENV
+        fi
 
     - name: Google Auth
       id: auth
@@ -50,27 +80,32 @@ jobs:
       run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
       working-directory: ./terraform
 
+    - name: Terraform Select Workspace
+      run: terraform workspace select ${{ env.ENV_NAME }} || terraform workspace new ${{ env.ENV_NAME }}
+      working-directory: ./terraform
+
     - name: Terraform Apply Infrastructure
       run: terraform apply -target=google_artifact_registry_repository.repo -target=cloudflare_r2_bucket.products -target=cloudflare_r2_bucket.backups -auto-approve
       working-directory: ./terraform
       env:
+        TF_VAR_environment: ${{ env.ENV_NAME }}
         TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
         TF_VAR_region: ${{ env.GCP_REGION }}
         TF_VAR_image_tag: ${{ github.sha }}
         TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        TF_VAR_postgres_connection_string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-        TF_VAR_redis_connection_string: ${{ secrets.REDIS_CONNECTION_STRING }}
-        TF_VAR_signalr_connection_string: ${{ secrets.SIGNALR_CONNECTION_STRING }}
+        TF_VAR_postgres_connection_string: ${{ env.DB_CONN }}
+        TF_VAR_redis_connection_string: ${{ env.REDIS_CONN }}
+        TF_VAR_signalr_connection_string: ${{ env.SIGNALR_CONN }}
         TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
         TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
-        TF_VAR_auth0_domain: ${{ secrets.AUTH0_DOMAIN }}
-        TF_VAR_auth0_audience: ${{ secrets.AUTH0_AUDIENCE }}
-        TF_VAR_auth0_management_client_id: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
-        TF_VAR_auth0_management_client_secret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
-        TF_VAR_auth0_client_id: ${{ secrets.AUTH0_CLIENT_ID }}
-        TF_VAR_r2_bucket_name: ${{ secrets.R2_BUCKET_NAME }}
-        TF_VAR_cors_allowed_origins: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+        TF_VAR_auth0_domain: ${{ env.AUTH0_DOM }}
+        TF_VAR_auth0_audience: ${{ env.AUTH0_AUD }}
+        TF_VAR_auth0_management_client_id: ${{ env.AUTH0_MGT_ID }}
+        TF_VAR_auth0_management_client_secret: ${{ env.AUTH0_MGT_SEC }}
+        TF_VAR_auth0_client_id: ${{ env.AUTH0_CLIENT_ID }}
+        TF_VAR_r2_bucket_name: ${{ env.R2_BUCKET }}
+        TF_VAR_cors_allowed_origins: ${{ env.CORS_ORIGINS }}
 
     - name: Publish Container
       run: |
@@ -86,13 +121,7 @@ jobs:
 
     - name: Database Backup
       run: |
-        # Parse connection string to get PostgreSQL URI
-        # Expecting: Host=myhost;Database=mydb;Username=myuser;Password=mypass
-        # Or: Server=myhost;Database=mydb;User Id=myuser;Password=mypass
-        # This is a bit fragile but common for .NET. 
-        # For a more robust way, we'd use a dedicated script.
-        
-        CONN_STR="${{ secrets.POSTGRES_CONNECTION_STRING }}"
+        CONN_STR="${{ env.DB_CONN }}"
         
         extract_val() {
           echo "$CONN_STR" | grep -oEi "$1=[^;]+" | cut -d'=' -f2
@@ -109,9 +138,14 @@ jobs:
         echo "Starting backup of $DB from $HOST..."
         pg_dump -h "$HOST" -U "$USER" -d "$DB" | gzip > "$BACKUP_FILE"
         
-        echo "Uploading $BACKUP_FILE to R2..."
-        # Use AWS CLI with R2 endpoint
-        aws s3 cp "$BACKUP_FILE" "s3://${{ secrets.R2_BUCKET_NAME }}-backups/$BACKUP_FILE" \
+        # Determine the backup bucket name based on the environment
+        BACKUP_BUCKET="${{ env.R2_BUCKET }}-backups"
+        if [ "${{ env.ENV_NAME }}" != "prod" ]; then
+          BACKUP_BUCKET="${{ env.R2_BUCKET }}-${{ env.ENV_NAME }}-backups"
+        fi
+        
+        echo "Uploading $BACKUP_FILE to R2 bucket $BACKUP_BUCKET..."
+        aws s3 cp "$BACKUP_FILE" "s3://$BACKUP_BUCKET/$BACKUP_FILE" \
           --endpoint-url "https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
           --region auto
       env:
@@ -122,27 +156,28 @@ jobs:
       run: |
         dotnet ef database update \
           --project TindahanNatin.Server/TindahanNatin.Server.csproj \
-          --connection "${{ secrets.POSTGRES_CONNECTION_STRING }}"
+          --connection "${{ env.DB_CONN }}"
 
     - name: Terraform Apply
       run: terraform apply -auto-approve
       working-directory: ./terraform
       env:
+        TF_VAR_environment: ${{ env.ENV_NAME }}
         TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
         TF_VAR_region: ${{ env.GCP_REGION }}
         TF_VAR_image_tag: ${{ github.sha }}
         TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        TF_VAR_postgres_connection_string: ${{ secrets.POSTGRES_CONNECTION_STRING }}
-        TF_VAR_redis_connection_string: ${{ secrets.REDIS_CONNECTION_STRING }}
-        TF_VAR_signalr_connection_string: ${{ secrets.SIGNALR_CONNECTION_STRING }}
+        TF_VAR_postgres_connection_string: ${{ env.DB_CONN }}
+        TF_VAR_redis_connection_string: ${{ env.REDIS_CONN }}
+        TF_VAR_signalr_connection_string: ${{ env.SIGNALR_CONN }}
         TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
         TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
-        TF_VAR_auth0_domain: ${{ secrets.AUTH0_DOMAIN }}
-        TF_VAR_auth0_audience: ${{ secrets.AUTH0_AUDIENCE }}
-        TF_VAR_auth0_management_client_id: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_ID }}
-        TF_VAR_auth0_management_client_secret: ${{ secrets.AUTH0_MANAGEMENT_CLIENT_SECRET }}
-        TF_VAR_auth0_client_id: ${{ secrets.AUTH0_CLIENT_ID }}
-        TF_VAR_r2_bucket_name: ${{ secrets.R2_BUCKET_NAME }}
-        TF_VAR_cors_allowed_origins: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+        TF_VAR_auth0_domain: ${{ env.AUTH0_DOM }}
+        TF_VAR_auth0_audience: ${{ env.AUTH0_AUD }}
+        TF_VAR_auth0_management_client_id: ${{ env.AUTH0_MGT_ID }}
+        TF_VAR_auth0_management_client_secret: ${{ env.AUTH0_MGT_SEC }}
+        TF_VAR_auth0_client_id: ${{ env.AUTH0_CLIENT_ID }}
+        TF_VAR_r2_bucket_name: ${{ env.R2_BUCKET }}
+        TF_VAR_cors_allowed_origins: ${{ env.CORS_ORIGINS }}
 

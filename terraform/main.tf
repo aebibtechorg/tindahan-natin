@@ -29,7 +29,7 @@ provider "cloudflare" {
 # Artifact Registry for Docker images
 resource "google_artifact_registry_repository" "repo" {
   location      = var.region
-  repository_id = "tindahannatin-server"
+  repository_id = var.environment == "prod" ? "tindahannatin-server" : "tindahannatin-server-${var.environment}"
   description   = "Docker repository for TindahanNatin Server"
   format        = "DOCKER"
 }
@@ -37,20 +37,20 @@ resource "google_artifact_registry_repository" "repo" {
 # Cloudflare R2 Bucket for Products
 resource "cloudflare_r2_bucket" "products" {
   account_id = var.cloudflare_account_id
-  name       = var.r2_bucket_name
+  name       = var.environment == "prod" ? var.r2_bucket_name : "${var.r2_bucket_name}-${var.environment}"
   location   = "APAC"
 }
 
 # Cloudflare R2 Bucket for Database Backups
 resource "cloudflare_r2_bucket" "backups" {
   account_id = var.cloudflare_account_id
-  name       = "${var.r2_bucket_name}-backups"
+  name       = var.environment == "prod" ? "${var.r2_bucket_name}-backups" : "${var.r2_bucket_name}-${var.environment}-backups"
   location   = "APAC"
 }
 
 # Cloud Run Service
 resource "google_cloud_run_v2_service" "server" {
-  name     = "tindahannatin-server"
+  name     = var.environment == "prod" ? "tindahannatin-server" : "tindahannatin-server-${var.environment}"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
@@ -83,7 +83,7 @@ resource "google_cloud_run_v2_service" "server" {
 
       env {
         name  = "Storage__BucketName"
-        value = var.r2_bucket_name
+        value = cloudflare_r2_bucket.products.name
       }
 
       env {
@@ -120,7 +120,7 @@ resource "google_cloud_run_v2_service" "server" {
       # though it's standard ASP.NET Core.
       env {
         name  = "ASPNETCORE_ENVIRONMENT"
-        value = "Production"
+        value = var.environment == "prod" ? "Production" : "Staging"
       }
     }
   }

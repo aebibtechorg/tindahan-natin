@@ -2,7 +2,7 @@ name: Flutter Android CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, staging ]
     paths:
       - 'tindahan_natin/**'
       - '!tindahan_natin/lib/features/public_store/**'
@@ -18,9 +18,58 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write # Required for WIF auth
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SA }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Set Environment Variables
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            ENV_NAME="prod"
+            SERVICE_NAME="tindahannatin-server"
+            echo "PUBLIC_WEB_APP_BASE_URL=${{ secrets.PROD_PUBLIC_WEB_APP_BASE_URL || secrets.PUBLIC_WEB_APP_BASE_URL }}" >> $GITHUB_ENV
+            echo "AUTH0_DOMAIN=${{ secrets.PROD_AUTH0_DOMAIN || secrets.AUTH0_DOMAIN }}" >> $GITHUB_ENV
+            echo "AUTH0_CLIENT_ID=${{ secrets.PROD_AUTH0_CLIENT_ID || secrets.AUTH0_CLIENT_ID }}" >> $GITHUB_ENV
+            echo "AUTH0_AUDIENCE=${{ secrets.PROD_AUTH0_AUDIENCE || secrets.AUTH0_AUDIENCE }}" >> $GITHUB_ENV
+            echo "AUTH0_SCHEME=${{ secrets.PROD_AUTH0_SCHEME || secrets.AUTH0_SCHEME }}" >> $GITHUB_ENV
+            echo "PLAY_TRACK=production" >> $GITHUB_ENV
+          else
+            ENV_NAME="staging"
+            SERVICE_NAME="tindahannatin-server-staging"
+            echo "PUBLIC_WEB_APP_BASE_URL=${{ secrets.STAGING_PUBLIC_WEB_APP_BASE_URL || secrets.PUBLIC_WEB_APP_BASE_URL }}" >> $GITHUB_ENV
+            echo "AUTH0_DOMAIN=${{ secrets.STAGING_AUTH0_DOMAIN || secrets.AUTH0_DOMAIN }}" >> $GITHUB_ENV
+            echo "AUTH0_CLIENT_ID=${{ secrets.STAGING_AUTH0_CLIENT_ID || secrets.AUTH0_CLIENT_ID }}" >> $GITHUB_ENV
+            echo "AUTH0_AUDIENCE=${{ secrets.STAGING_AUTH0_AUDIENCE || secrets.AUTH0_AUDIENCE }}" >> $GITHUB_ENV
+            echo "AUTH0_SCHEME=${{ secrets.STAGING_AUTH0_SCHEME || secrets.AUTH0_SCHEME }}" >> $GITHUB_ENV
+            echo "PLAY_TRACK=alpha" >> $GITHUB_ENV
+          fi
+          
+          # Query the URL dynamically from Cloud Run
+          RUN_URL=$(gcloud run services describe $SERVICE_NAME --platform managed --region asia-southeast1 --format 'value(status.url)' 2>/dev/null || echo "")
+          
+          if [ -n "$RUN_URL" ]; then
+            echo "SERVER_HTTP=$RUN_URL" >> $GITHUB_ENV
+            echo "Resolved Cloud Run URL: $RUN_URL"
+          else
+            # Fallback to secrets if lookup failed
+            FALLBACK_HTTP="${{ secrets.STAGING_SERVER_HTTP || secrets.SERVER_HTTP }}"
+            if [ "$ENV_NAME" = "prod" ]; then
+              FALLBACK_HTTP="${{ secrets.PROD_SERVER_HTTP || secrets.SERVER_HTTP }}"
+            fi
+            echo "SERVER_HTTP=$FALLBACK_HTTP" >> $GITHUB_ENV
+            echo "Cloud Run service not found or lookup failed. Using fallback: $FALLBACK_HTTP"
+          fi
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -53,7 +102,6 @@ jobs:
         working-directory: tindahan_natin
 
       - name: Decode Android Keystore
-        # if: secrets.ANDROID_KEYSTORE_BASE64 != ''
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
           echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" > android/key.properties
@@ -62,18 +110,9 @@ jobs:
           echo "storeFile=upload-keystore.jks" >> android/key.properties
         working-directory: tindahan_natin
 
-      # - name: Lint
-      #   run: flutter analyze
-      #   working-directory: tindahan_natin
-
-      # - name: Test
-      #   run: flutter test
-      #   working-directory: tindahan_natin
-
       - name: Extract Release Notes
         id: release_notes
         run: |
-          # Extract the content of the latest version from CHANGELOG.md
           awk '/^## \[/{if (count++) exit; next} count' CHANGELOG.md > release_notes.txt
           echo "NOTES<<EOF" >> $GITHUB_OUTPUT
           cat release_notes.txt >> $GITHUB_OUTPUT
@@ -83,44 +122,43 @@ jobs:
       - name: Prepare Google Play Release Notes
         run: |
           mkdir -p google-play-notes/whatsnew
-          # Use the same extracted notes for Google Play (en-US default), truncated to 500 chars
           head -c 500 release_notes.txt > google-play-notes/whatsnew/whatsnew-en-US
         working-directory: tindahan_natin
 
       - name: Build APK
         run: |
           flutter build apk --release \
-            --dart-define=SERVER_HTTP=${{ secrets.SERVER_HTTP }} \
-            --dart-define=PUBLIC_WEB_APP_BASE_URL=${{ secrets.PUBLIC_WEB_APP_BASE_URL }} \
-            --dart-define=AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
-            --dart-define=AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
-            --dart-define=AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
-            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }} \
+            --dart-define=SERVER_HTTP=${{ env.SERVER_HTTP }} \
+            --dart-define=PUBLIC_WEB_APP_BASE_URL=${{ env.PUBLIC_WEB_APP_BASE_URL }} \
+            --dart-define=AUTH0_DOMAIN=${{ env.AUTH0_DOMAIN }} \
+            --dart-define=AUTH0_CLIENT_ID=${{ env.AUTH0_CLIENT_ID }} \
+            --dart-define=AUTH0_AUDIENCE=${{ env.AUTH0_AUDIENCE }} \
+            --dart-define=AUTH0_SCHEME=${{ env.AUTH0_SCHEME }} \
             --dart-define=BANNER_AD_UNIT_ID_ANDROID=${{ secrets.BANNER_AD_UNIT_ID_ANDROID }} \
             --dart-define=INTERSTITIAL_AD_UNIT_ID_ANDROID=${{ secrets.INTERSTITIAL_AD_UNIT_ID_ANDROID }} \
             --dart-define=NATIVE_AD_UNIT_ID_ANDROID=${{ secrets.NATIVE_AD_UNIT_ID_ANDROID }}
         working-directory: tindahan_natin
         env:
-          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
-          AUTH0_SCHEME: ${{ secrets.AUTH0_SCHEME }}
+          AUTH0_DOMAIN: ${{ env.AUTH0_DOMAIN }}
+          AUTH0_SCHEME: ${{ env.AUTH0_SCHEME }}
           ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
 
       - name: Build App Bundle
         run: |
           flutter build appbundle --release \
-            --dart-define=SERVER_HTTP=${{ secrets.SERVER_HTTP }} \
-            --dart-define=PUBLIC_WEB_APP_BASE_URL=${{ secrets.PUBLIC_WEB_APP_BASE_URL }} \
-            --dart-define=AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
-            --dart-define=AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
-            --dart-define=AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }} \
-            --dart-define=AUTH0_SCHEME=${{ secrets.AUTH0_SCHEME }} \
+            --dart-define=SERVER_HTTP=${{ env.SERVER_HTTP }} \
+            --dart-define=PUBLIC_WEB_APP_BASE_URL=${{ env.PUBLIC_WEB_APP_BASE_URL }} \
+            --dart-define=AUTH0_DOMAIN=${{ env.AUTH0_DOMAIN }} \
+            --dart-define=AUTH0_CLIENT_ID=${{ env.AUTH0_CLIENT_ID }} \
+            --dart-define=AUTH0_AUDIENCE=${{ env.AUTH0_AUDIENCE }} \
+            --dart-define=AUTH0_SCHEME=${{ env.AUTH0_SCHEME }} \
             --dart-define=BANNER_AD_UNIT_ID_ANDROID=${{ secrets.BANNER_AD_UNIT_ID_ANDROID }} \
             --dart-define=INTERSTITIAL_AD_UNIT_ID_ANDROID=${{ secrets.INTERSTITIAL_AD_UNIT_ID_ANDROID }} \
             --dart-define=NATIVE_AD_UNIT_ID_ANDROID=${{ secrets.NATIVE_AD_UNIT_ID_ANDROID }}
         working-directory: tindahan_natin
         env:
-          AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
-          AUTH0_SCHEME: ${{ secrets.AUTH0_SCHEME }}
+          AUTH0_DOMAIN: ${{ env.AUTH0_DOMAIN }}
+          AUTH0_SCHEME: ${{ env.AUTH0_SCHEME }}
           ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
 
       - name: Upload APK
@@ -148,13 +186,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to Google Play
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_CONSOLE_SERVICE_ACCOUNT_JSON }}
           packageName: com.aebibtech.tindahan_natin
           releaseFiles: tindahan_natin/build/app/outputs/bundle/release/app-release.aab
           whatsNewDirectory: tindahan_natin/google-play-notes/whatsnew
-          tracks: alpha
+          tracks: ${{ env.PLAY_TRACK }}
           status: completed
-          # changesNotSentForReview: true

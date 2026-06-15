@@ -1,3 +1,9 @@
+variable "environment" {
+  description = "Target environment (staging or prod)"
+  type        = string
+  default     = "prod"
+}
+
 variable "project_id" {
   description = "Google Cloud Project ID"
   type        = string

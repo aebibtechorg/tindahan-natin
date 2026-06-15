@@ -1,11 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/Hero.tsx';
+import Story from '../components/Story.tsx';
 import Features from '../components/Features.tsx';
 ---
 
 <Layout title="Home">
 	<Hero client:load />
+	<Story client:visible />
 	<Features client:visible />
 
 	<section class="cta-banner">

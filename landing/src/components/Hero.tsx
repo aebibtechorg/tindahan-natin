@@ -56,13 +56,12 @@ const Hero = () => {
           </motion.div>
           
           <h1 className="hero-title">
-            Your sari-sari store, <br />
-            <span className="shimmer-text">modernized.</span>
+            Run your store with confidence<br />
+            <span className="shimmer-text">even when Mama isn't around.</span>
           </h1>
           
           <p className="hero-subtitle">
-            Tindahan Natin helps you manage inventory, organize shelves visually, 
-            and empower family members, tinderos, and tinderas that run your store.
+            Find product prices, shelf locations, and stock storage instantly. No more guessing. No more Messenger chats while customers wait.
           </p>
           
           <div className="hero-actions">
