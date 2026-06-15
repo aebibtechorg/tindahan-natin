@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0+20] - 2026-06-15
+- Various performance fixes
+
 ## [1.0.0+19] - 2026-06-14
 ### Added
 - Onboarding
