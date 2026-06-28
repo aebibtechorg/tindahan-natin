@@ -36,8 +36,8 @@ builder.Services.AddCors(o =>
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
-builder.AddRedisClientBuilder("cache")
-    .WithOutputCache();
+// builder.AddRedisClientBuilder("cache")
+//     .WithOutputCache();
 
 builder.AddNpgsqlDbContext<TindahanDbContext>("tindahandb");
 builder.AddMinioClient("minio");
@@ -178,7 +178,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseOutputCache();
+// app.UseOutputCache();
 
 string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
