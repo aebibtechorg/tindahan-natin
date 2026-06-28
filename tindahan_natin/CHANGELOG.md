@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1+21] - 2026-06-28
+- Fixed disappearing store shelves on the map editor and shelf selection screen
+
 ## [1.0.0+20] - 2026-06-15
 - Various performance fixes
 
