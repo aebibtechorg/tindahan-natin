@@ -121,6 +121,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
         'x': snapX,
         'y': snapY,
       });
+      ref.invalidate(shelvesProvider(storeId));
 
       if (!mounted) {
         return;
@@ -581,6 +582,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
           'rotation': updatedShelf.rotation,
         }, storeId: storeId);
       }
+      ref.invalidate(shelvesProvider(storeId));
     } catch (e) {
       setState(() {
         for (final entry in snapshot.entries) {
@@ -777,6 +779,7 @@ class _StoreMapScreenState extends ConsumerState<StoreMapScreen> {
                                 'y': updatedShelf.y,
                                 'rotation': rotation,
                               }, storeId: storeId);
+                          ref.invalidate(shelvesProvider(storeId));
                           setState(
                             () => _optimisticShelves[shelf.id] = updatedShelf,
                           );
@@ -1120,6 +1123,7 @@ class _DraggableShelfState extends ConsumerState<DraggableShelf> {
               'y': y,
               'rotation': rotation,
             }, storeId: widget.storeId);
+            ref.invalidate(shelvesProvider(widget.storeId));
             widget.onOptimisticUpdate?.call(updatedShelf);
           } catch (e) {
             setState(() {

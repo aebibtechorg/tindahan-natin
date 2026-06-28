@@ -84,6 +84,90 @@ jobs:
       run: terraform workspace select ${{ env.ENV_NAME }} || terraform workspace new ${{ env.ENV_NAME }}
       working-directory: ./terraform
 
+    - name: Terraform Import Existing Resources
+      run: |
+        STATE_LIST=$(terraform state list)
+        
+        if echo "$STATE_LIST" | grep -q "google_artifact_registry_repository.repo"; then
+          echo "google_artifact_registry_repository.repo is already in state."
+        else
+          if [ "$TF_VAR_environment" = "prod" ]; then
+            REPO_NAME="tindahannatin-server"
+          else
+            REPO_NAME="tindahannatin-server-$TF_VAR_environment"
+          fi
+          echo "Attempting to import google_artifact_registry_repository.repo..."
+          terraform import google_artifact_registry_repository.repo "projects/$TF_VAR_project_id/locations/$TF_VAR_region/repositories/$REPO_NAME" || true
+        fi
+        
+        if echo "$STATE_LIST" | grep -q "cloudflare_r2_bucket.products"; then
+          echo "cloudflare_r2_bucket.products is already in state."
+        else
+          if [ "$TF_VAR_environment" = "prod" ]; then
+            BUCKET_NAME="$TF_VAR_r2_bucket_name"
+          else
+            BUCKET_NAME="${TF_VAR_r2_bucket_name}-$TF_VAR_environment"
+          fi
+          echo "Attempting to import cloudflare_r2_bucket.products..."
+          terraform import cloudflare_r2_bucket.products "$TF_VAR_cloudflare_account_id/$BUCKET_NAME" || true
+        fi
+        
+        if echo "$STATE_LIST" | grep -q "cloudflare_r2_bucket.backups"; then
+          echo "cloudflare_r2_bucket.backups is already in state."
+        else
+          if [ "$TF_VAR_environment" = "prod" ]; then
+            BACKUP_BUCKET_NAME="${TF_VAR_r2_bucket_name}-backups"
+          else
+            BACKUP_BUCKET_NAME="${TF_VAR_r2_bucket_name}-${TF_VAR_environment}-backups"
+          fi
+          echo "Attempting to import cloudflare_r2_bucket.backups..."
+          terraform import cloudflare_r2_bucket.backups "$TF_VAR_cloudflare_account_id/$BACKUP_BUCKET_NAME" || true
+        fi
+        
+        if echo "$STATE_LIST" | grep -q "google_cloud_run_v2_service.server"; then
+          echo "google_cloud_run_v2_service.server is already in state."
+        else
+          if [ "$TF_VAR_environment" = "prod" ]; then
+            SERVICE_NAME="tindahannatin-server"
+          else
+            SERVICE_NAME="tindahannatin-server-$TF_VAR_environment"
+          fi
+          echo "Attempting to import google_cloud_run_v2_service.server..."
+          terraform import google_cloud_run_v2_service.server "projects/$TF_VAR_project_id/locations/$TF_VAR_region/services/$SERVICE_NAME" || true
+        fi
+        
+        if echo "$STATE_LIST" | grep -q "google_cloud_run_v2_service_iam_member.public_access"; then
+          echo "google_cloud_run_v2_service_iam_member.public_access is already in state."
+        else
+          if [ "$TF_VAR_environment" = "prod" ]; then
+            SERVICE_NAME="tindahannatin-server"
+          else
+            SERVICE_NAME="tindahannatin-server-$TF_VAR_environment"
+          fi
+          echo "Attempting to import google_cloud_run_v2_service_iam_member.public_access..."
+          terraform import google_cloud_run_v2_service_iam_member.public_access "projects/$TF_VAR_project_id/locations/$TF_VAR_region/services/$SERVICE_NAME roles/run.invoker allUsers" || true
+        fi
+      working-directory: ./terraform
+      env:
+        TF_VAR_environment: ${{ env.ENV_NAME }}
+        TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+        TF_VAR_region: ${{ env.GCP_REGION }}
+        TF_VAR_image_tag: ${{ github.sha }}
+        TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        TF_VAR_postgres_connection_string: ${{ env.DB_CONN }}
+        TF_VAR_redis_connection_string: ${{ env.REDIS_CONN }}
+        TF_VAR_signalr_connection_string: ${{ env.SIGNALR_CONN }}
+        TF_VAR_r2_access_key: ${{ secrets.R2_ACCESS_KEY }}
+        TF_VAR_r2_secret_key: ${{ secrets.R2_SECRET_KEY }}
+        TF_VAR_auth0_domain: ${{ env.AUTH0_DOM }}
+        TF_VAR_auth0_audience: ${{ env.AUTH0_AUD }}
+        TF_VAR_auth0_management_client_id: ${{ env.AUTH0_MGT_ID }}
+        TF_VAR_auth0_management_client_secret: ${{ env.AUTH0_MGT_SEC }}
+        TF_VAR_auth0_client_id: ${{ env.AUTH0_CLIENT_ID }}
+        TF_VAR_r2_bucket_name: ${{ env.R2_BUCKET }}
+        TF_VAR_cors_allowed_origins: ${{ env.CORS_ORIGINS }}
+
     - name: Terraform Apply Infrastructure
       run: terraform apply -target=google_artifact_registry_repository.repo -target=cloudflare_r2_bucket.products -target=cloudflare_r2_bucket.backups -auto-approve
       working-directory: ./terraform
