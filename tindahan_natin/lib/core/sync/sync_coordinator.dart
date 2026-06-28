@@ -7,6 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tindahan_natin/core/network/dio_client.dart';
 import 'package:tindahan_natin/core/storage/local_storage.dart';
 import 'package:tindahan_natin/features/auth/auth_service.dart';
+import 'package:tindahan_natin/features/store_map/map_service.dart';
+import 'package:tindahan_natin/features/products/product_service.dart';
+import 'package:tindahan_natin/features/categories/category_service.dart';
 
 class SyncCoordinator {
   SyncCoordinator(this._ref, this._dio, this._local);
@@ -136,14 +139,17 @@ class SyncCoordinator {
         if (method == 'DELETE' && entityId != null) {
           await _local.removeCachedProduct(storeId, entityId);
           await _local.removeCachedRecord(cacheKey, entityId);
+          _ref.invalidate(productsProvider(storeId));
           return;
         }
         if (responseMap != null) {
           await _local.upsertCachedProduct(storeId, responseMap);
           await _local.upsertCachedRecord(cacheKey, responseMap);
+          _ref.invalidate(productsProvider(storeId));
         } else if (body is Map<String, dynamic> && method == 'PUT' && entityId != null) {
           await _local.upsertCachedProduct(storeId, {...body, 'id': entityId});
           await _local.upsertCachedRecord(cacheKey, {...body, 'id': entityId});
+          _ref.invalidate(productsProvider(storeId));
         }
         return;
       case 'categories':
@@ -151,12 +157,15 @@ class SyncCoordinator {
         final cacheKey = 'categories_$storeId';
         if (method == 'DELETE' && entityId != null) {
           await _local.removeCachedRecord(cacheKey, entityId);
+          _ref.invalidate(categoriesProvider(storeId));
           return;
         }
         if (responseMap != null) {
           await _local.upsertCachedRecord(cacheKey, responseMap);
+          _ref.invalidate(categoriesProvider(storeId));
         } else if (body is Map<String, dynamic> && method == 'PUT' && entityId != null) {
           await _local.upsertCachedRecord(cacheKey, {...body, 'id': entityId});
+          _ref.invalidate(categoriesProvider(storeId));
         }
         return;
       case 'store':
@@ -173,12 +182,15 @@ class SyncCoordinator {
         final cacheKey = 'shelves_$storeId';
         if (method == 'DELETE' && entityId != null) {
           await _local.removeCachedRecord(cacheKey, entityId);
+          _ref.invalidate(shelvesProvider(storeId));
           return;
         }
         if (responseMap != null) {
           await _local.upsertCachedRecord(cacheKey, responseMap);
+          _ref.invalidate(shelvesProvider(storeId));
         } else if (body is Map<String, dynamic> && method == 'PUT' && entityId != null) {
           await _local.upsertCachedRecord(cacheKey, {...body, 'id': entityId});
+          _ref.invalidate(shelvesProvider(storeId));
         }
         return;
       case 'productLocations':
@@ -186,12 +198,15 @@ class SyncCoordinator {
         final cacheKey = 'locations_$storeId';
         if (method == 'DELETE' && entityId != null) {
           await _local.removeCachedRecord(cacheKey, entityId);
+          _ref.invalidate(productLocationsProvider(storeId));
           return;
         }
         if (responseMap != null) {
           await _local.upsertCachedRecord(cacheKey, responseMap);
+          _ref.invalidate(productLocationsProvider(storeId));
         } else if (body is Map<String, dynamic> && method == 'PUT' && entityId != null) {
           await _local.upsertCachedRecord(cacheKey, {...body, 'id': entityId});
+          _ref.invalidate(productLocationsProvider(storeId));
         }
         return;
       default:
